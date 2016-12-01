@@ -175,8 +175,23 @@ static void update_policy_online(void)
 	/* Re-evaluate policy to trigger adjust notifier for online CPUs */
 	get_online_cpus();
 	for_each_online_cpu(i) {
-		pr_debug("Updating policy for CPU%d\n", i);
-		cpufreq_update_policy(i);
+		struct cpufreq_policy *policy = cpufreq_cpu_get(i);
+
+		if (!policy)
+			continue;
+
+		/*
+		 * CPUs that share a freq domain share a single cpufreq
+		 * policy, so updating it once per domain is enough. Match on
+		 * the policy's own CPU to stay correct for any number of
+		 * clusters (kona has three: silver, gold and prime).
+		 */
+		if (policy->cpu == i) {
+			pr_debug("Updating policy for CPU%d\n", i);
+			cpufreq_update_policy(i);
+		}
+
+		cpufreq_cpu_put(policy);
 	}
 	put_online_cpus();
 }
