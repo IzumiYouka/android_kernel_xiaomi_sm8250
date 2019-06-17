@@ -399,7 +399,7 @@ static unsigned long sugov_get_util(struct sugov_cpu *sg_cpu)
 	struct rq *rq = cpu_rq(sg_cpu->cpu);
 
 	unsigned long util_cfs = cpu_util_cfs(rq);
-	unsigned long max = arch_scale_cpu_capacity(NULL, sg_cpu->cpu);
+	unsigned long max = arch_scale_cpu_capacity(sg_cpu->cpu);
 
 	sg_cpu->max = max;
 	sg_cpu->bw_dl = cpu_bw_dl(rq);
@@ -786,7 +786,7 @@ static unsigned long calc_dvfs_headroom(unsigned long util,
 
 static void sugov_build_dvfs_headroom_lut(struct sugov_policy *sg_policy)
 {
-	unsigned long cap = arch_scale_cpu_capacity(NULL, sg_policy->policy->cpu);
+	unsigned long cap = arch_scale_cpu_capacity(sg_policy->policy->cpu);
 	unsigned long util;
 	u16 *new_lut;
 	int next;
