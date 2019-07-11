@@ -36,6 +36,9 @@
  */
 static struct kmem_cache *memobjs_cache;
 static struct kmem_cache *sparseobjs_cache;
+static struct kmem_cache *timeline_cache;
+static struct kmem_cache *sync_cache;
+static struct kmem_cache *cmd_cache;
 
 static struct kmem_cache *timeline_cache;
 static struct kmem_cache *sparse_cache;
