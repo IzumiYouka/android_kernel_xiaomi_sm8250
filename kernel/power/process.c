@@ -196,6 +196,8 @@ void thaw_processes(void)
 	oom_killer_enable();
 #endif
 
+	pr_info("Restarting tasks ... ");
+
 	__usermodehelper_set_disable_depth(UMH_FREEZING);
 	thaw_workqueues();
 
