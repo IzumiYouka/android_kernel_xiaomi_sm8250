@@ -11237,43 +11237,43 @@
           <var-decl name='trace_recursion' type-id='type-id-16' visibility='default' filepath='include/linux/sched.h' line='1145' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19072'>
-          <var-decl name='memcg_in_oom' type-id='type-id-1540' visibility='default' filepath='include/linux/sched.h' line='1163' column='1'/>
+          <var-decl name='memcg_in_oom' type-id='type-id-1540' visibility='default' filepath='include/linux/sched.h' line='1171' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19136'>
-          <var-decl name='memcg_oom_gfp_mask' type-id='type-id-486' visibility='default' filepath='include/linux/sched.h' line='1164' column='1'/>
+          <var-decl name='memcg_oom_gfp_mask' type-id='type-id-486' visibility='default' filepath='include/linux/sched.h' line='1172' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19168'>
-          <var-decl name='memcg_oom_order' type-id='type-id-17' visibility='default' filepath='include/linux/sched.h' line='1165' column='1'/>
+          <var-decl name='memcg_oom_order' type-id='type-id-17' visibility='default' filepath='include/linux/sched.h' line='1173' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19200'>
-          <var-decl name='memcg_nr_pages_over_high' type-id='type-id-5' visibility='default' filepath='include/linux/sched.h' line='1168' column='1'/>
+          <var-decl name='memcg_nr_pages_over_high' type-id='type-id-5' visibility='default' filepath='include/linux/sched.h' line='1176' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19264'>
-          <var-decl name='active_memcg' type-id='type-id-1540' visibility='default' filepath='include/linux/sched.h' line='1171' column='1'/>
+          <var-decl name='active_memcg' type-id='type-id-1540' visibility='default' filepath='include/linux/sched.h' line='1179' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19328'>
-          <var-decl name='throttle_queue' type-id='type-id-1541' visibility='default' filepath='include/linux/sched.h' line='1175' column='1'/>
+          <var-decl name='throttle_queue' type-id='type-id-1541' visibility='default' filepath='include/linux/sched.h' line='1183' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19392'>
-          <var-decl name='utask' type-id='type-id-1542' visibility='default' filepath='include/linux/sched.h' line='1179' column='1'/>
+          <var-decl name='utask' type-id='type-id-1542' visibility='default' filepath='include/linux/sched.h' line='1187' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19456'>
-          <var-decl name='pagefault_disabled' type-id='type-id-17' visibility='default' filepath='include/linux/sched.h' line='1188' column='1'/>
+          <var-decl name='pagefault_disabled' type-id='type-id-17' visibility='default' filepath='include/linux/sched.h' line='1196' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19520'>
-          <var-decl name='oom_reaper_list' type-id='type-id-432' visibility='default' filepath='include/linux/sched.h' line='1190' column='1'/>
+          <var-decl name='oom_reaper_list' type-id='type-id-432' visibility='default' filepath='include/linux/sched.h' line='1198' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19584'>
-          <var-decl name='stack_vm_area' type-id='type-id-1543' visibility='default' filepath='include/linux/sched.h' line='1193' column='1'/>
+          <var-decl name='stack_vm_area' type-id='type-id-1543' visibility='default' filepath='include/linux/sched.h' line='1201' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19648'>
-          <var-decl name='stack_refcount' type-id='type-id-26' visibility='default' filepath='include/linux/sched.h' line='1197' column='1'/>
+          <var-decl name='stack_refcount' type-id='type-id-26' visibility='default' filepath='include/linux/sched.h' line='1205' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19712'>
-          <var-decl name='security' type-id='type-id-15' visibility='default' filepath='include/linux/sched.h' line='1204' column='1'/>
+          <var-decl name='security' type-id='type-id-15' visibility='default' filepath='include/linux/sched.h' line='1212' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19840'>
-          <var-decl name='thread' type-id='type-id-1544' visibility='default' filepath='include/linux/sched.h' line='1214' column='1'/>
+          <var-decl name='thread' type-id='type-id-1544' visibility='default' filepath='include/linux/sched.h' line='1222' column='1'/>
         </data-member>
       </class-decl>
       <class-decl name='thread_info' size-in-bits='320' is-struct='yes' visibility='default' filepath='arch/arm64/include/asm/thread_info.h' line='39' column='1' id='type-id-1499'>
@@ -58234,93 +58234,9 @@
       </function-decl>
     </abi-instr>
   </abi-corpus>
-  <abi-corpus path='gnss-cmdline.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='mmc_core.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio_console.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='vcan.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio-rng.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='ttm.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='can.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio_crypto.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='sdhci.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='binfmt_misc.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio_ring.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='vmw_vsock_virtio_transport_common.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio-gpu.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='vsock_diag.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='mmc_block.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='crypto_engine.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='dummy_hcd.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio_balloon.ko' architecture='elf-amd-x86_64'>
-  </abi-corpus>
-  <abi-corpus path='net_failover.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='can-raw.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='dummy-cpufreq.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio_blk.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='vmw_vsock_virtio_transport.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio_pci.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='ac97_bus.ko' architecture='elf-amd-x86_64'>
-  </abi-corpus>
-  <abi-corpus path='can-dev.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio_net.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio_input.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='can-gw.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virtio_mmio.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='sdhci-pltfm.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='can-bcm.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='kheaders.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='gnss-serial.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='rtc-test.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='vsock.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='virt_wifi.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='failover.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='8250_of.ko' architecture='elf-arm-aarch64'>
-  </abi-corpus>
-  <abi-corpus path='snd-intel8x0.ko' architecture='elf-amd-x86_64'>
-  </abi-corpus>
-  <abi-corpus path='snd-ac97-codec.ko' architecture='elf-amd-x86_64'>
-  </abi-corpus>
 </abi-corpus-group>
 
 <!--
-     libabigail: abidw: 1.7.0-c088667b-goog
+     libabigail: abidw: 1.7.0-e43fef98-goog
      built with: clang: Android (6051079 based on r370808) clang version 10.0.1 (https://android.googlesource.com/toolchain/llvm-project b9738d6d99f614c8bf7a3e7c769659b313b88244)
 -->
