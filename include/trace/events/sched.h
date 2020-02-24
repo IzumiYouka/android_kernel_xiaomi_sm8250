@@ -996,11 +996,13 @@ TRACE_EVENT(sched_load_cfs_rq,
 		__trace_sched_path(cfs_rq, __get_dynamic_array(path),
 				   __get_dynamic_array_len(path));
 		__entry->load		= cfs_rq->avg.load_avg;
+		__entry->rbl_load 	= cfs_rq->avg.runnable_avg;
 		__entry->util		= cfs_rq->avg.util_avg;
 	),
 
-	TP_printk("cpu=%d path=%s load=%lu util=%lu",
-		  __entry->cpu, __get_str(path), __entry->load, __entry->util)
+	TP_printk("cpu=%d path=%s load=%lu rbl_load=%lu util=%lu",
+		  __entry->cpu, __get_str(path), __entry->load,
+		  __entry->rbl_load,__entry->util)
 );
 
 /*
@@ -1089,12 +1091,13 @@ TRACE_EVENT(sched_load_se,
 				      p ? TASK_COMM_LEN : sizeof("(null)"));
 		__entry->pid = p ? p->pid : -1;
 		__entry->load = se->avg.load_avg;
+		__entry->rbl_load = se->avg.runnable_avg;
 		__entry->util = se->avg.util_avg;
 	),
 
-	TP_printk("cpu=%d path=%s comm=%s pid=%d load=%lu util=%lu",
+	TP_printk("cpu=%d path=%s comm=%s pid=%d load=%lu rbl_load=%lu util=%lu",
 		  __entry->cpu, __get_str(path), __entry->comm, __entry->pid,
-		  __entry->load, __entry->util)
+		  __entry->load, __entry->rbl_load, __entry->util)
 );
 
 /*
