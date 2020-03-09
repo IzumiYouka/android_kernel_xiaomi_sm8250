@@ -27,6 +27,14 @@ EXPORT_SYMBOL_GPL(dsi_freq_head);
 
 #include "exposure_adjustment.h"
 
+#if defined(CONFIG_DRM_DYNAMIC_REFRESH_RATE)
+static struct blocking_notifier_head dsi_freq_head =
+			BLOCKING_NOTIFIER_INIT(dsi_freq_head);
+EXPORT_SYMBOL_GPL(dsi_freq_head);
+#endif
+
+#include "exposure_adjustment.h"
+
 /**
  * topology is currently defined by a set of following 3 values:
  * 1. num of layer mixers
