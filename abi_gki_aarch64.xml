@@ -40002,29 +40002,29 @@
           <var-decl name='skc_num' type-id='type-id-216' visibility='default' filepath='include/net/sock.h' line='172' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='nd_opt_hdr' size-in-bits='16' is-struct='yes' visibility='default' filepath='include/net/ndisc.h' line='102' column='1' id='type-id-4443'>
+      <class-decl name='nd_opt_hdr' size-in-bits='16' is-struct='yes' visibility='default' filepath='include/net/ndisc.h' line='103' column='1' id='type-id-4443'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='nd_opt_type' type-id='type-id-160' visibility='default' filepath='include/net/ndisc.h' line='103' column='1'/>
+          <var-decl name='nd_opt_type' type-id='type-id-160' visibility='default' filepath='include/net/ndisc.h' line='104' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='8'>
-          <var-decl name='nd_opt_len' type-id='type-id-160' visibility='default' filepath='include/net/ndisc.h' line='104' column='1'/>
+          <var-decl name='nd_opt_len' type-id='type-id-160' visibility='default' filepath='include/net/ndisc.h' line='105' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='ndisc_options' size-in-bits='1216' is-struct='yes' visibility='default' filepath='include/net/ndisc.h' line='108' column='1' id='type-id-4444'>
+      <class-decl name='ndisc_options' size-in-bits='1216' is-struct='yes' visibility='default' filepath='include/net/ndisc.h' line='109' column='1' id='type-id-4444'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='nd_opt_array' type-id='type-id-4383' visibility='default' filepath='include/net/ndisc.h' line='109' column='1'/>
+          <var-decl name='nd_opt_array' type-id='type-id-4383' visibility='default' filepath='include/net/ndisc.h' line='110' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='960'>
-          <var-decl name='nd_opts_ri' type-id='type-id-4382' visibility='default' filepath='include/net/ndisc.h' line='111' column='1'/>
+          <var-decl name='nd_opts_ri' type-id='type-id-4382' visibility='default' filepath='include/net/ndisc.h' line='112' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='1024'>
-          <var-decl name='nd_opts_ri_end' type-id='type-id-4382' visibility='default' filepath='include/net/ndisc.h' line='112' column='1'/>
+          <var-decl name='nd_opts_ri_end' type-id='type-id-4382' visibility='default' filepath='include/net/ndisc.h' line='113' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='1088'>
-          <var-decl name='nd_useropts' type-id='type-id-4382' visibility='default' filepath='include/net/ndisc.h' line='114' column='1'/>
+          <var-decl name='nd_useropts' type-id='type-id-4382' visibility='default' filepath='include/net/ndisc.h' line='115' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='1152'>
-          <var-decl name='nd_useropts_end' type-id='type-id-4382' visibility='default' filepath='include/net/ndisc.h' line='115' column='1'/>
+          <var-decl name='nd_useropts_end' type-id='type-id-4382' visibility='default' filepath='include/net/ndisc.h' line='116' column='1'/>
         </data-member>
       </class-decl>
       <class-decl name='neighbour' size-in-bits='2688' is-struct='yes' visibility='default' filepath='include/net/neighbour.h' line='135' column='1' id='type-id-4445'>
