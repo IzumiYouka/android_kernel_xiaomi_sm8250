@@ -1116,6 +1116,7 @@ struct rq {
 #endif
 
 #ifdef CONFIG_SMP
+	unsigned int		ttwu_pending;
 	struct llist_head	wake_list;
 #endif
 
