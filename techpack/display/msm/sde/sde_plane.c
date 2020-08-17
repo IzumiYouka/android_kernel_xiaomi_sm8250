@@ -3584,9 +3584,6 @@ static void _sde_plane_install_properties(struct drm_plane *plane,
 	msm_property_install_range(&psde->property_info, "mi_layer_info",
 		0x0, 0, U32_MAX, 0, PLANE_PROP_MI_LAYER_INFO);
 
-	msm_property_install_range(&psde->property_info, "mi_layer_info",
-		0x0, 0, U32_MAX, 0, PLANE_PROP_MI_LAYER_INFO);
-
 	msm_property_install_range(&psde->property_info, "zpos",
 		0x0, 0, INT_MAX, 0, PLANE_PROP_ZPOS);
 
@@ -4029,8 +4026,8 @@ static int sde_plane_atomic_set_property(struct drm_plane *plane,
 		idx = msm_property_index(&psde->property_info,
 				property);
 		if (idx == PLANE_PROP_ZPOS) {
-			if (val & FOD_PRESSED_LAYER_ZORDER) {
-				val &= ~FOD_PRESSED_LAYER_ZORDER;
+			if (val & 0x20000000u) {
+				val &= ~0x20000000u;
 				fod_val = 1;
 			}
 
