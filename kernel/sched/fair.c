@@ -12773,7 +12773,7 @@ static int newidle_balance(struct rq *this_rq, struct rq_flags *rf)
 		 * tasks on this rq or if active migration kicked in.
 		 */
 		if (pulled_task || this_rq->nr_running > 0 ||
-		    !continue_balancing)
+		    this_rq->ttwu_pending || !continue_balancing)
 			break;
 	}
 	rcu_read_unlock();
