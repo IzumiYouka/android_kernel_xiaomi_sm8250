@@ -26,6 +26,7 @@
 #define SD_PREFER_SIBLING	0x1000	/* Prefer to place tasks in a sibling domain */
 #define SD_OVERLAP		0x2000	/* sched_domains of this level overlap */
 #define SD_NUMA			0x4000	/* cross-node balancing */
+#define SD_ASYM_CPUCAPACITY_FULL 0x8000	/* Domain members have different CPU capacities spanning all unique CPU capacity values */
 
 #ifdef CONFIG_SCHED_SMT
 static inline int cpu_smt_flags(void)
