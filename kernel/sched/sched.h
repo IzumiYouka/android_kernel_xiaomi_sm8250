@@ -1088,11 +1088,6 @@ static inline u32 sched_rng(void)
 
 extern void update_rq_clock(struct rq *rq);
 
-static inline u64 __rq_clock_broken(struct rq *rq)
-{
-	return READ_ONCE(rq->clock);
-}
-
 /*
  * rq::clock_update_flags bits
  *
