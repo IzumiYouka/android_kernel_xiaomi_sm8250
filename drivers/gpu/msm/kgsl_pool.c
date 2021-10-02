@@ -97,6 +97,7 @@ _kgsl_pool_get_page(struct kgsl_page_pool *pool)
 				    NR_KERNEL_MISC_RECLAIMABLE,
 				    -(1 << pool->pool_order));
 	}
+
 	return p;
 }
 
