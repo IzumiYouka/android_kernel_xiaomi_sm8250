@@ -10,7 +10,6 @@
 #include <linux/syscalls.h>
 #include <linux/export.h>
 #include <linux/fs.h>
-#include <linux/kernel.h>
 #include <linux/mm.h>
 #include <linux/sched/signal.h>
 #include <linux/slab.h>
@@ -19,7 +18,6 @@
 #include <linux/bitops.h>
 #include <linux/spinlock.h>
 #include <linux/rcupdate.h>
-#include <linux/close_range.h>
 
 unsigned int sysctl_nr_open __read_mostly = 1024*1024;
 unsigned int sysctl_nr_open_min = BITS_PER_LONG;
@@ -43,23 +41,27 @@ static void free_fdtable_rcu(struct rcu_head *rcu)
 #define BITBIT_NR(nr)	BITS_TO_LONGS(BITS_TO_LONGS(nr))
 #define BITBIT_SIZE(nr)	(BITBIT_NR(nr) * sizeof(long))
 
-#define fdt_words(fdt) ((fdt)->max_fds / BITS_PER_LONG) // words in ->open_fds
 /*
  * Copy 'count' fd bits from the old table to the new table and clear the extra
  * space if any.  This does not copy the file pointers.  Called with the files
  * spinlock held for write.
  */
-static inline void copy_fd_bitmaps(struct fdtable *nfdt, struct fdtable *ofdt,
-			    unsigned int copy_words)
+static void copy_fd_bitmaps(struct fdtable *nfdt, struct fdtable *ofdt,
+			    unsigned int count)
 {
-	unsigned int nwords = fdt_words(nfdt);
+	unsigned int cpy, set;
 
-	bitmap_copy_and_extend(nfdt->open_fds, ofdt->open_fds,
-			copy_words * BITS_PER_LONG, nwords * BITS_PER_LONG);
-	bitmap_copy_and_extend(nfdt->close_on_exec, ofdt->close_on_exec,
-			copy_words * BITS_PER_LONG, nwords * BITS_PER_LONG);
-	bitmap_copy_and_extend(nfdt->full_fds_bits, ofdt->full_fds_bits,
-			copy_words, nwords);
+	cpy = count / BITS_PER_BYTE;
+	set = (nfdt->max_fds - count) / BITS_PER_BYTE;
+	memcpy(nfdt->open_fds, ofdt->open_fds, cpy);
+	memset((char *)nfdt->open_fds + cpy, 0, set);
+	memcpy(nfdt->close_on_exec, ofdt->close_on_exec, cpy);
+	memset((char *)nfdt->close_on_exec + cpy, 0, set);
+
+	cpy = BITBIT_SIZE(count);
+	set = BITBIT_SIZE(nfdt->max_fds) - cpy;
+	memcpy(nfdt->full_fds_bits, ofdt->full_fds_bits, cpy);
+	memset((char *)nfdt->full_fds_bits + cpy, 0, set);
 }
 
 /*
@@ -77,28 +79,12 @@ static void copy_fdtable(struct fdtable *nfdt, struct fdtable *ofdt)
 	memcpy(nfdt->fd, ofdt->fd, cpy);
 	memset((char *)nfdt->fd + cpy, 0, set);
 
-	copy_fd_bitmaps(nfdt, ofdt, fdt_words(ofdt));
+	copy_fd_bitmaps(nfdt, ofdt, ofdt->max_fds);
 }
 
-/*
- * Note how the fdtable bitmap allocations very much have to be a multiple of
- * BITS_PER_LONG. This is not only because we walk those things in chunks of
- * 'unsigned long' in some places, but simply because that is how the Linux
- * kernel bitmaps are defined to work: they are not "bits in an array of bytes",
- * they are very much "bits in an array of unsigned long".
- *
- * The ALIGN(nr, BITS_PER_LONG) here is for clarity: since we just multiplied
- * by that "1024/sizeof(ptr)" before, we already know there are sufficient
- * clear low bits. Clang seems to realize that, gcc ends up being confused.
- *
- * On a 128-bit machine, the ALIGN() would actually matter. In the meantime,
- * let's consider it documentation (and maybe a test-case for gcc to improve
- * its code generation ;)
- */
-static struct fdtable *alloc_fdtable(unsigned int slots_wanted)
+static struct fdtable * alloc_fdtable(unsigned int nr)
 {
 	struct fdtable *fdt;
-	unsigned int nr;
 	void *data;
 
 	/*
@@ -106,47 +92,21 @@ static struct fdtable *alloc_fdtable(unsigned int slots_wanted)
 	 * Allocation steps are keyed to the size of the fdarray, since it
 	 * grows far faster than any of the other dynamic data. We try to fit
 	 * the fdarray into comfortable page-tuned chunks: starting at 1024B
-	 * and growing in powers of two from there on.  Since we called only
-	 * with slots_wanted > BITS_PER_LONG (embedded instance in files->fdtab
-	 * already gives BITS_PER_LONG slots), the above boils down to
-	 * 1.  use the smallest power of two large enough to give us that many
-	 * slots.
-	 * 2.  on 32bit skip 64 and 128 - the minimal capacity we want there is
-	 * 256 slots (i.e. 1Kb fd array).
-	 * 3.  on 64bit don't skip anything, 1Kb fd array means 128 slots there
-	 * and we are never going to be asked for 64 or less.
+	 * and growing in powers of two from there on.
 	 */
-	if (IS_ENABLED(CONFIG_32BIT) && slots_wanted < 256)
-		nr = 256;
-	else
-		nr = roundup_pow_of_two(slots_wanted);
+	nr /= (1024 / sizeof(struct file *));
+	nr = roundup_pow_of_two(nr + 1);
+	nr *= (1024 / sizeof(struct file *));
 	/*
 	 * Note that this can drive nr *below* what we had passed if sysctl_nr_open
-	 * had been set lower between the check in expand_files() and here.
+	 * had been set lower between the check in expand_files() and here.  Deal
+	 * with that in caller, it's cheaper that way.
 	 *
 	 * We make sure that nr remains a multiple of BITS_PER_LONG - otherwise
 	 * bitmaps handling below becomes unpleasant, to put it mildly...
 	 */
-	if (unlikely(nr > sysctl_nr_open)) {
-		nr = round_down(sysctl_nr_open, BITS_PER_LONG);
-		if (nr < slots_wanted)
-			return ERR_PTR(-EMFILE);
-	}
-
-	/*
-	 * Check if the allocation size would exceed INT_MAX. kvmalloc_array()
-	 * and kvmalloc() will warn if the allocation size is greater than
-	 * INT_MAX, as filp_cachep objects are not __GFP_NOWARN.
-	 *
-	 * This can happen when sysctl_nr_open is set to a very high value and
-	 * a process tries to use a file descriptor near that limit. For example,
-	 * if sysctl_nr_open is set to 1073741816 (0x3ffffff8) - which is what
-	 * systemd typically sets it to - then trying to use a file descriptor
-	 * close to that value will require allocating a file descriptor table
-	 * that exceeds 8GB in size.
-	 */
-	if (unlikely(nr > INT_MAX / sizeof(struct file *)))
-		return ERR_PTR(-EMFILE);
+	if (unlikely(nr > sysctl_nr_open))
+		nr = ((sysctl_nr_open - 1) | (BITS_PER_LONG - 1)) + 1;
 
 	fdt = kmalloc(sizeof(struct fdtable), GFP_KERNEL_ACCOUNT);
 	if (!fdt)
@@ -175,7 +135,7 @@ out_arr:
 out_fdt:
 	kfree(fdt);
 out:
-	return ERR_PTR(-ENOMEM);
+	return NULL;
 }
 
 /*
@@ -192,7 +152,7 @@ static int expand_fdtable(struct files_struct *files, unsigned int nr)
 	struct fdtable *new_fdt, *cur_fdt;
 
 	spin_unlock(&files->file_lock);
-	new_fdt = alloc_fdtable(nr + 1);
+	new_fdt = alloc_fdtable(nr);
 
 	/* make sure all __fd_install() have seen resize_in_progress
 	 * or have finished their rcu_read_lock_sched() section.
@@ -201,8 +161,16 @@ static int expand_fdtable(struct files_struct *files, unsigned int nr)
 		synchronize_sched();
 
 	spin_lock(&files->file_lock);
-	if (IS_ERR(new_fdt))
-		return PTR_ERR(new_fdt);
+	if (!new_fdt)
+		return -ENOMEM;
+	/*
+	 * extremely unlikely race - sysctl_nr_open decreased between the check in
+	 * caller and alloc_fdtable().  Cheaper to catch it here...
+	 */
+	if (unlikely(new_fdt->max_fds <= nr)) {
+		__free_fdtable(new_fdt);
+		return -EMFILE;
+	}
 	cur_fdt = files_fdtable(files);
 	BUG_ON(nr < cur_fdt->max_fds);
 	copy_fdtable(new_fdt, cur_fdt);
@@ -282,45 +250,36 @@ static inline void __clear_open_fd(unsigned int fd, struct fdtable *fdt)
 	__clear_bit(fd / BITS_PER_LONG, fdt->full_fds_bits);
 }
 
-/*
- * Note that a sane fdtable size always has to be a multiple of
- * BITS_PER_LONG, since we have bitmaps that are sized by this.
- *
- * punch_hole is optional - when close_range() is asked to unshare
- * and close, we don't need to copy descriptors in that range, so
- * a smaller cloned descriptor table might suffice if the last
- * currently opened descriptor falls into that range.
- */
-static unsigned int sane_fdtable_size(struct fdtable *fdt, struct fd_range *punch_hole)
+static unsigned int count_open_files(struct fdtable *fdt)
 {
-	unsigned int last = find_last_bit(fdt->open_fds, fdt->max_fds);
+	unsigned int size = fdt->max_fds;
+	unsigned int i;
 
-	if (last == fdt->max_fds)
-		return NR_OPEN_DEFAULT;
-	if (punch_hole && punch_hole->to >= last && punch_hole->from <= last) {
-		last = find_last_bit(fdt->open_fds, punch_hole->from);
-		if (last == punch_hole->from)
-			return NR_OPEN_DEFAULT;
+	/* Find the last open fd */
+	for (i = size / BITS_PER_LONG; i > 0; ) {
+		if (fdt->open_fds[--i])
+			break;
 	}
-	return ALIGN(last + 1, BITS_PER_LONG);
+	i = (i + 1) * BITS_PER_LONG;
+	return i;
 }
 
 /*
- * Allocate a new descriptor table and copy contents from the passed in
- * instance.  Returns a pointer to cloned table on success, ERR_PTR()
- * on failure.  For 'punch_hole' see sane_fdtable_size().
+ * Allocate a new files structure and copy contents from the
+ * passed in files structure.
+ * errorp will be valid only when the returned files_struct is NULL.
  */
-struct files_struct *dup_fd(struct files_struct *oldf, struct fd_range *punch_hole)
+struct files_struct *dup_fd(struct files_struct *oldf, int *errorp)
 {
 	struct files_struct *newf;
 	struct file **old_fds, **new_fds;
 	unsigned int open_files, i;
 	struct fdtable *old_fdt, *new_fdt;
-	int error;
 
+	*errorp = -ENOMEM;
 	newf = kmem_cache_alloc(files_cachep, GFP_KERNEL);
 	if (!newf)
-		return ERR_PTR(-ENOMEM);
+		goto out;
 
 	atomic_set(&newf->count, 1);
 
@@ -337,7 +296,7 @@ struct files_struct *dup_fd(struct files_struct *oldf, struct fd_range *punch_ho
 
 	spin_lock(&oldf->file_lock);
 	old_fdt = files_fdtable(oldf);
-	open_files = sane_fdtable_size(old_fdt, punch_hole);
+	open_files = count_open_files(old_fdt);
 
 	/*
 	 * Check whether we need to allocate a larger fd array and fd set.
@@ -348,9 +307,16 @@ struct files_struct *dup_fd(struct files_struct *oldf, struct fd_range *punch_ho
 		if (new_fdt != &newf->fdtab)
 			__free_fdtable(new_fdt);
 
-		new_fdt = alloc_fdtable(open_files);
-		if (IS_ERR(new_fdt)) {
-			error = PTR_ERR(new_fdt);
+		new_fdt = alloc_fdtable(open_files - 1);
+		if (!new_fdt) {
+			*errorp = -ENOMEM;
+			goto out_release;
+		}
+
+		/* beyond sysctl_nr_open; nothing to do */
+		if (unlikely(new_fdt->max_fds < open_files)) {
+			__free_fdtable(new_fdt);
+			*errorp = -EMFILE;
 			goto out_release;
 		}
 
@@ -361,10 +327,10 @@ struct files_struct *dup_fd(struct files_struct *oldf, struct fd_range *punch_ho
 		 */
 		spin_lock(&oldf->file_lock);
 		old_fdt = files_fdtable(oldf);
-		open_files = sane_fdtable_size(old_fdt, punch_hole);
+		open_files = count_open_files(old_fdt);
 	}
 
-	copy_fd_bitmaps(new_fdt, old_fdt, open_files / BITS_PER_LONG);
+	copy_fd_bitmaps(new_fdt, old_fdt, open_files);
 
 	old_fds = old_fdt->fd;
 	new_fds = new_fdt->fd;
@@ -395,7 +361,8 @@ struct files_struct *dup_fd(struct files_struct *oldf, struct fd_range *punch_ho
 
 out_release:
 	kmem_cache_free(files_cachep, newf);
-	return ERR_PTR(error);
+out:
+	return NULL;
 }
 
 static struct fdtable *close_files(struct files_struct * files)
@@ -495,12 +462,12 @@ struct files_struct init_files = {
 
 static unsigned int find_next_fd(struct fdtable *fdt, unsigned int start)
 {
-	unsigned int maxfd = fdt->max_fds; /* always multiple of BITS_PER_LONG */
+	unsigned int maxfd = fdt->max_fds;
 	unsigned int maxbit = maxfd / BITS_PER_LONG;
 	unsigned int bitbit = start / BITS_PER_LONG;
 
 	bitbit = find_next_zero_bit(fdt->full_fds_bits, maxbit, bitbit) * BITS_PER_LONG;
-	if (bitbit >= maxfd)
+	if (bitbit > maxfd)
 		return maxfd;
 	if (bitbit > start)
 		start = bitbit;
@@ -654,161 +621,61 @@ void fd_install(unsigned int fd, struct file *file)
 
 EXPORT_SYMBOL(fd_install);
 
-/**
- * pick_file - return file associatd with fd
- * @files: file struct to retrieve file from
- * @fd: file descriptor to retrieve file for
- *
- * If this functions returns an EINVAL error pointer the fd was beyond the
- * current maximum number of file descriptors for that fdtable.
- *
- * Returns: The file associated with @fd, on error returns an error pointer.
- */
-static struct file *pick_file(struct files_struct *files, unsigned fd)
-{
-	struct file *file;
-	struct fdtable *fdt;
-
-	spin_lock(&files->file_lock);
-	fdt = files_fdtable(files);
-	if (fd >= fdt->max_fds) {
-		file = ERR_PTR(-EINVAL);
-		goto out_unlock;
-	}
-	fd = array_index_nospec(fd, fdt->max_fds);
-	file = fdt->fd[fd];
-	if (!file) {
-		file = ERR_PTR(-EBADF);
-		goto out_unlock;
-	}
-	rcu_assign_pointer(fdt->fd[fd], NULL);
-	__put_unused_fd(files, fd);
-
-out_unlock:
-	spin_unlock(&files->file_lock);
-	return file;
-}
-
 /*
  * The same warnings as for __alloc_fd()/__fd_install() apply here...
  */
 int __close_fd(struct files_struct *files, unsigned fd)
 {
 	struct file *file;
+	struct fdtable *fdt;
 
-	file = pick_file(files, fd);
-	if (IS_ERR(file))
-		return -EBADF;
-
+	spin_lock(&files->file_lock);
+	fdt = files_fdtable(files);
+	if (fd >= fdt->max_fds)
+		goto out_unlock;
+	file = fdt->fd[fd];
+	if (!file)
+		goto out_unlock;
+	rcu_assign_pointer(fdt->fd[fd], NULL);
+	__put_unused_fd(files, fd);
+	spin_unlock(&files->file_lock);
 	return filp_close(file, files);
+
+out_unlock:
+	spin_unlock(&files->file_lock);
+	return -EBADF;
 }
 EXPORT_SYMBOL(__close_fd); /* for ksys_close() */
 
-/**
- * last_fd - return last valid index into fd table
- * @cur_fds: files struct
- *
- * Context: Either rcu read lock or files_lock must be held.
- *
- * Returns: Last valid index into fdtable.
+/*
+ * variant of __close_fd that gets a ref on the file for later fput.
+ * The caller must ensure that filp_close() called on the file, and then
+ * an fput().
  */
-static inline unsigned last_fd(struct fdtable *fdt)
+int __close_fd_get_file(unsigned int fd, struct file **res)
 {
-	return fdt->max_fds - 1;
-}
-
-static inline void __range_cloexec(struct files_struct *cur_fds,
-				   unsigned int fd, unsigned int max_fd)
-{
+	struct files_struct *files = current->files;
+	struct file *file;
 	struct fdtable *fdt;
 
-	/* make sure we're using the correct maximum value */
-	spin_lock(&cur_fds->file_lock);
-	fdt = files_fdtable(cur_fds);
-	max_fd = min(last_fd(fdt), max_fd);
-	if (fd <= max_fd)
-		bitmap_set(fdt->close_on_exec, fd, max_fd - fd + 1);
-	spin_unlock(&cur_fds->file_lock);
-}
-
-static inline void __range_close(struct files_struct *cur_fds, unsigned int fd,
-				 unsigned int max_fd)
-{
-	while (fd <= max_fd) {
-		struct file *file;
-
-		file = pick_file(cur_fds, fd++);
-		if (!IS_ERR(file)) {
-			/* found a valid file to close */
-			filp_close(file, cur_fds);
-			cond_resched();
-			continue;
-		}
-
-		/* beyond the last fd in that table */
-		if (PTR_ERR(file) == -EINVAL)
-			return;
-	}
-}
-
-/**
- * __close_range() - Close all file descriptors in a given range.
- *
- * @fd:     starting file descriptor to close
- * @max_fd: last file descriptor to close
- *
- * This closes a range of file descriptors. All file descriptors
- * from @fd up to and including @max_fd are closed.
- */
-int __close_range(unsigned fd, unsigned max_fd, unsigned int flags)
-{
-	struct task_struct *me = current;
-	struct files_struct *cur_fds = me->files, *fds = NULL;
-
-	if (flags & ~(CLOSE_RANGE_UNSHARE | CLOSE_RANGE_CLOEXEC))
-		return -EINVAL;
-
-	if (fd > max_fd)
-		return -EINVAL;
-
-	if ((flags & CLOSE_RANGE_UNSHARE) && atomic_read(&cur_fds->count) > 1) {
-		struct fd_range range = {fd, max_fd}, *punch_hole = &range;
-
-		/*
-		 * If the caller requested all fds to be made cloexec we always
-		 * copy all of the file descriptors since they still want to
-		 * use them.
-		 */
-		if (flags & CLOSE_RANGE_CLOEXEC)
-			punch_hole = NULL;
-
-		fds = dup_fd(cur_fds, punch_hole);
-		if (IS_ERR(fds))
-			return PTR_ERR(fds);
-		/*
-		 * We used to share our file descriptor table, and have now
-		 * created a private one, make sure we're using it below.
-		 */
-		swap(cur_fds, fds);
-	}
-
-	if (flags & CLOSE_RANGE_CLOEXEC)
-		__range_cloexec(cur_fds, fd, max_fd);
-	else
-		__range_close(cur_fds, fd, max_fd);
-
-	if (fds) {
-		/*
-		 * We're done closing the files we were supposed to. Time to install
-		 * the new file descriptor table and drop the old one.
-		 */
-		task_lock(me);
-		me->files = cur_fds;
-		task_unlock(me);
-		put_files_struct(fds);
-	}
-
+	spin_lock(&files->file_lock);
+	fdt = files_fdtable(files);
+	if (fd >= fdt->max_fds)
+		goto out_unlock;
+	file = fdt->fd[fd];
+	if (!file)
+		goto out_unlock;
+	rcu_assign_pointer(fdt->fd[fd], NULL);
+	__put_unused_fd(files, fd);
+	spin_unlock(&files->file_lock);
+	get_file(file);
+	*res = file;
 	return 0;
+
+out_unlock:
+	spin_unlock(&files->file_lock);
+	*res = NULL;
+	return -ENOENT;
 }
 
 void do_close_on_exec(struct files_struct *files)
@@ -903,9 +770,9 @@ static inline struct file *__fget_files_rcu(struct files_struct *files,
 }
 
 
-static struct file *__fget_files(struct files_struct *files, unsigned int fd,
-				 fmode_t mask, unsigned int refs)
+static struct file *__fget(unsigned int fd, fmode_t mask, unsigned int refs)
 {
+	struct files_struct *files = current->files;
 	struct file *file;
 
 	rcu_read_lock();
@@ -913,12 +780,6 @@ static struct file *__fget_files(struct files_struct *files, unsigned int fd,
 	rcu_read_unlock();
 
 	return file;
-}
-
-static inline struct file *__fget(unsigned int fd, fmode_t mask,
-				  unsigned int refs)
-{
-	return __fget_files(current->files, fd, mask, refs);
 }
 
 struct file *fget_many(unsigned int fd, unsigned int refs)
@@ -937,39 +798,6 @@ struct file *fget_raw(unsigned int fd)
 	return __fget(fd, 0, 1);
 }
 EXPORT_SYMBOL(fget_raw);
-
-struct file *fget_task(struct task_struct *task, unsigned int fd)
-{
-	struct file *file = NULL;
-
-	task_lock(task);
-	if (task->files)
-		file = __fget_files(task->files, fd, 0, 1);
-	task_unlock(task);
-
-	return file;
-}
-
-struct file *task_lookup_next_fd_rcu(struct task_struct *task, unsigned int *ret_fd)
-{
-	/* Must be called with rcu_read_lock held */
-	struct files_struct *files;
-	unsigned int fd = *ret_fd;
-	struct file *file = NULL;
-
-	task_lock(task);
-	files = task->files;
-	if (files) {
-		for (; fd < files_fdtable(files)->max_fds; fd++) {
-			file = files_lookup_fd_rcu(files, fd);
-			if (file)
-				break;
-		}
-	}
-	task_unlock(task);
-	*ret_fd = fd;
-	return file;
-}
 
 /*
  * Lightweight file lookup - no refcnt increment if fd table isn't shared.
@@ -993,7 +821,7 @@ static unsigned long __fget_light(unsigned int fd, fmode_t mask)
 	struct file *file;
 
 	if (atomic_read(&files->count) == 1) {
-		file = files_lookup_fd_raw(files, fd);
+		file = __fcheck_files(files, fd);
 		if (!file || unlikely(file->f_mode & mask))
 			return 0;
 		return (unsigned long)file;
@@ -1087,7 +915,6 @@ __releases(&files->file_lock)
 	 * tables and this condition does not arise without those.
 	 */
 	fdt = files_fdtable(files);
-	fd = array_index_nospec(fd, fdt->max_fds);
 	tofree = fdt->fd[fd];
 	if (!tofree && fd_is_open(fd, fdt))
 		goto Ebusy;
@@ -1178,7 +1005,7 @@ SYSCALL_DEFINE2(dup2, unsigned int, oldfd, unsigned int, newfd)
 		int retval = oldfd;
 
 		rcu_read_lock();
-		if (!files_lookup_fd_rcu(files, oldfd))
+		if (!fcheck_files(files, oldfd))
 			retval = -EBADF;
 		rcu_read_unlock();
 		return retval;
