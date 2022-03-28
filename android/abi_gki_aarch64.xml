@@ -102971,6 +102971,14 @@
           <var-decl name='_sifields' type-id='891b5b8b' visibility='default' filepath='include/uapi/asm-generic/siginfo.h' line='132' column='1'/>
         </data-member>
       </class-decl>
+      <union-decl name='rcu_special' size-in-bits='32' visibility='default' filepath='include/linux/sched.h' line='624' column='1' id='a324790e'>
+        <data-member access='public'>
+          <var-decl name='b' type-id='6a7976cc' visibility='default' filepath='include/linux/sched.h' line='632' column='1'/>
+        </data-member>
+        <data-member access='public'>
+          <var-decl name='s' type-id='19c2251e' visibility='default' filepath='include/linux/sched.h' line='633' column='1'/>
+        </data-member>
+      </union-decl>
       <union-decl name='__anonymous_union__4' size-in-bits='896' is-anonymous='yes' visibility='default' filepath='include/uapi/asm-generic/siginfo.h' line='53' column='1' id='891b5b8b'>
         <data-member access='public'>
           <var-decl name='_pad' type-id='47394ee0' visibility='default' filepath='include/uapi/asm-generic/siginfo.h' line='54' column='1'/>
@@ -103325,14 +103333,6 @@
           <var-decl name='hbp_watch' type-id='18b1b6ec' visibility='default' filepath='arch/arm64/include/asm/processor.h' line='98' column='1'/>
         </data-member>
       </class-decl>
-      <union-decl name='rcu_special' size-in-bits='32' visibility='default' filepath='include/linux/sched.h' line='624' column='1' id='a324790e'>
-        <data-member access='public'>
-          <var-decl name='b' type-id='6a7976cc' visibility='default' filepath='include/linux/sched.h' line='632' column='1'/>
-        </data-member>
-        <data-member access='public'>
-          <var-decl name='s' type-id='19c2251e' visibility='default' filepath='include/linux/sched.h' line='633' column='1'/>
-        </data-member>
-      </union-decl>
       <pointer-type-def type-id='82d9d5d4' size-in-bits='64' id='a9f319d2'/>
       <pointer-type-def type-id='c0badb3b' size-in-bits='64' id='ef4fae1b'/>
       <pointer-type-def type-id='096280be' size-in-bits='64' id='ee802604'/>
@@ -119205,570 +119205,570 @@
       <array-type-def dimensions='1' type-id='f9b06939' size-in-bits='248' id='23e37060'>
         <subrange length='31' type-id='7ff19f0f' id='ae5e1d19'/>
       </array-type-def>
-      <class-decl name='hci_dev' size-in-bits='40128' is-struct='yes' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='205' column='1' id='c4e92edf'>
+      <class-decl name='hci_dev' size-in-bits='40128' is-struct='yes' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='208' column='1' id='c4e92edf'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='list' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='206' column='1'/>
+          <var-decl name='list' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='209' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='128'>
-          <var-decl name='lock' type-id='925167dc' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='207' column='1'/>
+          <var-decl name='lock' type-id='925167dc' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='210' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='384'>
-          <var-decl name='name' type-id='8e100159' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='209' column='1'/>
+          <var-decl name='name' type-id='8e100159' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='212' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='448'>
-          <var-decl name='flags' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='210' column='1'/>
+          <var-decl name='flags' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='213' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='512'>
-          <var-decl name='id' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='211' column='1'/>
+          <var-decl name='id' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='214' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='528'>
-          <var-decl name='bus' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='212' column='1'/>
+          <var-decl name='bus' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='215' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='536'>
-          <var-decl name='dev_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='213' column='1'/>
+          <var-decl name='dev_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='216' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='544'>
-          <var-decl name='bdaddr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='214' column='1'/>
+          <var-decl name='bdaddr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='217' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='592'>
-          <var-decl name='setup_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='215' column='1'/>
+          <var-decl name='setup_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='218' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='640'>
-          <var-decl name='public_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='216' column='1'/>
+          <var-decl name='public_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='219' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='688'>
-          <var-decl name='random_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='217' column='1'/>
+          <var-decl name='random_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='220' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='736'>
-          <var-decl name='static_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='218' column='1'/>
+          <var-decl name='static_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='221' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='784'>
-          <var-decl name='adv_addr_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='219' column='1'/>
+          <var-decl name='adv_addr_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='222' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='792'>
-          <var-decl name='dev_name' type-id='51d2bffa' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='220' column='1'/>
+          <var-decl name='dev_name' type-id='51d2bffa' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='223' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='2776'>
-          <var-decl name='short_name' type-id='979253d9' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='221' column='1'/>
+          <var-decl name='short_name' type-id='979253d9' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='224' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='2856'>
-          <var-decl name='eir' type-id='51e647b2' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='222' column='1'/>
+          <var-decl name='eir' type-id='51e647b2' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='225' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4784'>
-          <var-decl name='appearance' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='223' column='1'/>
+          <var-decl name='appearance' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='226' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4800'>
-          <var-decl name='dev_class' type-id='c216126b' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='224' column='1'/>
+          <var-decl name='dev_class' type-id='c216126b' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='227' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4824'>
-          <var-decl name='major_class' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='225' column='1'/>
+          <var-decl name='major_class' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='228' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4832'>
-          <var-decl name='minor_class' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='226' column='1'/>
+          <var-decl name='minor_class' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='229' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4840'>
-          <var-decl name='max_page' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='227' column='1'/>
+          <var-decl name='max_page' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='230' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4848'>
-          <var-decl name='features' type-id='7f89db3f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='228' column='1'/>
+          <var-decl name='features' type-id='7f89db3f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='231' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5040'>
-          <var-decl name='le_features' type-id='0209ab38' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='229' column='1'/>
+          <var-decl name='le_features' type-id='0209ab38' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='232' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5104'>
-          <var-decl name='le_white_list_size' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='230' column='1'/>
+          <var-decl name='le_white_list_size' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='233' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5112'>
-          <var-decl name='le_resolv_list_size' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='231' column='1'/>
+          <var-decl name='le_resolv_list_size' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='234' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5120'>
-          <var-decl name='le_num_of_adv_sets' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='232' column='1'/>
+          <var-decl name='le_num_of_adv_sets' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='235' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5128'>
-          <var-decl name='le_states' type-id='0209ab38' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='233' column='1'/>
+          <var-decl name='le_states' type-id='0209ab38' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='236' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5192'>
-          <var-decl name='commands' type-id='73b95420' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='234' column='1'/>
+          <var-decl name='commands' type-id='73b95420' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='237' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5704'>
-          <var-decl name='hci_ver' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='235' column='1'/>
+          <var-decl name='hci_ver' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='238' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5712'>
-          <var-decl name='hci_rev' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='236' column='1'/>
+          <var-decl name='hci_rev' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='239' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5728'>
-          <var-decl name='lmp_ver' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='237' column='1'/>
+          <var-decl name='lmp_ver' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='240' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5744'>
-          <var-decl name='manufacturer' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='238' column='1'/>
+          <var-decl name='manufacturer' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='241' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5760'>
-          <var-decl name='lmp_subver' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='239' column='1'/>
+          <var-decl name='lmp_subver' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='242' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5776'>
-          <var-decl name='voice_setting' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='240' column='1'/>
+          <var-decl name='voice_setting' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='243' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5792'>
-          <var-decl name='num_iac' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='241' column='1'/>
+          <var-decl name='num_iac' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='244' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5800'>
-          <var-decl name='stored_max_keys' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='242' column='1'/>
+          <var-decl name='stored_max_keys' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='245' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5808'>
-          <var-decl name='stored_num_keys' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='243' column='1'/>
+          <var-decl name='stored_num_keys' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='246' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5816'>
-          <var-decl name='io_capability' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='244' column='1'/>
+          <var-decl name='io_capability' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='247' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5824'>
-          <var-decl name='inq_tx_power' type-id='8af57d41' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='245' column='1'/>
+          <var-decl name='inq_tx_power' type-id='8af57d41' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='248' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5840'>
-          <var-decl name='page_scan_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='246' column='1'/>
+          <var-decl name='page_scan_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='249' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5856'>
-          <var-decl name='page_scan_window' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='247' column='1'/>
+          <var-decl name='page_scan_window' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='250' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5872'>
-          <var-decl name='page_scan_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='248' column='1'/>
+          <var-decl name='page_scan_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='251' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5880'>
-          <var-decl name='le_adv_channel_map' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='249' column='1'/>
+          <var-decl name='le_adv_channel_map' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='252' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5888'>
-          <var-decl name='le_adv_min_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='250' column='1'/>
+          <var-decl name='le_adv_min_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='253' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5904'>
-          <var-decl name='le_adv_max_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='251' column='1'/>
+          <var-decl name='le_adv_max_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='254' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5920'>
-          <var-decl name='le_scan_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='252' column='1'/>
+          <var-decl name='le_scan_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='255' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5936'>
-          <var-decl name='le_scan_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='253' column='1'/>
+          <var-decl name='le_scan_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='256' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5952'>
-          <var-decl name='le_scan_window' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='254' column='1'/>
+          <var-decl name='le_scan_window' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='257' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5968'>
-          <var-decl name='le_conn_min_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='255' column='1'/>
+          <var-decl name='le_conn_min_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='258' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5984'>
-          <var-decl name='le_conn_max_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='256' column='1'/>
+          <var-decl name='le_conn_max_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='259' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6000'>
-          <var-decl name='le_conn_latency' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='257' column='1'/>
+          <var-decl name='le_conn_latency' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='260' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6016'>
-          <var-decl name='le_supv_timeout' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='258' column='1'/>
+          <var-decl name='le_supv_timeout' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='261' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6032'>
-          <var-decl name='le_def_tx_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='259' column='1'/>
+          <var-decl name='le_def_tx_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='262' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6048'>
-          <var-decl name='le_def_tx_time' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='260' column='1'/>
+          <var-decl name='le_def_tx_time' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='263' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6064'>
-          <var-decl name='le_max_tx_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='261' column='1'/>
+          <var-decl name='le_max_tx_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='264' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6080'>
-          <var-decl name='le_max_tx_time' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='262' column='1'/>
+          <var-decl name='le_max_tx_time' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='265' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6096'>
-          <var-decl name='le_max_rx_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='263' column='1'/>
+          <var-decl name='le_max_rx_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='266' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6112'>
-          <var-decl name='le_max_rx_time' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='264' column='1'/>
+          <var-decl name='le_max_rx_time' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='267' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6128'>
-          <var-decl name='le_max_key_size' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='265' column='1'/>
+          <var-decl name='le_max_key_size' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='268' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6136'>
-          <var-decl name='le_min_key_size' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='266' column='1'/>
+          <var-decl name='le_min_key_size' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='269' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6144'>
-          <var-decl name='discov_interleaved_timeout' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='267' column='1'/>
+          <var-decl name='discov_interleaved_timeout' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='270' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6160'>
-          <var-decl name='conn_info_min_age' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='268' column='1'/>
+          <var-decl name='conn_info_min_age' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='271' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6176'>
-          <var-decl name='conn_info_max_age' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='269' column='1'/>
+          <var-decl name='conn_info_max_age' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='272' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6192'>
-          <var-decl name='ssp_debug_mode' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='270' column='1'/>
+          <var-decl name='ssp_debug_mode' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='273' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6200'>
-          <var-decl name='hw_error_code' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='271' column='1'/>
+          <var-decl name='hw_error_code' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='274' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6208'>
-          <var-decl name='clock' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='272' column='1'/>
+          <var-decl name='clock' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='275' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6240'>
-          <var-decl name='devid_source' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='274' column='1'/>
+          <var-decl name='devid_source' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='277' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6256'>
-          <var-decl name='devid_vendor' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='275' column='1'/>
+          <var-decl name='devid_vendor' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='278' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6272'>
-          <var-decl name='devid_product' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='276' column='1'/>
+          <var-decl name='devid_product' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='279' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6288'>
-          <var-decl name='devid_version' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='277' column='1'/>
+          <var-decl name='devid_version' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='280' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6304'>
-          <var-decl name='pkt_type' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='279' column='1'/>
+          <var-decl name='pkt_type' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='282' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6320'>
-          <var-decl name='esco_type' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='280' column='1'/>
+          <var-decl name='esco_type' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='283' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6336'>
-          <var-decl name='link_policy' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='281' column='1'/>
+          <var-decl name='link_policy' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='284' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6352'>
-          <var-decl name='link_mode' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='282' column='1'/>
+          <var-decl name='link_mode' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='285' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6368'>
-          <var-decl name='idle_timeout' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='284' column='1'/>
+          <var-decl name='idle_timeout' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='287' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6400'>
-          <var-decl name='sniff_min_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='285' column='1'/>
+          <var-decl name='sniff_min_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='288' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6416'>
-          <var-decl name='sniff_max_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='286' column='1'/>
+          <var-decl name='sniff_max_interval' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='289' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6432'>
-          <var-decl name='amp_status' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='288' column='1'/>
+          <var-decl name='amp_status' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='291' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6464'>
-          <var-decl name='amp_total_bw' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='289' column='1'/>
+          <var-decl name='amp_total_bw' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='292' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6496'>
-          <var-decl name='amp_max_bw' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='290' column='1'/>
+          <var-decl name='amp_max_bw' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='293' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6528'>
-          <var-decl name='amp_min_latency' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='291' column='1'/>
+          <var-decl name='amp_min_latency' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='294' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6560'>
-          <var-decl name='amp_max_pdu' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='292' column='1'/>
+          <var-decl name='amp_max_pdu' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='295' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6592'>
-          <var-decl name='amp_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='293' column='1'/>
+          <var-decl name='amp_type' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='296' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6608'>
-          <var-decl name='amp_pal_cap' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='294' column='1'/>
+          <var-decl name='amp_pal_cap' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='297' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6624'>
-          <var-decl name='amp_assoc_size' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='295' column='1'/>
+          <var-decl name='amp_assoc_size' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='298' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6656'>
-          <var-decl name='amp_max_flush_to' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='296' column='1'/>
+          <var-decl name='amp_max_flush_to' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='299' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6688'>
-          <var-decl name='amp_be_flush_to' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='297' column='1'/>
+          <var-decl name='amp_be_flush_to' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='300' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='6720'>
-          <var-decl name='loc_assoc' type-id='36e902a9' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='299' column='1'/>
+          <var-decl name='loc_assoc' type-id='36e902a9' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='302' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12160'>
-          <var-decl name='flow_ctl_mode' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='301' column='1'/>
+          <var-decl name='flow_ctl_mode' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='304' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12192'>
-          <var-decl name='auto_accept_delay' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='303' column='1'/>
+          <var-decl name='auto_accept_delay' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='306' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12224'>
-          <var-decl name='quirks' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='305' column='1'/>
+          <var-decl name='quirks' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='308' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12288'>
-          <var-decl name='cmd_cnt' type-id='49178f86' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='307' column='1'/>
+          <var-decl name='cmd_cnt' type-id='49178f86' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='310' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12320'>
-          <var-decl name='acl_cnt' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='308' column='1'/>
+          <var-decl name='acl_cnt' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='311' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12352'>
-          <var-decl name='sco_cnt' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='309' column='1'/>
+          <var-decl name='sco_cnt' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='312' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12384'>
-          <var-decl name='le_cnt' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='310' column='1'/>
+          <var-decl name='le_cnt' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='313' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12416'>
-          <var-decl name='acl_mtu' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='312' column='1'/>
+          <var-decl name='acl_mtu' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='315' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12448'>
-          <var-decl name='sco_mtu' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='313' column='1'/>
+          <var-decl name='sco_mtu' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='316' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12480'>
-          <var-decl name='le_mtu' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='314' column='1'/>
+          <var-decl name='le_mtu' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='317' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12512'>
-          <var-decl name='acl_pkts' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='315' column='1'/>
+          <var-decl name='acl_pkts' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='318' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12544'>
-          <var-decl name='sco_pkts' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='316' column='1'/>
+          <var-decl name='sco_pkts' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='319' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12576'>
-          <var-decl name='le_pkts' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='317' column='1'/>
+          <var-decl name='le_pkts' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='320' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12608'>
-          <var-decl name='block_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='319' column='1'/>
+          <var-decl name='block_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='322' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12624'>
-          <var-decl name='block_mtu' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='320' column='1'/>
+          <var-decl name='block_mtu' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='323' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12640'>
-          <var-decl name='num_blocks' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='321' column='1'/>
+          <var-decl name='num_blocks' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='324' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12656'>
-          <var-decl name='block_cnt' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='322' column='1'/>
+          <var-decl name='block_cnt' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='325' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12672'>
-          <var-decl name='acl_last_tx' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='324' column='1'/>
+          <var-decl name='acl_last_tx' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='327' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12736'>
-          <var-decl name='sco_last_tx' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='325' column='1'/>
+          <var-decl name='sco_last_tx' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='328' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12800'>
-          <var-decl name='le_last_tx' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='326' column='1'/>
+          <var-decl name='le_last_tx' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='329' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12864'>
-          <var-decl name='le_tx_def_phys' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='328' column='1'/>
+          <var-decl name='le_tx_def_phys' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='331' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12872'>
-          <var-decl name='le_rx_def_phys' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='329' column='1'/>
+          <var-decl name='le_rx_def_phys' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='332' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12928'>
-          <var-decl name='workqueue' type-id='242e3d19' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='331' column='1'/>
+          <var-decl name='workqueue' type-id='242e3d19' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='334' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='12992'>
-          <var-decl name='req_workqueue' type-id='242e3d19' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='332' column='1'/>
+          <var-decl name='req_workqueue' type-id='242e3d19' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='335' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='13056'>
-          <var-decl name='power_on' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='334' column='1'/>
+          <var-decl name='power_on' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='337' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='13440'>
-          <var-decl name='power_off' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='335' column='1'/>
+          <var-decl name='power_off' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='338' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='14528'>
-          <var-decl name='error_reset' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='336' column='1'/>
+          <var-decl name='error_reset' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='339' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='14912'>
-          <var-decl name='discov_timeout' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='338' column='1'/>
+          <var-decl name='discov_timeout' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='341' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='14976'>
-          <var-decl name='discov_off' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='339' column='1'/>
+          <var-decl name='discov_off' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='342' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='16064'>
-          <var-decl name='service_cache' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='341' column='1'/>
+          <var-decl name='service_cache' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='344' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='17152'>
-          <var-decl name='cmd_timer' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='343' column='1'/>
+          <var-decl name='cmd_timer' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='346' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18240'>
-          <var-decl name='rx_work' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='345' column='1'/>
+          <var-decl name='rx_work' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='348' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18624'>
-          <var-decl name='cmd_work' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='346' column='1'/>
+          <var-decl name='cmd_work' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='349' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19008'>
-          <var-decl name='tx_work' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='347' column='1'/>
+          <var-decl name='tx_work' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='350' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19392'>
-          <var-decl name='discov_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='349' column='1'/>
+          <var-decl name='discov_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='352' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='19776'>
-          <var-decl name='bg_scan_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='350' column='1'/>
+          <var-decl name='bg_scan_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='353' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='20160'>
-          <var-decl name='scan_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='351' column='1'/>
+          <var-decl name='scan_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='354' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='20544'>
-          <var-decl name='connectable_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='352' column='1'/>
+          <var-decl name='connectable_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='355' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='20928'>
-          <var-decl name='discoverable_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='353' column='1'/>
+          <var-decl name='discoverable_update' type-id='ef9025d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='356' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='21312'>
-          <var-decl name='le_scan_disable' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='354' column='1'/>
+          <var-decl name='le_scan_disable' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='357' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='22400'>
-          <var-decl name='le_scan_restart' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='355' column='1'/>
+          <var-decl name='le_scan_restart' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='358' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='23488'>
-          <var-decl name='rx_q' type-id='e61c85d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='357' column='1'/>
+          <var-decl name='rx_q' type-id='e61c85d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='360' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='23680'>
-          <var-decl name='raw_q' type-id='e61c85d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='358' column='1'/>
+          <var-decl name='raw_q' type-id='e61c85d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='361' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='23872'>
-          <var-decl name='cmd_q' type-id='e61c85d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='359' column='1'/>
+          <var-decl name='cmd_q' type-id='e61c85d0' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='362' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='24064'>
-          <var-decl name='sent_cmd' type-id='0fbf3cfd' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='361' column='1'/>
+          <var-decl name='sent_cmd' type-id='0fbf3cfd' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='364' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='24128'>
-          <var-decl name='req_lock' type-id='925167dc' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='363' column='1'/>
+          <var-decl name='req_lock' type-id='925167dc' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='366' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='24384'>
-          <var-decl name='req_wait_q' type-id='b5ab048f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='364' column='1'/>
+          <var-decl name='req_wait_q' type-id='b5ab048f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='367' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='24576'>
-          <var-decl name='req_status' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='365' column='1'/>
+          <var-decl name='req_status' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='368' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='24608'>
-          <var-decl name='req_result' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='366' column='1'/>
+          <var-decl name='req_result' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='369' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='24640'>
-          <var-decl name='req_skb' type-id='0fbf3cfd' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='367' column='1'/>
+          <var-decl name='req_skb' type-id='0fbf3cfd' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='370' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='24704'>
-          <var-decl name='smp_data' type-id='eaa32e2f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='369' column='1'/>
+          <var-decl name='smp_data' type-id='eaa32e2f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='372' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='24768'>
-          <var-decl name='smp_bredr_data' type-id='eaa32e2f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='370' column='1'/>
+          <var-decl name='smp_bredr_data' type-id='eaa32e2f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='373' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='24832'>
-          <var-decl name='discovery' type-id='f98a45fb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='372' column='1'/>
+          <var-decl name='discovery' type-id='f98a45fb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='375' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='25920'>
-          <var-decl name='conn_hash' type-id='f39496ab' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='373' column='1'/>
+          <var-decl name='conn_hash' type-id='f39496ab' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='376' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='26240'>
-          <var-decl name='mgmt_pending' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='375' column='1'/>
+          <var-decl name='mgmt_pending' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='378' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='26368'>
-          <var-decl name='blacklist' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='376' column='1'/>
+          <var-decl name='blacklist' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='379' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='26496'>
-          <var-decl name='whitelist' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='377' column='1'/>
+          <var-decl name='whitelist' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='380' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='26624'>
-          <var-decl name='uuids' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='378' column='1'/>
+          <var-decl name='uuids' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='381' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='26752'>
-          <var-decl name='link_keys' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='379' column='1'/>
+          <var-decl name='link_keys' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='382' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='26880'>
-          <var-decl name='long_term_keys' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='380' column='1'/>
+          <var-decl name='long_term_keys' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='383' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='27008'>
-          <var-decl name='identity_resolving_keys' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='381' column='1'/>
+          <var-decl name='identity_resolving_keys' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='384' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='27136'>
-          <var-decl name='remote_oob_data' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='382' column='1'/>
+          <var-decl name='remote_oob_data' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='385' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='27264'>
-          <var-decl name='le_white_list' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='383' column='1'/>
+          <var-decl name='le_white_list' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='386' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='27392'>
-          <var-decl name='le_resolv_list' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='384' column='1'/>
+          <var-decl name='le_resolv_list' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='387' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='27520'>
-          <var-decl name='le_conn_params' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='385' column='1'/>
+          <var-decl name='le_conn_params' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='388' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='27648'>
-          <var-decl name='pend_le_conns' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='386' column='1'/>
+          <var-decl name='pend_le_conns' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='389' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='27776'>
-          <var-decl name='pend_le_reports' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='387' column='1'/>
+          <var-decl name='pend_le_reports' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='390' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='27904'>
-          <var-decl name='stat' type-id='2f3316f3' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='389' column='1'/>
+          <var-decl name='stat' type-id='2f3316f3' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='392' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='28224'>
-          <var-decl name='promisc' type-id='49178f86' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='391' column='1'/>
+          <var-decl name='promisc' type-id='49178f86' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='394' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='28288'>
-          <var-decl name='hw_info' type-id='80f4b756' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='393' column='1'/>
+          <var-decl name='hw_info' type-id='80f4b756' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='396' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='28352'>
-          <var-decl name='fw_info' type-id='80f4b756' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='394' column='1'/>
+          <var-decl name='fw_info' type-id='80f4b756' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='397' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='28416'>
-          <var-decl name='debugfs' type-id='27675065' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='395' column='1'/>
+          <var-decl name='debugfs' type-id='27675065' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='398' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='28480'>
-          <var-decl name='dev' type-id='66e487eb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='397' column='1'/>
+          <var-decl name='dev' type-id='66e487eb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='400' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36096'>
-          <var-decl name='rfkill' type-id='c5b94c75' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='399' column='1'/>
+          <var-decl name='rfkill' type-id='c5b94c75' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='402' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36160'>
-          <var-decl name='dev_flags' type-id='f066dd3c' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='401' column='1'/>
+          <var-decl name='dev_flags' type-id='f066dd3c' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='404' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36224'>
-          <var-decl name='adv_tx_power' type-id='8af57d41' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='403' column='1'/>
+          <var-decl name='adv_tx_power' type-id='8af57d41' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='406' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36232'>
-          <var-decl name='adv_data' type-id='be65fec6' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='404' column='1'/>
+          <var-decl name='adv_data' type-id='be65fec6' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='407' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36480'>
-          <var-decl name='adv_data_len' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='405' column='1'/>
+          <var-decl name='adv_data_len' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='408' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36488'>
-          <var-decl name='scan_rsp_data' type-id='be65fec6' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='406' column='1'/>
+          <var-decl name='scan_rsp_data' type-id='be65fec6' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='409' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36736'>
-          <var-decl name='scan_rsp_data_len' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='407' column='1'/>
+          <var-decl name='scan_rsp_data_len' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='410' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36800'>
-          <var-decl name='adv_instances' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='409' column='1'/>
+          <var-decl name='adv_instances' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='412' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36928'>
-          <var-decl name='adv_instance_cnt' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='410' column='1'/>
+          <var-decl name='adv_instance_cnt' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='413' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36960'>
-          <var-decl name='cur_adv_instance' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='411' column='1'/>
+          <var-decl name='cur_adv_instance' type-id='8f048e17' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='414' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36976'>
-          <var-decl name='adv_instance_timeout' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='412' column='1'/>
+          <var-decl name='adv_instance_timeout' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='415' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='36992'>
-          <var-decl name='adv_instance_expire' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='413' column='1'/>
+          <var-decl name='adv_instance_expire' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='416' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='38080'>
-          <var-decl name='irk' type-id='9396cabb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='415' column='1'/>
+          <var-decl name='irk' type-id='9396cabb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='418' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='38208'>
-          <var-decl name='rpa_timeout' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='416' column='1'/>
+          <var-decl name='rpa_timeout' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='419' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='38272'>
-          <var-decl name='rpa_expired' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='417' column='1'/>
+          <var-decl name='rpa_expired' type-id='5ad6e0ef' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='420' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39360'>
-          <var-decl name='rpa' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='418' column='1'/>
+          <var-decl name='rpa' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='421' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39424'>
-          <var-decl name='open' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='424' column='1'/>
+          <var-decl name='open' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='427' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39488'>
-          <var-decl name='close' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='425' column='1'/>
+          <var-decl name='close' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='428' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39552'>
-          <var-decl name='flush' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='426' column='1'/>
+          <var-decl name='flush' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='429' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39616'>
-          <var-decl name='setup' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='427' column='1'/>
+          <var-decl name='setup' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='430' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39680'>
-          <var-decl name='shutdown' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='428' column='1'/>
+          <var-decl name='shutdown' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='431' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39744'>
-          <var-decl name='send' type-id='9e036c13' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='429' column='1'/>
+          <var-decl name='send' type-id='9e036c13' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='432' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39808'>
-          <var-decl name='notify' type-id='ba77b4f4' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='430' column='1'/>
+          <var-decl name='notify' type-id='ba77b4f4' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='433' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39872'>
-          <var-decl name='hw_error' type-id='c0a08bbe' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='431' column='1'/>
+          <var-decl name='hw_error' type-id='c0a08bbe' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='434' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='39936'>
-          <var-decl name='post_init' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='432' column='1'/>
+          <var-decl name='post_init' type-id='65ee7b03' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='435' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='40000'>
-          <var-decl name='set_diag' type-id='100f2106' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='433' column='1'/>
+          <var-decl name='set_diag' type-id='100f2106' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='436' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='40064'>
-          <var-decl name='set_bdaddr' type-id='156888c8' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='434' column='1'/>
+          <var-decl name='set_bdaddr' type-id='156888c8' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='437' column='1'/>
         </data-member>
       </class-decl>
       <typedef-decl name='bdaddr_t' type-id='535be081' filepath='include/net/bluetooth/bluetooth.h' line='196' column='1' id='c2840192'/>
@@ -119777,86 +119777,86 @@
           <var-decl name='b' type-id='c60dc9f2' visibility='default' filepath='include/net/bluetooth/bluetooth.h' line='195' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='amp_assoc' size-in-bits='5440' is-struct='yes' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='195' column='1' id='36e902a9'>
+      <class-decl name='amp_assoc' size-in-bits='5440' is-struct='yes' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='198' column='1' id='36e902a9'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='196' column='1'/>
+          <var-decl name='len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='199' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='16'>
-          <var-decl name='offset' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='197' column='1'/>
+          <var-decl name='offset' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='200' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='32'>
-          <var-decl name='rem_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='198' column='1'/>
+          <var-decl name='rem_len' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='201' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='48'>
-          <var-decl name='len_so_far' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='199' column='1'/>
+          <var-decl name='len_so_far' type-id='d315442e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='202' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='data' type-id='2731130d' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='200' column='1'/>
+          <var-decl name='data' type-id='2731130d' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='203' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='discovery_state' size-in-bits='1088' is-struct='yes' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='62' column='1' id='f98a45fb'>
+      <class-decl name='discovery_state' size-in-bits='1088' is-struct='yes' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='65' column='1' id='f98a45fb'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='type' type-id='95e97e5e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='63' column='1'/>
+          <var-decl name='type' type-id='95e97e5e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='66' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='32'>
-          <var-decl name='state' type-id='08f5ca26' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='70' column='1'/>
+          <var-decl name='state' type-id='08f5ca26' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='73' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='all' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='71' column='1'/>
+          <var-decl name='all' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='74' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='unknown' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='72' column='1'/>
+          <var-decl name='unknown' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='75' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='320'>
-          <var-decl name='resolve' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='73' column='1'/>
+          <var-decl name='resolve' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='76' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='448'>
-          <var-decl name='timestamp' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='74' column='1'/>
+          <var-decl name='timestamp' type-id='3f1a6b60' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='77' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='480'>
-          <var-decl name='last_adv_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='75' column='1'/>
+          <var-decl name='last_adv_addr' type-id='c2840192' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='78' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='528'>
-          <var-decl name='last_adv_addr_type' type-id='f9b06939' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='76' column='1'/>
+          <var-decl name='last_adv_addr_type' type-id='f9b06939' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='79' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='536'>
-          <var-decl name='last_adv_rssi' type-id='fdbf7a0f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='77' column='1'/>
+          <var-decl name='last_adv_rssi' type-id='fdbf7a0f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='80' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='544'>
-          <var-decl name='last_adv_flags' type-id='19c2251e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='78' column='1'/>
+          <var-decl name='last_adv_flags' type-id='19c2251e' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='81' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='576'>
-          <var-decl name='last_adv_data' type-id='23e37060' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='79' column='1'/>
+          <var-decl name='last_adv_data' type-id='23e37060' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='82' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='824'>
-          <var-decl name='last_adv_data_len' type-id='f9b06939' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='80' column='1'/>
+          <var-decl name='last_adv_data_len' type-id='f9b06939' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='83' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='832'>
-          <var-decl name='report_invalid_rssi' type-id='b50a4934' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='81' column='1'/>
+          <var-decl name='report_invalid_rssi' type-id='b50a4934' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='84' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='840'>
-          <var-decl name='result_filtering' type-id='b50a4934' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='82' column='1'/>
+          <var-decl name='result_filtering' type-id='b50a4934' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='85' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='848'>
-          <var-decl name='limited' type-id='b50a4934' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='83' column='1'/>
+          <var-decl name='limited' type-id='b50a4934' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='86' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='856'>
-          <var-decl name='rssi' type-id='fdbf7a0f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='84' column='1'/>
+          <var-decl name='rssi' type-id='fdbf7a0f' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='87' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='864'>
-          <var-decl name='uuid_count' type-id='1dc6a898' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='85' column='1'/>
+          <var-decl name='uuid_count' type-id='1dc6a898' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='88' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='896'>
-          <var-decl name='uuids' type-id='e5ee094d' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='86' column='1'/>
+          <var-decl name='uuids' type-id='e5ee094d' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='89' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='960'>
-          <var-decl name='scan_start' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='87' column='1'/>
+          <var-decl name='scan_start' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='90' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='1024'>
-          <var-decl name='scan_duration' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='88' column='1'/>
+          <var-decl name='scan_duration' type-id='7359adad' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='91' column='1'/>
         </data-member>
       </class-decl>
-      <enum-decl name='__anonymous_enum__' is-anonymous='yes' filepath='include/net/bluetooth/hci_core.h' line='64' column='1' id='08f5ca26'>
+      <enum-decl name='__anonymous_enum__' is-anonymous='yes' filepath='include/net/bluetooth/hci_core.h' line='67' column='1' id='08f5ca26'>
         <underlying-type type-id='9cac1fee'/>
         <enumerator name='DISCOVERY_STOPPED' value='0'/>
         <enumerator name='DISCOVERY_STARTING' value='1'/>
@@ -119864,24 +119864,24 @@
         <enumerator name='DISCOVERY_RESOLVING' value='3'/>
         <enumerator name='DISCOVERY_STOPPING' value='4'/>
       </enum-decl>
-      <class-decl name='hci_conn_hash' size-in-bits='320' is-struct='yes' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='91' column='1' id='f39496ab'>
+      <class-decl name='hci_conn_hash' size-in-bits='320' is-struct='yes' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='94' column='1' id='f39496ab'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='list' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='92' column='1'/>
+          <var-decl name='list' type-id='72f469ec' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='95' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='128'>
-          <var-decl name='acl_num' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='93' column='1'/>
+          <var-decl name='acl_num' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='96' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='160'>
-          <var-decl name='amp_num' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='94' column='1'/>
+          <var-decl name='amp_num' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='97' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='sco_num' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='95' column='1'/>
+          <var-decl name='sco_num' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='98' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='224'>
-          <var-decl name='le_num' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='96' column='1'/>
+          <var-decl name='le_num' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='99' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='256'>
-          <var-decl name='le_num_slave' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='97' column='1'/>
+          <var-decl name='le_num_slave' type-id='f0981eeb' visibility='default' filepath='include/net/bluetooth/hci_core.h' line='100' column='1'/>
         </data-member>
       </class-decl>
       <class-decl name='hci_dev_stats' size-in-bits='320' is-struct='yes' visibility='default' filepath='include/net/bluetooth/hci_sock.h' line='95' column='1' id='2f3316f3'>
@@ -133899,51 +133899,51 @@
           <var-decl name='list' type-id='72f469ec' visibility='default' filepath='include/sound/info.h' line='92' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm' size-in-bits='18496' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='546' column='1' id='76f8f8bb'>
+      <class-decl name='snd_pcm' size-in-bits='18496' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='550' column='1' id='76f8f8bb'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='card' type-id='52704eb7' visibility='default' filepath='include/sound/pcm.h' line='547' column='1'/>
+          <var-decl name='card' type-id='52704eb7' visibility='default' filepath='include/sound/pcm.h' line='551' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='list' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='548' column='1'/>
+          <var-decl name='list' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='552' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='device' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='549' column='1'/>
+          <var-decl name='device' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='553' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='224'>
-          <var-decl name='info_flags' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='550' column='1'/>
+          <var-decl name='info_flags' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='554' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='256'>
-          <var-decl name='dev_class' type-id='8efea9e5' visibility='default' filepath='include/sound/pcm.h' line='551' column='1'/>
+          <var-decl name='dev_class' type-id='8efea9e5' visibility='default' filepath='include/sound/pcm.h' line='555' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='272'>
-          <var-decl name='dev_subclass' type-id='8efea9e5' visibility='default' filepath='include/sound/pcm.h' line='552' column='1'/>
+          <var-decl name='dev_subclass' type-id='8efea9e5' visibility='default' filepath='include/sound/pcm.h' line='556' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='288'>
-          <var-decl name='id' type-id='59daf3ef' visibility='default' filepath='include/sound/pcm.h' line='553' column='1'/>
+          <var-decl name='id' type-id='59daf3ef' visibility='default' filepath='include/sound/pcm.h' line='557' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='800'>
-          <var-decl name='name' type-id='aa5ff375' visibility='default' filepath='include/sound/pcm.h' line='554' column='1'/>
+          <var-decl name='name' type-id='aa5ff375' visibility='default' filepath='include/sound/pcm.h' line='558' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='1472'>
-          <var-decl name='streams' type-id='5e28cc39' visibility='default' filepath='include/sound/pcm.h' line='555' column='1'/>
+          <var-decl name='streams' type-id='5e28cc39' visibility='default' filepath='include/sound/pcm.h' line='559' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='17856'>
-          <var-decl name='open_mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='556' column='1'/>
+          <var-decl name='open_mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='560' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18112'>
-          <var-decl name='open_wait' type-id='b5ab048f' visibility='default' filepath='include/sound/pcm.h' line='557' column='1'/>
+          <var-decl name='open_wait' type-id='b5ab048f' visibility='default' filepath='include/sound/pcm.h' line='561' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18304'>
-          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='558' column='1'/>
+          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='562' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18368'>
-          <var-decl name='private_free' type-id='182096ce' visibility='default' filepath='include/sound/pcm.h' line='559' column='1'/>
+          <var-decl name='private_free' type-id='182096ce' visibility='default' filepath='include/sound/pcm.h' line='563' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18432'>
-          <var-decl name='internal' type-id='b50a4934' visibility='default' filepath='include/sound/pcm.h' line='560' column='1'/>
+          <var-decl name='internal' type-id='b50a4934' visibility='default' filepath='include/sound/pcm.h' line='564' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18440'>
-          <var-decl name='nonatomic' type-id='b50a4934' visibility='default' filepath='include/sound/pcm.h' line='561' column='1'/>
+          <var-decl name='nonatomic' type-id='b50a4934' visibility='default' filepath='include/sound/pcm.h' line='565' column='1'/>
         </data-member>
       </class-decl>
       <class-decl name='snd_soc_card' size-in-bits='6656' is-struct='yes' visibility='default' filepath='include/sound/soc.h' line='1057' column='1' id='29ad938b'>
@@ -134538,7 +134538,7 @@
           <var-decl name='write' type-id='f695e0b6' visibility='default' filepath='include/sound/info.h' line='47' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_runtime' size-in-bits='6144' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='367' column='1' id='bc78c060'>
+      <class-decl name='snd_pcm_runtime' size-in-bits='6464' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='367' column='1' id='bc78c060'>
         <data-member access='public' layout-offset-in-bits='0'>
           <var-decl name='trigger_master' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='369' column='1'/>
         </data-member>
@@ -134710,40 +134710,46 @@
         <data-member access='public' layout-offset-in-bits='6016'>
           <var-decl name='driver_tstamp' type-id='a9c79a1f' visibility='default' filepath='include/sound/pcm.h' line='447' column='1'/>
         </data-member>
+        <data-member access='public' layout-offset-in-bits='6144'>
+          <var-decl name='buffer_mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='454' column='1'/>
+        </data-member>
+        <data-member access='public' layout-offset-in-bits='6400'>
+          <var-decl name='buffer_accessing' type-id='49178f86' visibility='default' filepath='include/sound/pcm.h' line='455' column='1'/>
+        </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_str' size-in-bits='8192' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='521' column='1' id='5d633b6b'>
+      <class-decl name='snd_pcm_str' size-in-bits='8192' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='525' column='1' id='5d633b6b'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='522' column='1'/>
+          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='526' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='523' column='1'/>
+          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='527' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='128'>
-          <var-decl name='substream_count' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='525' column='1'/>
+          <var-decl name='substream_count' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='529' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='160'>
-          <var-decl name='substream_opened' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='526' column='1'/>
+          <var-decl name='substream_opened' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='530' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='substream' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='527' column='1'/>
+          <var-decl name='substream' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='531' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='256'>
-          <var-decl name='proc_root' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='533' column='1'/>
+          <var-decl name='proc_root' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='537' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='320'>
-          <var-decl name='proc_info_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='534' column='1'/>
+          <var-decl name='proc_info_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='538' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='384'>
-          <var-decl name='chmap_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='540' column='1'/>
+          <var-decl name='chmap_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='544' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='448'>
-          <var-decl name='vol_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='541' column='1'/>
+          <var-decl name='vol_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='545' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='512'>
-          <var-decl name='usr_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='542' column='1'/>
+          <var-decl name='usr_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='546' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='576'>
-          <var-decl name='dev' type-id='66e487eb' visibility='default' filepath='include/sound/pcm.h' line='543' column='1'/>
+          <var-decl name='dev' type-id='66e487eb' visibility='default' filepath='include/sound/pcm.h' line='547' column='1'/>
         </data-member>
       </class-decl>
       <class-decl name='snd_shutdown_f_ops' is-struct='yes' visibility='default' is-declaration-only='yes' id='30b9286d'/>
@@ -135591,111 +135597,111 @@
           <var-decl name='audio_tstamp' type-id='a9c79a1f' visibility='default' filepath='include/uapi/sound/asound.h' line='482' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_substream' size-in-bits='5248' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='464' column='1' id='362eec9e'>
+      <class-decl name='snd_pcm_substream' size-in-bits='5248' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='468' column='1' id='362eec9e'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='465' column='1'/>
+          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='469' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='pstr' type-id='e5ffb4bb' visibility='default' filepath='include/sound/pcm.h' line='466' column='1'/>
+          <var-decl name='pstr' type-id='e5ffb4bb' visibility='default' filepath='include/sound/pcm.h' line='470' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='128'>
-          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='467' column='1'/>
+          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='471' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='number' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='468' column='1'/>
+          <var-decl name='number' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='472' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='224'>
-          <var-decl name='name' type-id='16dc656a' visibility='default' filepath='include/sound/pcm.h' line='469' column='1'/>
+          <var-decl name='name' type-id='16dc656a' visibility='default' filepath='include/sound/pcm.h' line='473' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='480'>
-          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='470' column='1'/>
+          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='474' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='512'>
-          <var-decl name='latency_pm_qos_req' type-id='cd6fc142' visibility='default' filepath='include/sound/pcm.h' line='471' column='1'/>
+          <var-decl name='latency_pm_qos_req' type-id='cd6fc142' visibility='default' filepath='include/sound/pcm.h' line='475' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='2752'>
-          <var-decl name='buffer_bytes_max' type-id='b59d7dce' visibility='default' filepath='include/sound/pcm.h' line='472' column='1'/>
+          <var-decl name='buffer_bytes_max' type-id='b59d7dce' visibility='default' filepath='include/sound/pcm.h' line='476' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='2816'>
-          <var-decl name='dma_buffer' type-id='c5addfb4' visibility='default' filepath='include/sound/pcm.h' line='473' column='1'/>
+          <var-decl name='dma_buffer' type-id='c5addfb4' visibility='default' filepath='include/sound/pcm.h' line='477' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3200'>
-          <var-decl name='dma_max' type-id='b59d7dce' visibility='default' filepath='include/sound/pcm.h' line='474' column='1'/>
+          <var-decl name='dma_max' type-id='b59d7dce' visibility='default' filepath='include/sound/pcm.h' line='478' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3264'>
-          <var-decl name='ops' type-id='f63b1a17' visibility='default' filepath='include/sound/pcm.h' line='476' column='1'/>
+          <var-decl name='ops' type-id='f63b1a17' visibility='default' filepath='include/sound/pcm.h' line='480' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3328'>
-          <var-decl name='runtime' type-id='17a05af6' visibility='default' filepath='include/sound/pcm.h' line='478' column='1'/>
+          <var-decl name='runtime' type-id='17a05af6' visibility='default' filepath='include/sound/pcm.h' line='482' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3392'>
-          <var-decl name='runtime_lock' type-id='fb4018a0' visibility='default' filepath='include/sound/pcm.h' line='479' column='1'/>
+          <var-decl name='runtime_lock' type-id='fb4018a0' visibility='default' filepath='include/sound/pcm.h' line='483' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3456'>
-          <var-decl name='timer' type-id='6ee1a870' visibility='default' filepath='include/sound/pcm.h' line='481' column='1'/>
+          <var-decl name='timer' type-id='6ee1a870' visibility='default' filepath='include/sound/pcm.h' line='485' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='timer_running' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='482' column='1'/>
+          <var-decl name='timer_running' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='486' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3584'>
-          <var-decl name='wait_time' type-id='bd54fe1a' visibility='default' filepath='include/sound/pcm.h' line='483' column='1'/>
+          <var-decl name='wait_time' type-id='bd54fe1a' visibility='default' filepath='include/sound/pcm.h' line='487' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3648'>
-          <var-decl name='next' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='485' column='1'/>
+          <var-decl name='next' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='489' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3712'>
-          <var-decl name='link_list' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='487' column='1'/>
+          <var-decl name='link_list' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='491' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3840'>
-          <var-decl name='self_group' type-id='5e60e97f' visibility='default' filepath='include/sound/pcm.h' line='488' column='1'/>
+          <var-decl name='self_group' type-id='5e60e97f' visibility='default' filepath='include/sound/pcm.h' line='492' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4352'>
-          <var-decl name='group' type-id='8042a887' visibility='default' filepath='include/sound/pcm.h' line='489' column='1'/>
+          <var-decl name='group' type-id='8042a887' visibility='default' filepath='include/sound/pcm.h' line='493' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4416'>
-          <var-decl name='file' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='491' column='1'/>
+          <var-decl name='file' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='495' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4480'>
-          <var-decl name='ref_count' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='492' column='1'/>
+          <var-decl name='ref_count' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='496' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4512'>
-          <var-decl name='mmap_count' type-id='49178f86' visibility='default' filepath='include/sound/pcm.h' line='493' column='1'/>
+          <var-decl name='mmap_count' type-id='49178f86' visibility='default' filepath='include/sound/pcm.h' line='497' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4544'>
-          <var-decl name='f_flags' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='494' column='1'/>
+          <var-decl name='f_flags' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='498' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4608'>
-          <var-decl name='pcm_release' type-id='897d1b6d' visibility='default' filepath='include/sound/pcm.h' line='495' column='1'/>
+          <var-decl name='pcm_release' type-id='897d1b6d' visibility='default' filepath='include/sound/pcm.h' line='499' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4672'>
-          <var-decl name='pid' type-id='b94e5398' visibility='default' filepath='include/sound/pcm.h' line='496' column='1'/>
+          <var-decl name='pid' type-id='b94e5398' visibility='default' filepath='include/sound/pcm.h' line='500' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4736'>
-          <var-decl name='proc_root' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='502' column='1'/>
+          <var-decl name='proc_root' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='506' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4800'>
-          <var-decl name='proc_info_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='503' column='1'/>
+          <var-decl name='proc_info_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='507' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4864'>
-          <var-decl name='proc_hw_params_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='504' column='1'/>
+          <var-decl name='proc_hw_params_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='508' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4928'>
-          <var-decl name='proc_sw_params_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='505' column='1'/>
+          <var-decl name='proc_sw_params_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='509' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4992'>
-          <var-decl name='proc_status_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='506' column='1'/>
+          <var-decl name='proc_status_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='510' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5056'>
-          <var-decl name='proc_prealloc_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='507' column='1'/>
+          <var-decl name='proc_prealloc_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='511' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5120'>
-          <var-decl name='proc_prealloc_max_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='508' column='1'/>
+          <var-decl name='proc_prealloc_max_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='512' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='hw_opened' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='514' column='1'/>
+          <var-decl name='hw_opened' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='518' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='1'>
-          <var-decl name='hw_no_buffer' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='515' column='1'/>
+          <var-decl name='hw_no_buffer' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='519' column='1'/>
         </data-member>
       </class-decl>
       <qualified-type-def type-id='d6a931df' const='yes' id='da194c5e'/>
@@ -135768,18 +135774,18 @@
           <var-decl name='dev' type-id='fa0b179b' visibility='default' filepath='include/sound/memalloc.h' line='36' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_group' size-in-bits='512' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='455' column='1' id='5e60e97f'>
+      <class-decl name='snd_pcm_group' size-in-bits='512' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='459' column='1' id='5e60e97f'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='lock' type-id='fb4018a0' visibility='default' filepath='include/sound/pcm.h' line='456' column='1'/>
+          <var-decl name='lock' type-id='fb4018a0' visibility='default' filepath='include/sound/pcm.h' line='460' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='457' column='1'/>
+          <var-decl name='mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='461' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='320'>
-          <var-decl name='substreams' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='458' column='1'/>
+          <var-decl name='substreams' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='462' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='448'>
-          <var-decl name='count' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='459' column='1'/>
+          <var-decl name='count' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='463' column='1'/>
         </data-member>
       </class-decl>
       <class-decl name='snd_pcm_hw_rule' size-in-bits='320' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='252' column='1' id='015799ac'>
@@ -137454,193 +137460,193 @@
       <array-type-def dimensions='1' type-id='8efea9e5' size-in-bits='128' id='ff13edc1'>
         <subrange length='8' type-id='7ff19f0f' id='56e0c0b1'/>
       </array-type-def>
-      <class-decl name='snd_pcm' size-in-bits='18496' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='546' column='1' id='76f8f8bb'>
+      <class-decl name='snd_pcm' size-in-bits='18496' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='550' column='1' id='76f8f8bb'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='card' type-id='52704eb7' visibility='default' filepath='include/sound/pcm.h' line='547' column='1'/>
+          <var-decl name='card' type-id='52704eb7' visibility='default' filepath='include/sound/pcm.h' line='551' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='list' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='548' column='1'/>
+          <var-decl name='list' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='552' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='device' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='549' column='1'/>
+          <var-decl name='device' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='553' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='224'>
-          <var-decl name='info_flags' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='550' column='1'/>
+          <var-decl name='info_flags' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='554' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='256'>
-          <var-decl name='dev_class' type-id='8efea9e5' visibility='default' filepath='include/sound/pcm.h' line='551' column='1'/>
+          <var-decl name='dev_class' type-id='8efea9e5' visibility='default' filepath='include/sound/pcm.h' line='555' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='272'>
-          <var-decl name='dev_subclass' type-id='8efea9e5' visibility='default' filepath='include/sound/pcm.h' line='552' column='1'/>
+          <var-decl name='dev_subclass' type-id='8efea9e5' visibility='default' filepath='include/sound/pcm.h' line='556' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='288'>
-          <var-decl name='id' type-id='59daf3ef' visibility='default' filepath='include/sound/pcm.h' line='553' column='1'/>
+          <var-decl name='id' type-id='59daf3ef' visibility='default' filepath='include/sound/pcm.h' line='557' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='800'>
-          <var-decl name='name' type-id='aa5ff375' visibility='default' filepath='include/sound/pcm.h' line='554' column='1'/>
+          <var-decl name='name' type-id='aa5ff375' visibility='default' filepath='include/sound/pcm.h' line='558' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='1472'>
-          <var-decl name='streams' type-id='5e28cc39' visibility='default' filepath='include/sound/pcm.h' line='555' column='1'/>
+          <var-decl name='streams' type-id='5e28cc39' visibility='default' filepath='include/sound/pcm.h' line='559' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='17856'>
-          <var-decl name='open_mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='556' column='1'/>
+          <var-decl name='open_mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='560' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18112'>
-          <var-decl name='open_wait' type-id='b5ab048f' visibility='default' filepath='include/sound/pcm.h' line='557' column='1'/>
+          <var-decl name='open_wait' type-id='b5ab048f' visibility='default' filepath='include/sound/pcm.h' line='561' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18304'>
-          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='558' column='1'/>
+          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='562' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18368'>
-          <var-decl name='private_free' type-id='182096ce' visibility='default' filepath='include/sound/pcm.h' line='559' column='1'/>
+          <var-decl name='private_free' type-id='182096ce' visibility='default' filepath='include/sound/pcm.h' line='563' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18432'>
-          <var-decl name='internal' type-id='b50a4934' visibility='default' filepath='include/sound/pcm.h' line='560' column='1'/>
+          <var-decl name='internal' type-id='b50a4934' visibility='default' filepath='include/sound/pcm.h' line='564' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='18440'>
-          <var-decl name='nonatomic' type-id='b50a4934' visibility='default' filepath='include/sound/pcm.h' line='561' column='1'/>
+          <var-decl name='nonatomic' type-id='b50a4934' visibility='default' filepath='include/sound/pcm.h' line='565' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_str' size-in-bits='8192' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='521' column='1' id='5d633b6b'>
+      <class-decl name='snd_pcm_str' size-in-bits='8192' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='525' column='1' id='5d633b6b'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='522' column='1'/>
+          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='526' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='523' column='1'/>
+          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='527' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='128'>
-          <var-decl name='substream_count' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='525' column='1'/>
+          <var-decl name='substream_count' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='529' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='160'>
-          <var-decl name='substream_opened' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='526' column='1'/>
+          <var-decl name='substream_opened' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='530' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='substream' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='527' column='1'/>
+          <var-decl name='substream' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='531' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='256'>
-          <var-decl name='proc_root' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='533' column='1'/>
+          <var-decl name='proc_root' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='537' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='320'>
-          <var-decl name='proc_info_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='534' column='1'/>
+          <var-decl name='proc_info_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='538' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='384'>
-          <var-decl name='chmap_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='540' column='1'/>
+          <var-decl name='chmap_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='544' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='448'>
-          <var-decl name='vol_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='541' column='1'/>
+          <var-decl name='vol_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='545' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='512'>
-          <var-decl name='usr_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='542' column='1'/>
+          <var-decl name='usr_kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='546' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='576'>
-          <var-decl name='dev' type-id='66e487eb' visibility='default' filepath='include/sound/pcm.h' line='543' column='1'/>
+          <var-decl name='dev' type-id='66e487eb' visibility='default' filepath='include/sound/pcm.h' line='547' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_substream' size-in-bits='5248' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='464' column='1' id='362eec9e'>
+      <class-decl name='snd_pcm_substream' size-in-bits='5248' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='468' column='1' id='362eec9e'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='465' column='1'/>
+          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='469' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='pstr' type-id='e5ffb4bb' visibility='default' filepath='include/sound/pcm.h' line='466' column='1'/>
+          <var-decl name='pstr' type-id='e5ffb4bb' visibility='default' filepath='include/sound/pcm.h' line='470' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='128'>
-          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='467' column='1'/>
+          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='471' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='number' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='468' column='1'/>
+          <var-decl name='number' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='472' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='224'>
-          <var-decl name='name' type-id='16dc656a' visibility='default' filepath='include/sound/pcm.h' line='469' column='1'/>
+          <var-decl name='name' type-id='16dc656a' visibility='default' filepath='include/sound/pcm.h' line='473' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='480'>
-          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='470' column='1'/>
+          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='474' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='512'>
-          <var-decl name='latency_pm_qos_req' type-id='cd6fc142' visibility='default' filepath='include/sound/pcm.h' line='471' column='1'/>
+          <var-decl name='latency_pm_qos_req' type-id='cd6fc142' visibility='default' filepath='include/sound/pcm.h' line='475' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='2752'>
-          <var-decl name='buffer_bytes_max' type-id='b59d7dce' visibility='default' filepath='include/sound/pcm.h' line='472' column='1'/>
+          <var-decl name='buffer_bytes_max' type-id='b59d7dce' visibility='default' filepath='include/sound/pcm.h' line='476' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='2816'>
-          <var-decl name='dma_buffer' type-id='c5addfb4' visibility='default' filepath='include/sound/pcm.h' line='473' column='1'/>
+          <var-decl name='dma_buffer' type-id='c5addfb4' visibility='default' filepath='include/sound/pcm.h' line='477' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3200'>
-          <var-decl name='dma_max' type-id='b59d7dce' visibility='default' filepath='include/sound/pcm.h' line='474' column='1'/>
+          <var-decl name='dma_max' type-id='b59d7dce' visibility='default' filepath='include/sound/pcm.h' line='478' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3264'>
-          <var-decl name='ops' type-id='f63b1a17' visibility='default' filepath='include/sound/pcm.h' line='476' column='1'/>
+          <var-decl name='ops' type-id='f63b1a17' visibility='default' filepath='include/sound/pcm.h' line='480' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3328'>
-          <var-decl name='runtime' type-id='17a05af6' visibility='default' filepath='include/sound/pcm.h' line='478' column='1'/>
+          <var-decl name='runtime' type-id='17a05af6' visibility='default' filepath='include/sound/pcm.h' line='482' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3392'>
-          <var-decl name='runtime_lock' type-id='fb4018a0' visibility='default' filepath='include/sound/pcm.h' line='479' column='1'/>
+          <var-decl name='runtime_lock' type-id='fb4018a0' visibility='default' filepath='include/sound/pcm.h' line='483' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3456'>
-          <var-decl name='timer' type-id='6ee1a870' visibility='default' filepath='include/sound/pcm.h' line='481' column='1'/>
+          <var-decl name='timer' type-id='6ee1a870' visibility='default' filepath='include/sound/pcm.h' line='485' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='timer_running' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='482' column='1'/>
+          <var-decl name='timer_running' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='486' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3584'>
-          <var-decl name='wait_time' type-id='bd54fe1a' visibility='default' filepath='include/sound/pcm.h' line='483' column='1'/>
+          <var-decl name='wait_time' type-id='bd54fe1a' visibility='default' filepath='include/sound/pcm.h' line='487' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3648'>
-          <var-decl name='next' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='485' column='1'/>
+          <var-decl name='next' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='489' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3712'>
-          <var-decl name='link_list' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='487' column='1'/>
+          <var-decl name='link_list' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='491' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='3840'>
-          <var-decl name='self_group' type-id='5e60e97f' visibility='default' filepath='include/sound/pcm.h' line='488' column='1'/>
+          <var-decl name='self_group' type-id='5e60e97f' visibility='default' filepath='include/sound/pcm.h' line='492' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4352'>
-          <var-decl name='group' type-id='8042a887' visibility='default' filepath='include/sound/pcm.h' line='489' column='1'/>
+          <var-decl name='group' type-id='8042a887' visibility='default' filepath='include/sound/pcm.h' line='493' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4416'>
-          <var-decl name='file' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='491' column='1'/>
+          <var-decl name='file' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='495' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4480'>
-          <var-decl name='ref_count' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='492' column='1'/>
+          <var-decl name='ref_count' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='496' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4512'>
-          <var-decl name='mmap_count' type-id='49178f86' visibility='default' filepath='include/sound/pcm.h' line='493' column='1'/>
+          <var-decl name='mmap_count' type-id='49178f86' visibility='default' filepath='include/sound/pcm.h' line='497' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4544'>
-          <var-decl name='f_flags' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='494' column='1'/>
+          <var-decl name='f_flags' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='498' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4608'>
-          <var-decl name='pcm_release' type-id='897d1b6d' visibility='default' filepath='include/sound/pcm.h' line='495' column='1'/>
+          <var-decl name='pcm_release' type-id='897d1b6d' visibility='default' filepath='include/sound/pcm.h' line='499' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4672'>
-          <var-decl name='pid' type-id='b94e5398' visibility='default' filepath='include/sound/pcm.h' line='496' column='1'/>
+          <var-decl name='pid' type-id='b94e5398' visibility='default' filepath='include/sound/pcm.h' line='500' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4736'>
-          <var-decl name='proc_root' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='502' column='1'/>
+          <var-decl name='proc_root' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='506' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4800'>
-          <var-decl name='proc_info_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='503' column='1'/>
+          <var-decl name='proc_info_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='507' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4864'>
-          <var-decl name='proc_hw_params_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='504' column='1'/>
+          <var-decl name='proc_hw_params_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='508' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4928'>
-          <var-decl name='proc_sw_params_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='505' column='1'/>
+          <var-decl name='proc_sw_params_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='509' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='4992'>
-          <var-decl name='proc_status_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='506' column='1'/>
+          <var-decl name='proc_status_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='510' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5056'>
-          <var-decl name='proc_prealloc_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='507' column='1'/>
+          <var-decl name='proc_prealloc_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='511' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='5120'>
-          <var-decl name='proc_prealloc_max_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='508' column='1'/>
+          <var-decl name='proc_prealloc_max_entry' type-id='b9608bfc' visibility='default' filepath='include/sound/pcm.h' line='512' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='hw_opened' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='514' column='1'/>
+          <var-decl name='hw_opened' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='518' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='1'>
-          <var-decl name='hw_no_buffer' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='515' column='1'/>
+          <var-decl name='hw_no_buffer' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='519' column='1'/>
         </data-member>
       </class-decl>
       <class-decl name='snd_dma_buffer' size-in-bits='384' is-struct='yes' visibility='default' filepath='include/sound/memalloc.h' line='64' column='1' id='c5addfb4'>
@@ -137827,7 +137833,7 @@
           <var-decl name='id32' type-id='49580a63' visibility='default' filepath='include/uapi/sound/asound.h' line='326' column='1'/>
         </data-member>
       </union-decl>
-      <class-decl name='snd_pcm_runtime' size-in-bits='6144' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='367' column='1' id='bc78c060'>
+      <class-decl name='snd_pcm_runtime' size-in-bits='6464' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='367' column='1' id='bc78c060'>
         <data-member access='public' layout-offset-in-bits='0'>
           <var-decl name='trigger_master' type-id='06b2cd14' visibility='default' filepath='include/sound/pcm.h' line='369' column='1'/>
         </data-member>
@@ -137999,6 +138005,12 @@
         <data-member access='public' layout-offset-in-bits='6016'>
           <var-decl name='driver_tstamp' type-id='a9c79a1f' visibility='default' filepath='include/sound/pcm.h' line='447' column='1'/>
         </data-member>
+        <data-member access='public' layout-offset-in-bits='6144'>
+          <var-decl name='buffer_mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='454' column='1'/>
+        </data-member>
+        <data-member access='public' layout-offset-in-bits='6400'>
+          <var-decl name='buffer_accessing' type-id='49178f86' visibility='default' filepath='include/sound/pcm.h' line='455' column='1'/>
+        </data-member>
       </class-decl>
       <typedef-decl name='snd_pcm_sframes_t' type-id='bd54fe1a' filepath='include/uapi/sound/asound.h' line='159' column='1' id='721b74e7'/>
       <typedef-decl name='snd_pcm_access_t' type-id='95e97e5e' filepath='include/uapi/sound/asound.h' line='183' column='1' id='6459083c'/>
@@ -138109,18 +138121,18 @@
         </data-member>
       </class-decl>
       <typedef-decl name='snd_pcm_hw_rule_func_t' type-id='657a5cf1' filepath='include/sound/pcm.h' line='249' column='1' id='58d3b2a5'/>
-      <class-decl name='snd_pcm_group' size-in-bits='512' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='455' column='1' id='5e60e97f'>
+      <class-decl name='snd_pcm_group' size-in-bits='512' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='459' column='1' id='5e60e97f'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='lock' type-id='fb4018a0' visibility='default' filepath='include/sound/pcm.h' line='456' column='1'/>
+          <var-decl name='lock' type-id='fb4018a0' visibility='default' filepath='include/sound/pcm.h' line='460' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='457' column='1'/>
+          <var-decl name='mutex' type-id='925167dc' visibility='default' filepath='include/sound/pcm.h' line='461' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='320'>
-          <var-decl name='substreams' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='458' column='1'/>
+          <var-decl name='substreams' type-id='72f469ec' visibility='default' filepath='include/sound/pcm.h' line='462' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='448'>
-          <var-decl name='count' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='459' column='1'/>
+          <var-decl name='count' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='463' column='1'/>
         </data-member>
       </class-decl>
       <qualified-type-def type-id='73803d48' const='yes' id='71bae7c7'/>
@@ -138252,12 +138264,12 @@
       <array-type-def dimensions='1' type-id='002ac4a6' size-in-bits='120' id='92ab2118'>
         <subrange length='15' type-id='7ff19f0f' id='8484ba73'/>
       </array-type-def>
-      <class-decl name='snd_pcm_chmap_elem' size-in-bits='128' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1407' column='1' id='09098b3b'>
+      <class-decl name='snd_pcm_chmap_elem' size-in-bits='128' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1411' column='1' id='09098b3b'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='channels' type-id='002ac4a6' visibility='default' filepath='include/sound/pcm.h' line='1408' column='1'/>
+          <var-decl name='channels' type-id='002ac4a6' visibility='default' filepath='include/sound/pcm.h' line='1412' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='8'>
-          <var-decl name='map' type-id='92ab2118' visibility='default' filepath='include/sound/pcm.h' line='1409' column='1'/>
+          <var-decl name='map' type-id='92ab2118' visibility='default' filepath='include/sound/pcm.h' line='1413' column='1'/>
         </data-member>
       </class-decl>
       <typedef-decl name='snd_pcm_hw_param_t' type-id='95e97e5e' filepath='include/uapi/sound/asound.h' line='345' column='1' id='6b55ba25'/>
@@ -138272,77 +138284,77 @@
           <var-decl name='mask' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='306' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_volume_elem' size-in-bits='32' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1467' column='1' id='2ee25a20'>
+      <class-decl name='snd_pcm_volume_elem' size-in-bits='32' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1471' column='1' id='2ee25a20'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='volume' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1468' column='1'/>
+          <var-decl name='volume' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1472' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_volume' size-in-bits='384' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1472' column='1' id='03397d2e'>
+      <class-decl name='snd_pcm_volume' size-in-bits='384' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1476' column='1' id='03397d2e'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='1473' column='1'/>
+          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='1477' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1474' column='1'/>
+          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1478' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='128'>
-          <var-decl name='kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='1475' column='1'/>
+          <var-decl name='kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='1479' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='volume' type-id='9476d097' visibility='default' filepath='include/sound/pcm.h' line='1476' column='1'/>
+          <var-decl name='volume' type-id='9476d097' visibility='default' filepath='include/sound/pcm.h' line='1480' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='256'>
-          <var-decl name='max_length' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1477' column='1'/>
+          <var-decl name='max_length' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1481' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='320'>
-          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='1478' column='1'/>
+          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='1482' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_usr_elem' size-in-bits='4096' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1491' column='1' id='f9ce5970'>
+      <class-decl name='snd_pcm_usr_elem' size-in-bits='4096' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1495' column='1' id='f9ce5970'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='val' type-id='79d32e77' visibility='default' filepath='include/sound/pcm.h' line='1492' column='1'/>
+          <var-decl name='val' type-id='79d32e77' visibility='default' filepath='include/sound/pcm.h' line='1496' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_usr' size-in-bits='384' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1496' column='1' id='cdad71be'>
+      <class-decl name='snd_pcm_usr' size-in-bits='384' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1500' column='1' id='cdad71be'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='1497' column='1'/>
+          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='1501' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1498' column='1'/>
+          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1502' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='128'>
-          <var-decl name='kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='1499' column='1'/>
+          <var-decl name='kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='1503' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='usr' type-id='433983f9' visibility='default' filepath='include/sound/pcm.h' line='1500' column='1'/>
+          <var-decl name='usr' type-id='433983f9' visibility='default' filepath='include/sound/pcm.h' line='1504' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='256'>
-          <var-decl name='max_length' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1501' column='1'/>
+          <var-decl name='max_length' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1505' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='320'>
-          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='1502' column='1'/>
+          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='1506' column='1'/>
         </data-member>
       </class-decl>
-      <class-decl name='snd_pcm_chmap' size-in-bits='384' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1413' column='1' id='e8a73faf'>
+      <class-decl name='snd_pcm_chmap' size-in-bits='384' is-struct='yes' visibility='default' filepath='include/sound/pcm.h' line='1417' column='1' id='e8a73faf'>
         <data-member access='public' layout-offset-in-bits='0'>
-          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='1414' column='1'/>
+          <var-decl name='pcm' type-id='4c9f335b' visibility='default' filepath='include/sound/pcm.h' line='1418' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='64'>
-          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1415' column='1'/>
+          <var-decl name='stream' type-id='95e97e5e' visibility='default' filepath='include/sound/pcm.h' line='1419' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='128'>
-          <var-decl name='kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='1416' column='1'/>
+          <var-decl name='kctl' type-id='7a5054b7' visibility='default' filepath='include/sound/pcm.h' line='1420' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='192'>
-          <var-decl name='chmap' type-id='ddec2084' visibility='default' filepath='include/sound/pcm.h' line='1417' column='1'/>
+          <var-decl name='chmap' type-id='ddec2084' visibility='default' filepath='include/sound/pcm.h' line='1421' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='256'>
-          <var-decl name='max_channels' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='1418' column='1'/>
+          <var-decl name='max_channels' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='1422' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='288'>
-          <var-decl name='channel_mask' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='1419' column='1'/>
+          <var-decl name='channel_mask' type-id='f0981eeb' visibility='default' filepath='include/sound/pcm.h' line='1423' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='320'>
-          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='1420' column='1'/>
+          <var-decl name='private_data' type-id='eaa32e2f' visibility='default' filepath='include/sound/pcm.h' line='1424' column='1'/>
         </data-member>
       </class-decl>
       <qualified-type-def type-id='d6b43ca8' const='yes' id='81795b61'/>
@@ -138362,8 +138374,8 @@
       <pointer-type-def type-id='c04d3da4' size-in-bits='64' id='4797e68a'/>
       <pointer-type-def type-id='03397d2e' size-in-bits='64' id='bc08cff4'/>
       <pointer-type-def type-id='bc08cff4' size-in-bits='64' id='dfdf3a7a'/>
-      <var-decl name='snd_pcm_std_chmaps' type-id='93f82aba' mangled-name='snd_pcm_std_chmaps' visibility='default' filepath='sound/core/pcm_lib.c' line='2269' column='1' elf-symbol-id='snd_pcm_std_chmaps'/>
-      <var-decl name='snd_pcm_alt_chmaps' type-id='93f82aba' mangled-name='snd_pcm_alt_chmaps' visibility='default' filepath='sound/core/pcm_lib.c' line='2291' column='1' elf-symbol-id='snd_pcm_alt_chmaps'/>
+      <var-decl name='snd_pcm_std_chmaps' type-id='93f82aba' mangled-name='snd_pcm_std_chmaps' visibility='default' filepath='sound/core/pcm_lib.c' line='2274' column='1' elf-symbol-id='snd_pcm_std_chmaps'/>
+      <var-decl name='snd_pcm_alt_chmaps' type-id='93f82aba' mangled-name='snd_pcm_alt_chmaps' visibility='default' filepath='sound/core/pcm_lib.c' line='2296' column='1' elf-symbol-id='snd_pcm_alt_chmaps'/>
       <function-decl name='snd_pcm_period_elapsed' mangled-name='snd_pcm_period_elapsed' filepath='sound/core/pcm_lib.c' line='1799' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_period_elapsed'>
         <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_lib.c' line='1799' column='1'/>
         <return type-id='48b5725f'/>
@@ -138428,66 +138440,66 @@
         <parameter type-id='6b55ba25' name='var' filepath='sound/core/pcm_lib.c' line='1227' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
-      <function-decl name='snd_pcm_add_volume_ctls' mangled-name='snd_pcm_add_volume_ctls' filepath='sound/core/pcm_lib.c' line='2508' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_add_volume_ctls'>
-        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_lib.c' line='2508' column='1'/>
-        <parameter type-id='95e97e5e' name='stream' filepath='sound/core/pcm_lib.c' line='2508' column='1'/>
-        <parameter type-id='9476d097' name='volume' filepath='sound/core/pcm_lib.c' line='2509' column='1'/>
-        <parameter type-id='95e97e5e' name='max_length' filepath='sound/core/pcm_lib.c' line='2510' column='1'/>
-        <parameter type-id='7359adad' name='private_value' filepath='sound/core/pcm_lib.c' line='2511' column='1'/>
-        <parameter type-id='dfdf3a7a' name='info_ret' filepath='sound/core/pcm_lib.c' line='2512' column='1'/>
+      <function-decl name='snd_pcm_add_volume_ctls' mangled-name='snd_pcm_add_volume_ctls' filepath='sound/core/pcm_lib.c' line='2513' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_add_volume_ctls'>
+        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_lib.c' line='2513' column='1'/>
+        <parameter type-id='95e97e5e' name='stream' filepath='sound/core/pcm_lib.c' line='2513' column='1'/>
+        <parameter type-id='9476d097' name='volume' filepath='sound/core/pcm_lib.c' line='2514' column='1'/>
+        <parameter type-id='95e97e5e' name='max_length' filepath='sound/core/pcm_lib.c' line='2515' column='1'/>
+        <parameter type-id='7359adad' name='private_value' filepath='sound/core/pcm_lib.c' line='2516' column='1'/>
+        <parameter type-id='dfdf3a7a' name='info_ret' filepath='sound/core/pcm_lib.c' line='2517' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
-      <function-decl name='snd_pcm_add_usr_ctls' mangled-name='snd_pcm_add_usr_ctls' filepath='sound/core/pcm_lib.c' line='2597' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_add_usr_ctls'>
-        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_lib.c' line='2597' column='1'/>
-        <parameter type-id='95e97e5e' name='stream' filepath='sound/core/pcm_lib.c' line='2597' column='1'/>
-        <parameter type-id='433983f9' name='usr' filepath='sound/core/pcm_lib.c' line='2598' column='1'/>
-        <parameter type-id='95e97e5e' name='max_length' filepath='sound/core/pcm_lib.c' line='2599' column='1'/>
-        <parameter type-id='95e97e5e' name='max_kctrl_str_len' filepath='sound/core/pcm_lib.c' line='2599' column='1'/>
-        <parameter type-id='7359adad' name='private_value' filepath='sound/core/pcm_lib.c' line='2600' column='1'/>
-        <parameter type-id='4797e68a' name='info_ret' filepath='sound/core/pcm_lib.c' line='2601' column='1'/>
+      <function-decl name='snd_pcm_add_usr_ctls' mangled-name='snd_pcm_add_usr_ctls' filepath='sound/core/pcm_lib.c' line='2602' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_add_usr_ctls'>
+        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_lib.c' line='2602' column='1'/>
+        <parameter type-id='95e97e5e' name='stream' filepath='sound/core/pcm_lib.c' line='2602' column='1'/>
+        <parameter type-id='433983f9' name='usr' filepath='sound/core/pcm_lib.c' line='2603' column='1'/>
+        <parameter type-id='95e97e5e' name='max_length' filepath='sound/core/pcm_lib.c' line='2604' column='1'/>
+        <parameter type-id='95e97e5e' name='max_kctrl_str_len' filepath='sound/core/pcm_lib.c' line='2604' column='1'/>
+        <parameter type-id='7359adad' name='private_value' filepath='sound/core/pcm_lib.c' line='2605' column='1'/>
+        <parameter type-id='4797e68a' name='info_ret' filepath='sound/core/pcm_lib.c' line='2606' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
-      <function-decl name='snd_pcm_add_chmap_ctls' mangled-name='snd_pcm_add_chmap_ctls' filepath='sound/core/pcm_lib.c' line='2447' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_add_chmap_ctls'>
-        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_lib.c' line='2447' column='1'/>
-        <parameter type-id='95e97e5e' name='stream' filepath='sound/core/pcm_lib.c' line='2447' column='1'/>
-        <parameter type-id='ddec2084' name='chmap' filepath='sound/core/pcm_lib.c' line='2448' column='1'/>
-        <parameter type-id='95e97e5e' name='max_channels' filepath='sound/core/pcm_lib.c' line='2449' column='1'/>
-        <parameter type-id='7359adad' name='private_value' filepath='sound/core/pcm_lib.c' line='2450' column='1'/>
-        <parameter type-id='ce765417' name='info_ret' filepath='sound/core/pcm_lib.c' line='2451' column='1'/>
+      <function-decl name='snd_pcm_add_chmap_ctls' mangled-name='snd_pcm_add_chmap_ctls' filepath='sound/core/pcm_lib.c' line='2452' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_add_chmap_ctls'>
+        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_lib.c' line='2452' column='1'/>
+        <parameter type-id='95e97e5e' name='stream' filepath='sound/core/pcm_lib.c' line='2452' column='1'/>
+        <parameter type-id='ddec2084' name='chmap' filepath='sound/core/pcm_lib.c' line='2453' column='1'/>
+        <parameter type-id='95e97e5e' name='max_channels' filepath='sound/core/pcm_lib.c' line='2454' column='1'/>
+        <parameter type-id='7359adad' name='private_value' filepath='sound/core/pcm_lib.c' line='2455' column='1'/>
+        <parameter type-id='ce765417' name='info_ret' filepath='sound/core/pcm_lib.c' line='2456' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
     </abi-instr>
     <abi-instr address-size='64' path='sound/core/pcm_memory.c' language='LANG_C89'>
-      <function-decl name='snd_pcm_lib_preallocate_pages_for_all' mangled-name='snd_pcm_lib_preallocate_pages_for_all' filepath='sound/core/pcm_memory.c' line='280' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_preallocate_pages_for_all'>
-        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_memory.c' line='280' column='1'/>
-        <parameter type-id='95e97e5e' name='type' filepath='sound/core/pcm_memory.c' line='281' column='1'/>
-        <parameter type-id='eaa32e2f' name='data' filepath='sound/core/pcm_memory.c' line='281' column='1'/>
-        <parameter type-id='b59d7dce' name='size' filepath='sound/core/pcm_memory.c' line='282' column='1'/>
-        <parameter type-id='b59d7dce' name='max' filepath='sound/core/pcm_memory.c' line='282' column='1'/>
+      <function-decl name='snd_pcm_lib_preallocate_pages_for_all' mangled-name='snd_pcm_lib_preallocate_pages_for_all' filepath='sound/core/pcm_memory.c' line='283' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_preallocate_pages_for_all'>
+        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_memory.c' line='283' column='1'/>
+        <parameter type-id='95e97e5e' name='type' filepath='sound/core/pcm_memory.c' line='284' column='1'/>
+        <parameter type-id='eaa32e2f' name='data' filepath='sound/core/pcm_memory.c' line='284' column='1'/>
+        <parameter type-id='b59d7dce' name='size' filepath='sound/core/pcm_memory.c' line='285' column='1'/>
+        <parameter type-id='b59d7dce' name='max' filepath='sound/core/pcm_memory.c' line='285' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
-      <function-decl name='snd_pcm_lib_malloc_pages' mangled-name='snd_pcm_lib_malloc_pages' filepath='sound/core/pcm_memory.c' line='328' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_malloc_pages'>
-        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='328' column='1'/>
-        <parameter type-id='b59d7dce' name='size' filepath='sound/core/pcm_memory.c' line='328' column='1'/>
+      <function-decl name='snd_pcm_lib_malloc_pages' mangled-name='snd_pcm_lib_malloc_pages' filepath='sound/core/pcm_memory.c' line='331' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_malloc_pages'>
+        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='331' column='1'/>
+        <parameter type-id='b59d7dce' name='size' filepath='sound/core/pcm_memory.c' line='331' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
-      <function-decl name='snd_pcm_lib_get_vmalloc_page' mangled-name='snd_pcm_lib_get_vmalloc_page' filepath='sound/core/pcm_memory.c' line='449' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_get_vmalloc_page'>
-        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='449' column='1'/>
-        <parameter type-id='7359adad' name='offset' filepath='sound/core/pcm_memory.c' line='450' column='1'/>
+      <function-decl name='snd_pcm_lib_get_vmalloc_page' mangled-name='snd_pcm_lib_get_vmalloc_page' filepath='sound/core/pcm_memory.c' line='452' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_get_vmalloc_page'>
+        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='452' column='1'/>
+        <parameter type-id='7359adad' name='offset' filepath='sound/core/pcm_memory.c' line='453' column='1'/>
         <return type-id='02f11ed4'/>
       </function-decl>
-      <function-decl name='snd_pcm_lib_free_vmalloc_buffer' mangled-name='snd_pcm_lib_free_vmalloc_buffer' filepath='sound/core/pcm_memory.c' line='426' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_free_vmalloc_buffer'>
-        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='426' column='1'/>
+      <function-decl name='snd_pcm_lib_free_vmalloc_buffer' mangled-name='snd_pcm_lib_free_vmalloc_buffer' filepath='sound/core/pcm_memory.c' line='429' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_free_vmalloc_buffer'>
+        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='429' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
-      <function-decl name='snd_pcm_lib_free_pages' mangled-name='snd_pcm_lib_free_pages' filepath='sound/core/pcm_memory.c' line='379' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_free_pages'>
-        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='379' column='1'/>
+      <function-decl name='snd_pcm_lib_free_pages' mangled-name='snd_pcm_lib_free_pages' filepath='sound/core/pcm_memory.c' line='382' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_lib_free_pages'>
+        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='382' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
-      <function-decl name='_snd_pcm_lib_alloc_vmalloc_buffer' mangled-name='_snd_pcm_lib_alloc_vmalloc_buffer' filepath='sound/core/pcm_memory.c' line='398' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='_snd_pcm_lib_alloc_vmalloc_buffer'>
-        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='398' column='1'/>
-        <parameter type-id='b59d7dce' name='size' filepath='sound/core/pcm_memory.c' line='399' column='1'/>
-        <parameter type-id='3eb7c31c' name='gfp_flags' filepath='sound/core/pcm_memory.c' line='399' column='1'/>
+      <function-decl name='_snd_pcm_lib_alloc_vmalloc_buffer' mangled-name='_snd_pcm_lib_alloc_vmalloc_buffer' filepath='sound/core/pcm_memory.c' line='401' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='_snd_pcm_lib_alloc_vmalloc_buffer'>
+        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_memory.c' line='401' column='1'/>
+        <parameter type-id='b59d7dce' name='size' filepath='sound/core/pcm_memory.c' line='402' column='1'/>
+        <parameter type-id='3eb7c31c' name='gfp_flags' filepath='sound/core/pcm_memory.c' line='402' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
     </abi-instr>
@@ -138506,13 +138518,13 @@
       </function-decl>
     </abi-instr>
     <abi-instr address-size='64' path='sound/core/pcm_native.c' language='LANG_C89'>
-      <function-decl name='snd_pcm_suspend_all' mangled-name='snd_pcm_suspend_all' filepath='sound/core/pcm_native.c' line='1511' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_suspend_all'>
-        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_native.c' line='1511' column='1'/>
+      <function-decl name='snd_pcm_suspend_all' mangled-name='snd_pcm_suspend_all' filepath='sound/core/pcm_native.c' line='1557' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_suspend_all'>
+        <parameter type-id='4c9f335b' name='pcm' filepath='sound/core/pcm_native.c' line='1557' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
-      <function-decl name='snd_pcm_stop' mangled-name='snd_pcm_stop' filepath='sound/core/pcm_native.c' line='1317' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_stop'>
-        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_native.c' line='1317' column='1'/>
-        <parameter type-id='33158de9' name='state' filepath='sound/core/pcm_native.c' line='1317' column='1'/>
+      <function-decl name='snd_pcm_stop' mangled-name='snd_pcm_stop' filepath='sound/core/pcm_native.c' line='1363' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='snd_pcm_stop'>
+        <parameter type-id='06b2cd14' name='substream' filepath='sound/core/pcm_native.c' line='1363' column='1'/>
+        <parameter type-id='33158de9' name='state' filepath='sound/core/pcm_native.c' line='1363' column='1'/>
         <return type-id='95e97e5e'/>
       </function-decl>
     </abi-instr>
