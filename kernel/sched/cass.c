@@ -99,8 +99,8 @@ bool cass_cpu_better(const struct cass_cpu_cand *a,
 	long res;
 
 	/* Prefer the CPU that fits the task */
-	if (cass_cmp(fits_capacity(p_util, a->cpu),
-		     fits_capacity(p_util, b->cpu)))
+	if (cass_cmp(fits_capacity_cpu(p_util, a->cpu),
+		     fits_capacity_cpu(p_util, b->cpu)))
 		goto done;
 
 	/* Prefer the CPU that isn't the single fastest one in the system */
