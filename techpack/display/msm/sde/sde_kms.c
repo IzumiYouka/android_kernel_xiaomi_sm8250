@@ -933,7 +933,7 @@ static void _sde_kms_drm_check_dpms(struct drm_atomic_state *old_state,
 			old_mode = DRM_PANEL_BLANK_POWERDOWN;
 		}
 
-		if (old_mode != new_mode) {
+		if ((old_mode != new_mode) || (old_fps != new_fps)) {
 			struct drm_panel_notifier notifier_data;
 
 			SDE_EVT32(old_mode, new_mode, old_fps, new_fps,
@@ -1437,6 +1437,7 @@ static int _sde_kms_setup_displays(struct drm_device *dev,
 		.get_panel_vfp = dsi_display_get_panel_vfp,
 		.get_default_lms = dsi_display_get_default_lms,
 		.get_qsync_min_fps = dsi_display_get_qsync_min_fps,
+		.cmd_receive = dsi_display_cmd_receive,
 	};
 	static const struct sde_connector_ops wb_ops = {
 		.post_init =    sde_wb_connector_post_init,
@@ -1452,6 +1453,7 @@ static int _sde_kms_setup_displays(struct drm_device *dev,
 		.cmd_transfer = NULL,
 		.cont_splash_config = NULL,
 		.get_panel_vfp = NULL,
+		.cmd_receive = NULL,
 	};
 	static const struct sde_connector_ops dp_ops = {
 		.set_info_blob = dp_connnector_set_info_blob,
@@ -1470,6 +1472,7 @@ static int _sde_kms_setup_displays(struct drm_device *dev,
 		.cont_splash_config = NULL,
 		.get_panel_vfp = NULL,
 		.update_pps = dp_connector_update_pps,
+		.cmd_receive = NULL,
 	};
 	struct msm_display_info info;
 	struct drm_encoder *encoder;
@@ -3974,32 +3977,7 @@ void sde_kms_kickoff_count(struct sde_kms *sde_kms)
 	struct dsi_display *display = NULL;
 
 	if (sde_kms != NULL) {
-		for (i = 0; i < sde_kms->dsi_display_count; ++i) {
+		for (i = 0; i < sde_kms->dsi_display_count; ++i)
 			display = sde_kms->dsi_displays[i];
-		}
 	}
-}
-
-	return;
-void sde_kms_trigger_early_wakeup(struct sde_kms *sde_kms,
-		struct drm_crtc *crtc)
-{
-	struct msm_drm_private *priv;
-	struct drm_encoder *drm_enc;
-
-	if (!sde_kms || !crtc) {
-		SDE_ERROR("invalid argument sde_kms %pK crtc %pK\n",
-			sde_kms, crtc);
-		return;
-	}
-
-	priv = sde_kms->dev->dev_private;
-
-	SDE_ATRACE_BEGIN("sde_kms_trigger_early_wakeup");
-	drm_for_each_encoder_mask(drm_enc, crtc->dev, crtc->state->encoder_mask)
-		sde_encoder_trigger_early_wakeup(drm_enc);
-
-	if (sde_kms->first_kickoff)
-		sde_power_scale_reg_bus(&priv->phandle, VOTE_INDEX_HIGH, false);
-	SDE_ATRACE_END("sde_kms_trigger_early_wakeup");
 }
