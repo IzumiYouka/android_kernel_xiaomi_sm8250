@@ -3584,6 +3584,9 @@ static void _sde_plane_install_properties(struct drm_plane *plane,
 	msm_property_install_range(&psde->property_info, "mi_layer_info",
 		0x0, 0, U32_MAX, 0, PLANE_PROP_MI_LAYER_INFO);
 
+	msm_property_install_range(&psde->property_info, "mi_layer_info",
+		0x0, 0, U32_MAX, 0, PLANE_PROP_MI_LAYER_INFO);
+
 	msm_property_install_range(&psde->property_info, "zpos",
 		0x0, 0, INT_MAX, 0, PLANE_PROP_ZPOS);
 

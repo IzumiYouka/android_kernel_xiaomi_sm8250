@@ -952,7 +952,7 @@ static bool _sde_rm_check_lm_and_get_connected_blks(
 		struct sde_rm_hw_blk *primary_lm)
 {
 	const struct sde_lm_cfg *lm_cfg = to_sde_hw_mixer(lm->hw)->cap;
-	const struct sde_pingpong_cfg *pp_cfg = NULL;
+	const struct sde_pingpong_cfg *pp_cfg;
 	bool ret, is_conn_primary, is_conn_secondary;
 	u32 lm_primary_pref, lm_secondary_pref, cwb_pref;
 
@@ -2068,6 +2068,7 @@ void sde_rm_release(struct sde_rm *rm, struct drm_encoder *enc, bool nxt)
 	} else {
 		SDE_DEBUG("release rsvp[s%de%d]\n", rsvp->seq,
 				rsvp->enc_id);
+		SDE_EVT32(rsvp, rsvp->seq, rsvp->enc_id, nxt, DRMID(enc), DRMID(conn));
 		_sde_rm_release_rsvp(rm, rsvp, conn);
 	}
 
@@ -2090,6 +2091,9 @@ static void _sde_rm_check_and_modify_commit_rsvps(
 		list_for_each_entry(blk, &rm->hw_blks[type], list) {
 			if (blk->rsvp_nxt &&  blk->rsvp_nxt->enc_id == rsvp->enc_id
 					 && blk->rsvp_nxt != rsvp) {
+				pr_err("rsvp :%x blk->rsvp_nxt :%x, enc_id: %x type :%x\n",
+					rsvp, blk->rsvp_nxt, blk->rsvp_nxt->enc_id , type);
+				SDE_EVT32(rsvp, blk->rsvp_nxt, blk->rsvp_nxt->enc_id , type);
 				modify = true;
 			}
 		}
