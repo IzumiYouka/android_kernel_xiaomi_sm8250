@@ -648,13 +648,8 @@ And public attribution of xiaomi platforms(like L11R and so and)
 	usbpd_pm {
 		compatible = "xiaomi,usbpd-pm";
 		status = "ok";
-<<<<<<< HEAD
 		mi,pd-bat-volt-max = <4480>;
 		mi,pd-bat-curr-max = <12400>;
-=======
-		mi,pd-bat-volt-max = <4450>;
-		mi,pd-bat-curr-max = <6000>;
->>>>>>> a503174144ca (arm64/dts: xiaomi: avoid overvolting the battery during charging)
 		mi,pd-bus-volt-max = <12000>;
 		mi,pd-bus-curr-max = <6200>;
 		mi,pd-non-ffc-bat-volt-max = <4450>;
