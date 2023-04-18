@@ -4923,22 +4923,13 @@ static inline int util_fits_cpu(unsigned long util,
 	return fits;
 }
 
-static inline bool task_fits_capacity(struct task_struct *p,
-					long capacity,
-					int cpu)
+static inline int task_fits_cpu(struct task_struct *p, int cpu)
 {
-	unsigned int margin;
+	unsigned long uclamp_min = uclamp_eff_value(p, UCLAMP_MIN);
+	unsigned long uclamp_max = uclamp_eff_value(p, UCLAMP_MAX);
+	unsigned long util = task_util_est(p);
 
-	/*
-	 * Derive upmigration/downmigrate margin wrt the src/dest
-	 * CPU.
-	 */
-	if (capacity_orig_of(task_cpu(p)) > capacity_orig_of(cpu))
-		margin = sched_capacity_margin_down[cpu];
-	else
-		margin = sched_capacity_margin_up[task_cpu(p)];
-
-	return capacity * 1024 > uclamp_task_util(p) * margin;
+	return util_fits_cpu(util, uclamp_min, uclamp_max, cpu);
 }
 
 static inline bool task_fits_max(struct task_struct *p, int cpu)
@@ -4959,7 +4950,7 @@ static inline bool task_fits_max(struct task_struct *p, int cpu)
 			return false;
 	}
 
-	return task_fits_capacity(p, capacity, cpu);
+	return task_fits_cpu(p, cpu);
 }
 
 static inline bool task_demand_fits(struct task_struct *p, int cpu)
@@ -4970,7 +4961,7 @@ static inline bool task_demand_fits(struct task_struct *p, int cpu)
 	if (capacity == max_capacity)
 		return true;
 
-	return task_fits_capacity(p, capacity, cpu);
+	return task_fits_cpu(p, cpu);
 }
 
 struct find_best_target_env {
