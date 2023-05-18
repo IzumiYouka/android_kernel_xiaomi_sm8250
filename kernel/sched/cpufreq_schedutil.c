@@ -204,7 +204,7 @@ static bool sugov_update_next_freq(struct sugov_policy *sg_policy, u64 time,
 		 (next_freq < sg_policy->next_freq &&
 		  sugov_should_rate_limit(sg_policy, time)))
 		return false;
-		
+
 	if (sugov_up_down_rate_limit(sg_policy, time, next_freq)) {
 		/* Restore cached freq as next_freq is not changed */
 		sg_policy->cached_raw_freq = sg_policy->prev_cached_raw_freq;
@@ -1343,12 +1343,14 @@ static void sugov_exit(struct cpufreq_policy *policy)
 
 	mutex_lock(&global_tunables_lock);
 
+	/* Save tunables before last owner release it in gov_attr_set_put() */
+	if (tunables->attr_set.usage_count == 1)
+		sugov_tunables_save(policy, tunables);
+
 	count = gov_attr_set_put(&tunables->attr_set, &sg_policy->tunables_hook);
 	policy->governor_data = NULL;
-	if (!count) {
-		sugov_tunables_save(policy, tunables);
+	if (!count)
 		sugov_clear_global_tunables();
-	}
 
 	mutex_unlock(&global_tunables_lock);
 
