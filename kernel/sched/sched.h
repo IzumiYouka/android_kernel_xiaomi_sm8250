@@ -548,6 +548,9 @@ struct cfs_rq {
 	/* h_nr_running for SCHED_IDLE tasks */
 	unsigned int		idle_h_nr_running;
 
+	s64			avg_vruntime;
+	u64			avg_load;
+
 	u64			exec_clock;
 	u64			min_vruntime;
 #ifndef CONFIG_64BIT
@@ -2076,6 +2079,8 @@ extern void activate_task(struct rq *rq, struct task_struct *p, int flags);
 extern void deactivate_task(struct rq *rq, struct task_struct *p, int flags);
 
 extern void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags);
+
+extern u64 avg_vruntime(struct cfs_rq *cfs_rq);
 
 extern const_debug unsigned int sysctl_sched_nr_migrate;
 extern const_debug unsigned int sysctl_sched_migration_cost;
