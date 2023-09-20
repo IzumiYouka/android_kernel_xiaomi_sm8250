@@ -30,7 +30,6 @@ extern unsigned int sysctl_sched_base_slice;
 extern unsigned int sysctl_sched_sync_hint_enable;
 extern unsigned int sysctl_sched_cstate_aware;
 extern unsigned int sysctl_sched_wakeup_granularity;
-extern unsigned int sysctl_sched_child_runs_first;
 extern unsigned int sysctl_sched_force_lb_enable;
 extern unsigned int sysctl_sched_hr_limit_level;
 
