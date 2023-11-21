@@ -5,7 +5,6 @@
  */
 SCHED_FEAT(PLACE_LAG, true)
 SCHED_FEAT(PLACE_DEADLINE_INITIAL, true)
-SCHED_FEAT(EEVDF, true)
 
 /*
  * Prefer to schedule the task we woke last (assuming it failed
@@ -13,13 +12,6 @@ SCHED_FEAT(EEVDF, true)
  * touched, increases cache locality.
  */
 SCHED_FEAT(NEXT_BUDDY, false)
-
-/*
- * Prefer to schedule the task that ran last (when we did
- * wake-preempt) as that likely will touch the same data, increases
- * cache locality.
- */
-SCHED_FEAT(LAST_BUDDY, true)
 
 /*
  * Consider buddies to be cache hot, decreases the likelyness of a
