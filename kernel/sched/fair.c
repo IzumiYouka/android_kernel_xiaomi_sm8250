@@ -6398,33 +6398,11 @@ bool cpu_overutilized(int cpu)
 	return !util_fits_cpu(cpu_util(cpu), rq_util_min, rq_util_max, cpu);
 }
 
-static bool sd_overutilized(struct sched_domain *sd)
-{
-	return sd->shared->overutilized;
-}
-
-static void set_sd_overutilized(struct sched_domain *sd)
-{
-	trace_sched_overutilized(sd, sd->shared->overutilized, true);
-	sd->shared->overutilized = true;
-}
-
-static void clear_sd_overutilized(struct sched_domain *sd)
-{
-	trace_sched_overutilized(sd, sd->shared->overutilized, false);
-	sd->shared->overutilized = false;
-}
-
 static inline void update_overutilized_status(struct rq *rq)
 {
-	struct sched_domain *sd;
-
-	rcu_read_lock();
-	sd = rcu_dereference(rq->sd);
-	if (sd && !sd_overutilized(sd) &&
-	    cpu_overutilized(rq->cpu))
-		set_sd_overutilized(sd);
-	rcu_read_unlock();
+	if (!READ_ONCE(rq->rd->overutilized) && cpu_overutilized(rq->cpu)) {
+		WRITE_ONCE(rq->rd->overutilized, SG_OVERUTILIZED);
+	}
 }
 #else
 static inline void update_overutilized_status(struct rq *rq) { }
@@ -10186,7 +10164,6 @@ struct sd_lb_stats {
 	unsigned long total_running;
 	unsigned long total_load;	/* Total load of all groups in sd */
 	unsigned long total_capacity;	/* Total capacity of all groups in sd */
-	unsigned long total_util;	/* Total util of all groups in sd */
 	unsigned long avg_load;	/* Average load across all groups in sd */
 
 	struct sg_lb_stats busiest_stat;/* Statistics of the busiest group */
@@ -10207,7 +10184,6 @@ static inline void init_sd_lb_stats(struct sd_lb_stats *sds)
 		.total_running = 0UL,
 		.total_load = 0UL,
 		.total_capacity = 0UL,
-		.total_util = 0UL,
 		.busiest_stat = {
 			.avg_load = 0UL,
 			.sum_nr_running = 0,
@@ -10620,12 +10596,8 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 
 		nr_running = rq->nr_running;
 
-		if (cpu_overutilized(i)) {
+		if (cpu_overutilized(i))
 			*sg_status |= SG_OVERUTILIZED;
-
-			if (rq->misfit_task_load)
-				*sg_status |= SG_HAS_MISFIT_TASK;
-		}
 
 #ifdef CONFIG_NUMA_BALANCING
 		sgs->nr_numa_running += rq->nr_numa_running;
@@ -10887,7 +10859,6 @@ next_group:
 		sds->total_running += sgs->sum_nr_running;
 		sds->total_load += sgs->group_load;
 		sds->total_capacity += sgs->group_capacity;
-		sds->total_util += sgs->group_util;
 
 		trace_sched_load_balance_sg_stats(sg->cpumask[0],
 				sgs->group_type, sgs->idle_cpus,
@@ -10910,48 +10881,14 @@ next_group:
 
 		/* update overload indicator if we are at root domain */
 		WRITE_ONCE(rd->overload, sg_status & SG_OVERLOAD);
+
+		/* Update over-utilization (tipping point, U >= 0) indicator */
+		WRITE_ONCE(rd->overutilized, sg_status & SG_OVERUTILIZED);
+	} else if (sg_status & SG_OVERUTILIZED) {
+		struct root_domain *rd = env->dst_rq->rd;
+
+		WRITE_ONCE(rd->overutilized, SG_OVERUTILIZED);
 	}
-
-	if (sg_status & SG_OVERUTILIZED)
-		set_sd_overutilized(env->sd);
-	else
-		clear_sd_overutilized(env->sd);
-
-	/*
-	 * If there is a misfit task in one cpu in this sched_domain
-	 * it is likely that the imbalance cannot be sorted out among
-	 * the cpu's in this sched_domain. In this case set the
-	 * overutilized flag at the parent sched_domain.
-	 */
-	if (sg_status & SG_HAS_MISFIT_TASK) {
-		struct sched_domain *sd = env->sd->parent;
-
-		/*
-		 * In case of a misfit task, load balance at the parent
-		 * sched domain level will make sense only if the the cpus
-		 * have a different capacity. If cpus at a domain level have
-		 * the same capacity, the misfit task cannot be well
-		 * accomodated	in any of the cpus and there in no point in
-		 * trying a load balance at this level
-		 */
-		while (sd) {
-			if (sd->flags & SD_ASYM_CPUCAPACITY) {
-				set_sd_overutilized(sd);
-				break;
-			}
-			sd = sd->parent;
-		}
-	}
-
-	/*
-	 * If the domain util is greater that domain capacity, load balancing
-	 * needs to be done at the next sched domain level as well.
-	 */
-	if (env->sd->parent &&
-	    sds->total_capacity * 1024 < sds->total_util *
-			 sched_capacity_margin_up[group_first_cpu(sds->local)])
-		set_sd_overutilized(env->sd->parent);
-
 }
 
 /**
@@ -11245,7 +11182,7 @@ static struct sched_group *find_busiest_group(struct lb_env *env)
 	if (static_branch_unlikely(&sched_energy_present)) {
 		struct root_domain *rd = env->dst_rq->rd;
 
-		if (rcu_dereference(rd->pd) && !sd_overutilized(env->sd)) {
+		if (rcu_dereference(rd->pd) && !READ_ONCE(rd->overutilized)) {
 			int cpu_local, cpu_busiest;
 			unsigned long capacity_local, capacity_busiest;
 
@@ -11907,7 +11844,7 @@ out:
 				 busiest ? busiest->nr_running : 0,
 				 env.imbalance, env.flags, ld_moved,
 				 sd->balance_interval, active_balance,
-				 sd_overutilized(sd), env.prefer_spread);
+				 READ_ONCE(this_rq->rd->overutilized), env.prefer_spread);
 	return ld_moved;
 }
 
@@ -11915,7 +11852,6 @@ static inline unsigned long
 get_sd_balance_interval(struct sched_domain *sd, int cpu_busy)
 {
 	unsigned long interval = sd->balance_interval;
-	unsigned int cpu;
 
 	if (cpu_busy)
 		interval *= sd->busy_factor;
@@ -11924,24 +11860,6 @@ get_sd_balance_interval(struct sched_domain *sd, int cpu_busy)
 	interval = msecs_to_jiffies(interval);
 	interval = clamp(interval, 1UL, max_load_balance_interval);
 
-	/*
-	 * check if sched domain is marked as overutilized
-	 * we ought to only do this on systems which have SD_ASYMCAPACITY
-	 * but we want to do it for all sched domains in those systems
-	 * So for now, just check if overutilized as a proxy.
-	 */
-	/*
-	 * If we are overutilized and we have a misfit task, then
-	 * we want to balance as soon as practically possible, so
-	 * we return an interval of zero, except for busy balance.
-	 */
-	if (sd_overutilized(sd) && !cpu_busy) {
-		/* we know the root is overutilized, let's check for a misfit task */
-		for_each_cpu(cpu, sched_domain_span(sd)) {
-			if (cpu_rq(cpu)->misfit_task_load)
-				return 1;
-		}
-	}
 	return interval;
 }
 
@@ -12202,9 +12120,6 @@ static void rebalance_domains(struct rq *rq, enum cpu_idle_type idle)
 		 */
 		need_decay = update_newidle_cost(sd, 0, 0);
 		max_cost += sd->max_newidle_lb_cost;
-
-		if (!sd_overutilized(sd))
-			continue;
 
 		if (!(sd->flags & SD_LOAD_BALANCE))
 			continue;
