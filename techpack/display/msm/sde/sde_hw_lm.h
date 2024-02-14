@@ -103,6 +103,7 @@ struct sde_hw_mixer {
 		bool enabled;
 		bool stage[SDE_STAGE_MAX];
 	} dim;
+
 };
 
 /**
