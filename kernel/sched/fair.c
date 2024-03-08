@@ -9557,7 +9557,7 @@ int can_migrate_task(struct task_struct *p, struct lb_env *env)
 	if (tsk_cache_hot == -1)
 		tsk_cache_hot = task_hot(p, env);
 
-	if (env->idle != CPU_NOT_IDLE || tsk_cache_hot <= 0 ||
+	if (env->idle || tsk_cache_hot <= 0 ||
 	    env->sd->nr_balance_failed > env->sd->cache_nice_tries) {
 		if (tsk_cache_hot == 1) {
 			schedstat_inc(env->sd->lb_hot_gained[env->idle]);
@@ -9647,7 +9647,7 @@ redo:
 		 * We don't want to steal all, otherwise we may be treated likewise,
 		 * which could at worst lead to a livelock crash.
 		 */
-		if (env->idle != CPU_NOT_IDLE && env->src_rq->nr_running <= 1)
+		if (env->idle && env->src_rq->nr_running <= 1)
 			break;
 
 		p = list_last_entry(tasks, struct task_struct, se.group_node);
@@ -10069,7 +10069,7 @@ static inline int get_sd_load_idx(struct sched_domain *sd,
 	int load_idx;
 
 	switch (idle) {
-	case CPU_NOT_IDLE:
+	case __CPU_NOT_IDLE:
 		load_idx = sd->busy_idx;
 		break;
 
@@ -10603,7 +10603,7 @@ asym_packing:
 		return true;
 
 	/* No ASYM_PACKING if target CPU is already busy */
-	if (env->idle == CPU_NOT_IDLE)
+	if (!env->idle)
 		return true;
 	/*
 	 * ASYM_PACKING needs to move all the work to the highest
@@ -10838,7 +10838,7 @@ static int check_asym_packing(struct lb_env *env, struct sd_lb_stats *sds)
 	if (!(env->sd->flags & SD_ASYM_PACKING))
 		return 0;
 
-	if (env->idle == CPU_NOT_IDLE)
+	if (!env->idle)
 		return 0;
 
 	if (!sds->busiest)
@@ -11061,7 +11061,7 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
 		 */
 		if (busiest->group_type == group_overloaded &&
 			local->group_type <= group_misfit_task &&
-			env->idle != CPU_NOT_IDLE) {
+			env->idle) {
 			env->imbalance = busiest->load_per_task;
 			return;
 		}
@@ -11157,7 +11157,7 @@ static struct sched_group *find_busiest_group(struct lb_env *env)
 	 * busiest group has some capacity but loaded with more than 1
 	 * task.
 	 */
-	if (env->idle != CPU_NOT_IDLE && group_has_capacity(env, local) &&
+	if (env->idle && group_has_capacity(env, local) &&
 	    (busiest->group_no_capacity || env->prefer_spread))
 		goto force_balance;
 
@@ -11192,7 +11192,7 @@ static struct sched_group *find_busiest_group(struct lb_env *env)
 			goto out_balanced;
 	} else {
 		/*
-		 * In the CPU_NEWLY_IDLE, CPU_NOT_IDLE cases, use
+		 * In the CPU_NEWLY_IDLE, __CPU_NOT_IDLE cases, use
 		 * imbalance_pct to be conservative.
 		 */
 		if (100 * busiest->avg_load <=
@@ -11360,18 +11360,18 @@ static int need_active_balance(struct lb_env *env)
 	 * because of other sched_class or IRQs if more capacity stays
 	 * available on dst_cpu.
 	 */
-	if ((env->idle != CPU_NOT_IDLE) &&
+	if ((env->idle) &&
 	    (env->src_rq->cfs.h_nr_queued == 1)) {
 		if ((check_cpu_capacity(env->src_rq, sd)) &&
 		    (capacity_of(env->src_cpu)*sd->imbalance_pct < capacity_of(env->dst_cpu)*100))
 			return 1;
 	}
 
-	if (env->idle != CPU_NOT_IDLE &&
+	if (env->idle &&
 			env->src_grp_type == group_misfit_task)
 		return 1;
 
-	if ((env->idle != CPU_NOT_IDLE) &&
+	if ((env->idle) &&
 		(capacity_of(env->src_cpu) < capacity_of(env->dst_cpu)) &&
 		((capacity_orig_of(env->src_cpu) <
 				capacity_orig_of(env->dst_cpu))) &&
@@ -11969,7 +11969,7 @@ static void rebalance_domains(struct rq *rq, enum cpu_idle_type idle)
 {
 	int continue_balancing = 1;
 	int cpu = rq->cpu;
-	int busy = idle != CPU_IDLE && !sched_idle_cpu(cpu);
+	int busy = !idle && !sched_idle_cpu(cpu);
 	unsigned long interval;
 	struct sched_domain *sd;
 	/* Earliest time when we have to do rebalance again */
@@ -12024,8 +12024,8 @@ static void rebalance_domains(struct rq *rq, enum cpu_idle_type idle)
 				 * env->dst_cpu, so we can't know our idle
 				 * state even if we migrated tasks. Update it.
 				 */
-				idle = idle_cpu(cpu) ? CPU_IDLE : CPU_NOT_IDLE;
-				busy = idle != CPU_IDLE && !sched_idle_cpu(cpu);
+				idle = idle_cpu(cpu);
+				busy = !idle && !sched_idle_cpu(cpu);
 			}
 			sd->last_balance = jiffies;
 			interval = get_sd_balance_interval(sd, busy);
@@ -12725,8 +12725,7 @@ out:
 static __latent_entropy void run_rebalance_domains(struct softirq_action *h)
 {
 	struct rq *this_rq = this_rq();
-	enum cpu_idle_type idle = this_rq->idle_balance ?
-						CPU_IDLE : CPU_NOT_IDLE;
+	enum cpu_idle_type idle = this_rq->idle_balance;
 
 	/*
 	 * Since core isolation doesn't update nohz.idle_cpus_mask, there
