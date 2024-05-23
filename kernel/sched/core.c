@@ -1527,6 +1527,7 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 
 void deactivate_task(struct rq *rq, struct task_struct *p, int flags)
 {
+	SCHED_WARN_ON(flags & DEQUEUE_SLEEP);
 	if (task_contributes_to_load(p))
 		rq->nr_uninterruptible++;
 
@@ -2534,6 +2535,8 @@ static int ttwu_remote(struct task_struct *p, int wake_flags)
 	if (task_on_rq_queued(p)) {
 		/* check_preempt_curr() may use rq clock */
 		update_rq_clock(rq);
+		if (p->se.sched_delayed)
+			enqueue_task(rq, p, ENQUEUE_NOCLOCK | ENQUEUE_DELAYED);
 		ttwu_do_wakeup(rq, p, wake_flags, &rf);
 		ret = 1;
 	}
@@ -2789,6 +2792,13 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags,
 	if (!(p->state & state))
 		goto out;
 
+	/*
+	 * Specifically, given current runs ttwu() we must be before
+	 * schedule()'s block_task(), as such this must not observe
+	 * sched_delayed.
+	 */
+	SCHED_WARN_ON(p->se.sched_delayed);
+
 	trace_sched_waking(p);
 
 	/* We're going to change ->state: */
@@ -2977,6 +2987,9 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 	p->se.vlag			= 0;
 	p->se.slice			= sysctl_sched_base_slice;
 	INIT_LIST_HEAD(&p->se.group_node);
+
+	/* A delayed task cannot be in clone(). */
+	SCHED_WARN_ON(p->se.sched_delayed);
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	p->se.cfs_rq			= NULL;
