@@ -4812,7 +4812,7 @@ static void clear_buddies(struct cfs_rq *cfs_rq, struct sched_entity *se)
 
 static __always_inline void return_cfs_rq_runtime(struct cfs_rq *cfs_rq);
 
-static void
+static bool
 dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 {
 	int action = UPDATE_TG;
@@ -4820,10 +4820,30 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 	if (entity_is_task(se) && task_on_rq_migrating(task_of(se)))
 		action |= DO_DETACH;
 
-	/*
-	 * Update run-time statistics of the 'current'.
-	 */
 	update_curr(cfs_rq);
+
+	if (flags & DEQUEUE_DELAYED) {
+		SCHED_WARN_ON(!se->sched_delayed);
+	} else {
+		bool sleep = flags & DEQUEUE_SLEEP;
+
+		/*
+		 * DELAY_DEQUEUE relies on spurious wakeups, special task
+		 * states must not suffer spurious wakeups, excempt them.
+		 */
+		if (flags & DEQUEUE_SPECIAL)
+			sleep = false;
+
+		SCHED_WARN_ON(sleep && se->sched_delayed);
+
+		if (sched_feat(DELAY_DEQUEUE) && sleep &&
+		    !entity_eligible(cfs_rq, se)) {
+			if (cfs_rq->next == se)
+				cfs_rq->next = NULL;
+			se->sched_delayed = 1;
+			return false;
+		}
+	}
 
 	/*
 	 * When dequeuing a sched_entity, we must:
@@ -4860,8 +4880,13 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 	if ((flags & (DEQUEUE_SAVE | DEQUEUE_MOVE)) != DEQUEUE_SAVE)
 		update_min_vruntime(cfs_rq);
 
+	if (flags & DEQUEUE_DELAYED)
+		se->sched_delayed = 0;
+
 	if (cfs_rq->nr_running == 0)
 		update_idle_cfs_rq_clock_pelt(cfs_rq);
+
+	return true;
 }
 
 static void
@@ -5186,7 +5211,11 @@ static void throttle_cfs_rq(struct cfs_rq *cfs_rq)
 			break;
 
 		if (dequeue) {
-			dequeue_entity(qcfs_rq, se, DEQUEUE_SLEEP);
+			int flags = DEQUEUE_SLEEP | DEQUEUE_SPECIAL;
+
+			if (se->sched_delayed)
+				flags |= DEQUEUE_DELAYED;
+			dequeue_entity(qcfs_rq, se, flags);
 		} else {
 			update_load_avg(qcfs_rq, se, 0);
 			se_update_runnable(se);
@@ -6035,31 +6064,29 @@ static void set_next_buddy(struct sched_entity *se);
  * decreased. We remove the task from the rbtree and
  * update the fair scheduling stats:
  */
-static bool dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
+static int dequeue_entities(struct rq *rq, struct sched_entity *se, int flags)
 {
-	struct cfs_rq *cfs_rq;
-	struct sched_entity *se = &p->se;
-	int task_sleep = flags & DEQUEUE_SLEEP;
-	int idle_h_nr_running = idle_policy(p->policy);
 	bool was_sched_idle = sched_idle_rq(rq);
+	bool task_sleep = flags & DEQUEUE_SLEEP;
+	bool task_delayed = flags & DEQUEUE_DELAYED;
+	struct task_struct *p = NULL;
+	int idle_h_nr_running = 0;
+	struct cfs_rq *cfs_rq;
 
-	/*
-	 * Update the rq's estimated utilization before any
-	 * cfs_rq_util_change() from the dequeue path reads it, otherwise
-	 * schedutil would see a stale CPU util_est value.
-	 */
-	util_est_dequeue(&rq->cfs, p);
-
-	/*
-	 * The code below (indirectly) updates schedutil which looks at
-	 * the cfs_rq utilization to select a frequency.
-	 * Let's update schedtune here to ensure the boost value of the
-	 * current task is not more accounted for in the selection of the OPP.
-	 */
+	if (entity_is_task(se)) {
+		p = task_of(se);
+		idle_h_nr_running = idle_policy(p->policy);
+	}
 
 	for_each_sched_entity(se) {
 		cfs_rq = cfs_rq_of(se);
-		dequeue_entity(cfs_rq, se, flags);
+
+		if (!dequeue_entity(cfs_rq, se, flags)) {
+			if (p && &p->se == se)
+				return -1;
+
+			break;
+		}
 
 		/*
 		 * end evaluation on encountering a throttled cfs_rq
@@ -6085,6 +6112,7 @@ static bool dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 			break;
 		}
 		flags |= DEQUEUE_SLEEP;
+		flags &= ~(DEQUEUE_DELAYED | DEQUEUE_SPECIAL);
 	}
 
 	for_each_sched_entity(se) {
@@ -6108,7 +6136,35 @@ static bool dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	if (unlikely(!was_sched_idle && sched_idle_rq(rq)))
 		rq->next_balance = jiffies;
 
-	util_est_update(&rq->cfs, p, task_sleep);
+	if (p && task_delayed) {
+		SCHED_WARN_ON(!task_sleep);
+		SCHED_WARN_ON(p->on_rq != 1);
+
+		/* Fix-up what dequeue_task_fair() skipped */
+		hrtick_update(rq);
+
+		/* Fix-up what block_task() skipped. */
+		__block_task(rq, p);
+	}
+
+	return 1;
+}
+
+static bool dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
+{
+	/*
+	 * Update the rq's estimated utilization before any
+	 * cfs_rq_util_change() from the dequeue path reads it, otherwise
+	 * schedutil would see a stale CPU util_est value.
+	 */
+	util_est_dequeue(&rq->cfs, p);
+
+	if (dequeue_entities(rq, &p->se, flags) < 0) {
+		util_est_update(&rq->cfs, p, DEQUEUE_SLEEP);
+		return false;
+	}
+
+	util_est_update(&rq->cfs, p, flags & DEQUEUE_SLEEP);
 	hrtick_update(rq);
 
 	return true;
@@ -8277,7 +8333,21 @@ static void migrate_task_rq_fair(struct task_struct *p, int new_cpu)
 
 static void task_dead_fair(struct task_struct *p)
 {
-	remove_entity_load_avg(&p->se);
+	struct sched_entity *se = &p->se;
+
+	if (se->sched_delayed) {
+		struct rq_flags rf;
+		struct rq *rq;
+
+		rq = task_rq_lock(p, &rf);
+		if (se->sched_delayed) {
+			update_rq_clock(rq);
+			dequeue_entities(rq, se, DEQUEUE_SLEEP | DEQUEUE_DELAYED);
+		}
+		task_rq_unlock(rq, p, &rf);
+	}
+
+	remove_entity_load_avg(se);
 }
 #endif /* CONFIG_SMP */
 
