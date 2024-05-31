@@ -11,6 +11,10 @@ SCHED_FEAT(PLACE_LAG, false)
  */
 SCHED_FEAT(PLACE_DEADLINE_INITIAL, false)
 /*
+ * Preserve relative virtual deadline on 'migration'.
+ */
+SCHED_FEAT(PLACE_REL_DEADLINE, true)
+/*
  * Inhibit (wakeup) preemption until the current task has either matched the
  * 0-lag point or until is has exhausted it's slice.
  */
