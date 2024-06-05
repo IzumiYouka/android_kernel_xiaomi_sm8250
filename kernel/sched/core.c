@@ -1494,9 +1494,14 @@ static inline void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 		psi_enqueue(p, flags & ENQUEUE_WAKEUP);
 	}
 
-	uclamp_rq_inc(rq, p);
 	p->sched_class->enqueue_task(rq, p, flags);
 	trace_sched_enq_deq_task(p, 1, cpumask_bits(&p->cpus_allowed)[0]);
+
+	/*
+	 * Must be after ->enqueue_task() because ENQUEUE_DELAYED can clear
+	 * ->sched_delayed.
+	 */
+	uclamp_rq_inc(rq, p);
 }
 
 static inline void dequeue_task(struct rq *rq, struct task_struct *p, int flags)
@@ -1509,6 +1514,10 @@ static inline void dequeue_task(struct rq *rq, struct task_struct *p, int flags)
 		psi_dequeue(p, flags & DEQUEUE_SLEEP);
 	}
 
+	/*
+	 * Must be before ->dequeue_task() because ->dequeue_task() can 'fail'
+	 * and mark the task ->sched_delayed.
+	 */
 	uclamp_rq_dec(rq, p);
 	p->sched_class->dequeue_task(rq, p, flags);
 	trace_sched_enq_deq_task(p, 0, cpumask_bits(&p->cpus_allowed)[0]);
