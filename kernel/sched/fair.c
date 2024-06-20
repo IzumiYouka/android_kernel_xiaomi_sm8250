@@ -724,6 +724,21 @@ static void update_min_vruntime(struct cfs_rq *cfs_rq)
 #endif
 }
 
+static inline u64 cfs_rq_min_slice(struct cfs_rq *cfs_rq)
+{
+	struct sched_entity *root = __pick_root_entity(cfs_rq);
+	struct sched_entity *curr = cfs_rq->curr;
+	u64 min_slice = ~0ULL;
+
+	if (curr && curr->on_rq)
+		min_slice = curr->slice;
+
+	if (root)
+		min_slice = min(min_slice, root->min_slice);
+
+	return min_slice;
+}
+
 #define __node_2_se(node) \
 	rb_entry((node), struct sched_entity, run_node)
 
@@ -738,8 +753,18 @@ static inline void __min_vruntime_update(struct sched_entity *se, struct rb_node
 	}
 }
 
+static inline void __min_slice_update(struct sched_entity *se, struct rb_node *node)
+{
+	if (node) {
+		struct sched_entity *rse = __node_2_se(node);
+		if (rse->min_slice < se->min_slice)
+			se->min_slice = rse->min_slice;
+	}
+}
+
 /*
  * se->min_vruntime = min(se->vruntime, {left,right}->min_vruntime)
+ * se->min_slice = min(se->slice, {left,right}->min_slice)
  */
 static inline u64 min_vruntime_update(struct sched_entity *se)
 {
@@ -749,11 +774,55 @@ static inline u64 min_vruntime_update(struct sched_entity *se)
 	__min_vruntime_update(se, node->rb_right);
 	__min_vruntime_update(se, node->rb_left);
 
+	se->min_slice = se->slice;
+	__min_slice_update(se, node->rb_right);
+	__min_slice_update(se, node->rb_left);
+
 	return se->min_vruntime;
 }
 
-RB_DECLARE_CALLBACKS(static, min_vruntime_cb, struct sched_entity,
-		     run_node, u64, min_vruntime, min_vruntime_update);
+static inline void
+min_vruntime_cb_propagate(struct rb_node *rb, struct rb_node *stop)
+{
+	while (rb != stop) {
+		struct sched_entity *se = __node_2_se(rb);
+		u64 old_min_vruntime = se->min_vruntime;
+		u64 old_min_slice = se->min_slice;
+
+		min_vruntime_update(se);
+		if (se->min_vruntime == old_min_vruntime &&
+		    se->min_slice == old_min_slice)
+			break;
+		rb = rb_parent(&se->run_node);
+	}
+}
+
+static inline void
+min_vruntime_cb_copy(struct rb_node *rb_old, struct rb_node *rb_new)
+{
+	struct sched_entity *old = __node_2_se(rb_old);
+	struct sched_entity *new = __node_2_se(rb_new);
+
+	new->min_vruntime = old->min_vruntime;
+	new->min_slice = old->min_slice;
+}
+
+static void
+min_vruntime_cb_rotate(struct rb_node *rb_old, struct rb_node *rb_new)
+{
+	struct sched_entity *old = __node_2_se(rb_old);
+	struct sched_entity *new = __node_2_se(rb_new);
+
+	new->min_vruntime = old->min_vruntime;
+	new->min_slice = old->min_slice;
+	min_vruntime_update(old);
+}
+
+static const struct rb_augment_callbacks min_vruntime_cb = {
+	.propagate = min_vruntime_cb_propagate,
+	.copy = min_vruntime_cb_copy,
+	.rotate = min_vruntime_cb_rotate,
+};
 
 /*
  * Enqueue an entity into the rb-tree:
@@ -785,6 +854,7 @@ static void __enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 
 	avg_vruntime_add(cfs_rq, se);
 	se->min_vruntime = se->vruntime;
+	se->min_slice = se->slice;
 	rb_link_node(&se->run_node, parent, link);
 	rb_insert_augmented_cached(&se->run_node, &cfs_rq->tasks_timeline,
 				   leftmost, &min_vruntime_cb);
@@ -950,7 +1020,8 @@ static bool update_deadline(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	 * nice) while the request time r_i is determined by
 	 * sysctl_sched_base_slice.
 	 */
-	se->slice = sysctl_sched_base_slice;
+	if (!se->custom_slice)
+		se->slice = sysctl_sched_base_slice;
 
 	/*
 	 * EEVDF: vd_i = ve_i + r_i / w_i
@@ -4660,7 +4731,8 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 	u64 vslice, vruntime = avg_vruntime(cfs_rq);
 	s64 lag = 0;
 
-	se->slice = sysctl_sched_base_slice;
+	if (!se->custom_slice)
+		se->slice = sysctl_sched_base_slice;
 	vslice = calc_delta_fair(se->slice, se);
 
 	/*
@@ -6120,6 +6192,7 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	int h_nr_delayed = 0;
 	int task_new = !(flags & ENQUEUE_WAKEUP);
 	int idle_h_nr_running = idle_policy(p->policy);
+	u64 slice = 0;
 
 	/*
 	 * The code below (indirectly) updates schedutil which looks at
@@ -6170,7 +6243,18 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 			break;
 		}
 		cfs_rq = cfs_rq_of(se);
+
+		/*
+		 * Basically set the slice of group entries to the min_slice of
+		 * their respective cfs_rq. This ensures the group can service
+		 * its entities in the desired time-frame.
+		 */
+		if (slice) {
+			se->slice = slice;
+			se->custom_slice = 1;
+		}
 		enqueue_entity(cfs_rq, se, flags);
+		slice = cfs_rq_min_slice(cfs_rq);
 
 		/*
 		 * end evaluation on encountering a throttled cfs_rq
@@ -6203,6 +6287,9 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		update_load_avg(cfs_rq, se, UPDATE_TG);
 		se_update_runnable(se);
 		update_cfs_group(se);
+
+		se->slice = slice;
+		slice = cfs_rq_min_slice(cfs_rq);
 	}
 
 	if (!se) {
@@ -6261,12 +6348,16 @@ static int dequeue_entities(struct rq *rq, struct sched_entity *se, int flags)
 	int idle_h_nr_running = 0;
 	int h_nr_delayed = 0;
 	struct cfs_rq *cfs_rq;
+	u64 slice = 0;
 
 	if (entity_is_task(se)) {
 		p = task_of(se);
 		idle_h_nr_running = idle_policy(p->policy);
 		if (!task_sleep && !task_delayed)
 			h_nr_delayed = !!se->sched_delayed;
+	} else {
+		cfs_rq = group_cfs_rq(se);
+		slice = cfs_rq_min_slice(cfs_rq);
 	}
 
 	for_each_sched_entity(se) {
@@ -6295,6 +6386,8 @@ static int dequeue_entities(struct rq *rq, struct sched_entity *se, int flags)
 
 		/* Don't dequeue parent if it has other entities besides us */
 		if (cfs_rq->load.weight) {
+			slice = cfs_rq_min_slice(cfs_rq);
+
 			/* Avoid re-evaluating load for this entity: */
 			se = parent_entity(se);
 			/*
@@ -6323,6 +6416,9 @@ static int dequeue_entities(struct rq *rq, struct sched_entity *se, int flags)
 		update_load_avg(cfs_rq, se, UPDATE_TG);
 		se_update_runnable(se);
 		update_cfs_group(se);
+
+		se->slice = slice;
+		slice = cfs_rq_min_slice(cfs_rq);
 	}
 
 	if (!se) {
