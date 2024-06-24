@@ -30,9 +30,23 @@ void cpufreq_remove_update_util_hook(int cpu);
 bool cpufreq_this_cpu_can_update(struct cpufreq_policy *policy);
 
 static inline unsigned long map_util_freq(unsigned long util,
-					unsigned long freq, unsigned long cap)
+					  unsigned long freq,
+					  unsigned long cap)
 {
-	return (freq + (freq >> 2)) * util / cap;
+	unsigned long headroom;
+
+	if (util >= cap)
+		return freq;
+
+	/*
+	 * Tapered DVFS headroom:
+	 * Instead of boosting target freq by fixed 25%,
+	 * add 25% of remaining capacity to util.
+	 */
+	headroom = (cap - util) >> 2;
+	util += headroom;
+
+	return freq * util / cap;
 }
 #endif /* CONFIG_CPU_FREQ */
 
