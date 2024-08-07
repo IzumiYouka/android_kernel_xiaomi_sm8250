@@ -447,6 +447,29 @@ unsigned long schedutil_cpu_util(int cpu, unsigned long util_cfs,
 	util = scale_irq_capacity(util, irq, max);
 	util += irq;
 
+	return min(scale, util);
+}
+
+static __always_inline
+unsigned long apply_dvfs_headroom(int cpu, unsigned long util, unsigned long max_cap)
+{
+	unsigned long headroom;
+
+	if (!util || util >= max_cap)
+		return util;
+
+	/*
+	 * sm8250/alioth layout:
+	 * CPU0-3 = LITTLE, CPU4-6 = big, CPU7 = prime.
+	 * Keep source behavior without depending on cpu_lp_mask.
+	 */
+	if (cpu >= 0 && cpu <= 3)
+		headroom = util + (util >> 1);
+	else
+		headroom = util + (util >> 2);
+
+	return min(headroom, max_cap);
+}
 	/*
 	 * Bandwidth required by DEADLINE must always be granted while, for
 	 * FAIR and RT, we use blocked utilization of IDLE CPUs as a mechanism
