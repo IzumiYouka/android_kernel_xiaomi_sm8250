@@ -140,6 +140,17 @@ unsigned int sched_capacity_margin_up[NR_CPUS] = {
 unsigned int sched_capacity_margin_down[NR_CPUS] = {
 			[0 ... NR_CPUS-1] = 1205}; /* ~15% margin */
 
+/*
+ * fits_capacity() must ensure that a task will not be 'stuck' on a CPU with
+ * lower capacity for too long. This the threshold is the util value at which
+ * if a task becomes always busy it could miss misfit migration load balance
+ * event. So we consider a task is misfit before it reaches this point.
+ */
+static inline bool fits_capacity(unsigned long util, int cpu)
+{
+	return util < cpu_rq(cpu)->fits_capacity_threshold;
+}
+
 unsigned int sched_small_task_threshold = 102;
 __read_mostly unsigned int sysctl_sched_force_lb_enable = 1;
 
@@ -9284,20 +9295,42 @@ void init_max_cpu_capacity(struct max_cpu_capacity *mcc) {
 static void update_cpu_capacity(struct sched_domain *sd, int cpu)
 {
 	unsigned long capacity = arch_scale_cpu_capacity(sd, cpu);
+	struct rq *rq = cpu_rq(cpu);
 	struct sched_group *sdg = sd->groups;
+	u64 limit;
 
 	capacity *= arch_scale_max_freq_capacity(sd, cpu);
 	capacity >>= SCHED_CAPACITY_SHIFT;
 
 	capacity = min(capacity, thermal_cap(cpu));
-	cpu_rq(cpu)->cpu_capacity_orig = capacity;
+	rq->cpu_capacity_orig = capacity;
 
 	capacity = scale_rt_capacity(cpu, capacity);
 
 	if (!capacity)
 		capacity = 1;
 
-	cpu_rq(cpu)->cpu_capacity = capacity;
+	rq->cpu_capacity = capacity;
+
+	/*
+	 * Calculate the util at which the task must be considered a misfit.
+	 *
+	 * We must ensure that a task experiences the same ramp-up time to
+	 * reach max performance point of the system regardless of the CPU it
+	 * is running on (due to invariance, time will stretch and task will
+	 * take longer to achieve the same util value compared to a task
+	 * running on a big CPU) and a delay in misfit migration which depends
+	 * on TICK doesn't end up hurting it as it can happen after we would
+	 * have crossed this threshold.
+	 *
+	 * To ensure that invaraince is taken into account, we don't scale time
+	 * and use it as-is, approximate_util_avg() will then let us know the
+	 * our threshold.
+	 */
+	limit = approximate_runtime(capacity) * USEC_PER_MSEC;
+	limit -= TICK_USEC; /* sd->balance_interval is more accurate */
+	rq->fits_capacity_threshold = approximate_util_avg(0, limit);
+
 	sdg->sgc->capacity = capacity;
 	sdg->sgc->min_capacity = capacity;
 	sdg->sgc->max_capacity = capacity;

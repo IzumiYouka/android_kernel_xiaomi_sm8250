@@ -72,13 +72,6 @@ void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
 }
 
 /*
- * The margin used when comparing utilization with CPU capacity.
- *
- * (default: ~20%)
- */
-#define fits_capacity(cap, max)	((cap) * 1280 < (max) * 1024)
-
-/*
  * Returns true if @c is the system's single prime CPU, i.e. the one CPU with
  * the highest capacity. CASS avoids it unless nothing else can satisfy the
  * task, since using the prime CPU is very expensive for energy efficiency.
@@ -107,8 +100,8 @@ bool cass_cpu_better(const struct cass_cpu_cand *a,
 	long res;
 
 	/* Prefer the CPU that fits the task */
-	if (cass_cmp(fits_capacity(p_util, a->cap),
-		     fits_capacity(p_util, b->cap)))
+	if (cass_cmp(fits_capacity(p_util, a->cpu),
+		     fits_capacity(p_util, b->cpu)))
 		goto done;
 
 	/* Prefer the CPU that isn't the single fastest one in the system */
