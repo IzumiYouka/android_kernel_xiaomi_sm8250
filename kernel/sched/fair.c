@@ -6555,7 +6555,8 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	 * Let's add the task's estimated utilization to the cfs_rq's
 	 * estimated utilization, before we update schedutil.
 	 */
-	if (!p->se.sched_delayed || (flags & ENQUEUE_DELAYED))
+	if (!(p->se.sched_delayed &&
+	      (task_on_rq_migrating(p) || (flags & ENQUEUE_RESTORE))))
 		util_est_enqueue(cfs_rq, p);
 
 	update_curr_eevdf(cfs_rq);
