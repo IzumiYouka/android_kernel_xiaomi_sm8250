@@ -2368,11 +2368,13 @@ int select_task_rq(struct task_struct *p, int cpu, int sd_flags, int *wake_flags
 
 	lockdep_assert_held(&p->pi_lock);
 
-	if (p->nr_cpus_allowed > 1)
+	if (p->nr_cpus_allowed > 1) {
 		cpu = p->sched_class->select_task_rq(p, cpu, sd_flags, *wake_flags,
 						     sibling_count_hint);
-	else
+		*wake_flags |= WF_RQ_SELECTED;
+	} else {
 		cpu = cpumask_any(&p->cpus_allowed);
+	}
 
 	/*
 	 * In order not to call set_task_cpu() on a blocking task we need
@@ -2533,6 +2535,8 @@ ttwu_do_activate(struct rq *rq, struct task_struct *p, int wake_flags,
 	if (p->sched_contributes_to_load)
 		rq->nr_uninterruptible--;
 
+	if (wake_flags & WF_RQ_SELECTED)
+		en_flags |= ENQUEUE_RQ_SELECTED;
 	if (wake_flags & WF_MIGRATED)
 		en_flags |= ENQUEUE_MIGRATED;
 #endif

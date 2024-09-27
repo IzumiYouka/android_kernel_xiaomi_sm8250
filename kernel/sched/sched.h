@@ -1782,6 +1782,7 @@ static inline int task_on_rq_migrating(struct task_struct *p)
 #define WF_FORK			0x02		/* Child wakeup after fork */
 #define WF_MIGRATED		0x4		/* Internal use, task got migrated */
 #define WF_TTWU			0x08		/* Wakeup; maps to SD_BALANCE_WAKE */
+#define WF_RQ_SELECTED		0x80		/* ->select_task_rq() was called */
 
 /*
  * To aid in avoiding the subversion of "niceness" due to uneven distribution
@@ -1814,6 +1815,7 @@ extern const u32		sched_prio_to_wmult[40];
  * ENQUEUE_HEAD      - place at front of runqueue (tail if not specified)
  * ENQUEUE_REPLENISH - CBS (replenish runtime and postpone deadline)
  * ENQUEUE_MIGRATED  - the task was migrated during wakeup
+ * ENQUEUE_RQ_SELECTED - ->select_task_rq() was called
  *
  */
 
@@ -1838,6 +1840,7 @@ extern const u32		sched_prio_to_wmult[40];
 #endif
 #define ENQUEUE_INITIAL		0x100
 #define ENQUEUE_DELAYED		0x200
+#define ENQUEUE_RQ_SELECTED	0x400
 
 #define RETRY_TASK		((void *)-1UL)
 
