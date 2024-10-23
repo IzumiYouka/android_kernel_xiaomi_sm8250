@@ -4976,9 +4976,9 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
 
 	if (se && se->sched_delayed) {
 		dequeue_entities(rq_of(cfs_rq), se, DEQUEUE_SLEEP | DEQUEUE_DELAYED);
-		SCHED_WARN_ON(se->sched_delayed);
-		SCHED_WARN_ON(se->on_rq);
-
+		/*
+		 * Must not reference @se again, see __block_task().
+		 */
 		return NULL;
 	}
 
@@ -6246,14 +6246,15 @@ static bool dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	if (!(p->se.sched_delayed && (task_on_rq_migrating(p) || (flags & DEQUEUE_SAVE))))
 		util_est_dequeue(&rq->cfs, p);
 
-	if (dequeue_entities(rq, &p->se, flags) < 0) {
-		util_est_update(&rq->cfs, p, DEQUEUE_SLEEP);
-		return false;
-	}
-
 	util_est_update(&rq->cfs, p, flags & DEQUEUE_SLEEP);
-	hrtick_update(rq);
+	if (dequeue_entities(rq, &p->se, flags) < 0)
+		return false;
 
+	/*
+	 * Must not reference @p after dequeue_entities(DEQUEUE_DELAYED).
+	 */
+
+	hrtick_update(rq);
 	return true;
 }
 
