@@ -564,40 +564,7 @@ out:
 	return dentry;
 }
 
-static int binder_features_show(struct seq_file *m, void *unused)
-{
-        bool *feature = m->private;
 
-        seq_printf(m, "%d\n", *feature);
-
-        return 0;
-}
-DEFINE_SHOW_ATTRIBUTE(binder_features);
-
-static int init_binder_features(struct super_block *sb)
-{
-        struct dentry *dentry, *dir;
-
-        dir = binderfs_create_dir(sb->s_root, "features");
-        if (IS_ERR(dir))
-                return PTR_ERR(dir);
-
-        dentry = binderfs_create_file(dir, "oneway_spam_detection",
-                                      &binder_features_fops,
-                                      &binder_features.oneway_spam_detection);
-        if (IS_ERR(dentry))
-                return PTR_ERR(dentry);
-
-        dentry = binderfs_create_file(dir, "freeze_notification",
-                                      &binder_features_fops,
-                                      &binder_features.freeze_notification);
-        if (IS_ERR(dentry))
-                return PTR_ERR(dentry);
-
-        return 0;
-}
-
-#ifdef CONFIG_ANDROID_BINDER_LOGS
 static struct dentry *binderfs_create_dir(struct dentry *parent,
 					  const char *name)
 {
@@ -632,6 +599,42 @@ out:
 	inode_unlock(parent_inode);
 	return dentry;
 }
+
+
+static int binder_features_show(struct seq_file *m, void *unused)
+{
+	bool *feature = m->private;
+
+	seq_printf(m, "%d\n", *feature);
+
+	return 0;
+}
+DEFINE_SHOW_ATTRIBUTE(binder_features);
+
+static int init_binder_features(struct super_block *sb)
+{
+	struct dentry *dentry, *dir;
+
+	dir = binderfs_create_dir(sb->s_root, "features");
+	if (IS_ERR(dir))
+		return PTR_ERR(dir);
+
+	dentry = binderfs_create_file(dir, "oneway_spam_detection",
+				      &binder_features_fops,
+				      &binder_features.oneway_spam_detection);
+	if (IS_ERR(dentry))
+		return PTR_ERR(dentry);
+
+	dentry = binderfs_create_file(dir, "freeze_notification",
+				      &binder_features_fops,
+				      &binder_features.freeze_notification);
+	if (IS_ERR(dentry))
+		return PTR_ERR(dentry);
+
+	return 0;
+}
+
+#ifdef CONFIG_ANDROID_BINDER_LOGS
 
 static int init_binder_logs(struct super_block *sb)
 {
