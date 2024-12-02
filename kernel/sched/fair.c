@@ -1186,7 +1186,7 @@ static struct sched_entity *pick_eevdf(struct cfs_rq *cfs_rq, bool protect)
 	 * We can safely skip eligibility check if there is only one entity
 	 * in this cfs_rq, saving some cycles.
 	 */
-	if (cfs_rq->nr_running == 1)
+	if (cfs_rq->nr_queued == 1)
 		return curr && curr->on_rq ? curr : se;
 
 	/*
@@ -3399,7 +3399,7 @@ account_entity_enqueue(struct cfs_rq *cfs_rq, struct sched_entity *se)
 		list_add(&se->group_node, &rq->cfs_tasks);
 	}
 #endif
-	cfs_rq->nr_running++;
+	cfs_rq->nr_queued++;
 }
 
 static void
@@ -3414,7 +3414,7 @@ account_entity_dequeue(struct cfs_rq *cfs_rq, struct sched_entity *se)
 		list_del_init(&se->group_node);
 	}
 #endif
-	cfs_rq->nr_running--;
+	cfs_rq->nr_queued--;
 }
 
 /*
@@ -4996,7 +4996,7 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 	 *
 	 * EEVDF: placement strategy #1 / #2
 	 */
-	if (sched_feat(PLACE_LAG) && cfs_rq->nr_running && se->vlag) {
+	if (sched_feat(PLACE_LAG) && cfs_rq->nr_queued && se->vlag) {
 		struct sched_entity *curr = cfs_rq->curr;
 		long load, weight;
 
@@ -5192,7 +5192,7 @@ enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 		__enqueue_entity(cfs_rq, se);
 	se->on_rq = 1;
 
-	if (cfs_rq->nr_running == 1) {
+	if (cfs_rq->nr_queued == 1) {
 		list_add_leaf_cfs_rq(cfs_rq);
 		check_enqueue_throttle(cfs_rq);
 	}
@@ -5330,7 +5330,7 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 	if (flags & DEQUEUE_DELAYED)
 		clear_delayed(se);
 
-	if (cfs_rq->nr_running == 0)
+	if (cfs_rq->nr_queued == 0)
 		update_idle_cfs_rq_clock_pelt(cfs_rq);
 
 	return true;
@@ -5616,7 +5616,7 @@ static int tg_unthrottle_up(struct task_group *tg, void *data)
 					     cfs_rq->throttled_clock_pelt;
 
 		/* Add cfs_rq with already running entity in the list */
-		if (cfs_rq->nr_running >= 1)
+		if (cfs_rq->nr_queued >= 1)
 			list_add_leaf_cfs_rq(cfs_rq);
 	}
 
@@ -5773,7 +5773,7 @@ void unthrottle_cfs_rq(struct cfs_rq *cfs_rq)
 	}
 
 	/* Determine whether we need to wake up potentially idle CPU: */
-	if (rq->curr == rq->idle && rq->cfs.nr_running)
+	if (rq->curr == rq->idle && rq->cfs.nr_queued)
 		resched_curr(rq);
 }
 
@@ -5962,7 +5962,7 @@ static __always_inline void return_cfs_rq_runtime(struct cfs_rq *cfs_rq)
 	if (!cfs_bandwidth_used())
 		return;
 
-	if (!cfs_rq->runtime_enabled || cfs_rq->nr_running)
+	if (!cfs_rq->runtime_enabled || cfs_rq->nr_queued)
 		return;
 
 	__return_cfs_rq_runtime(cfs_rq);
@@ -6418,13 +6418,13 @@ requeue_delayed_entity(struct sched_entity *se)
 	update_curr(cfs_rq);
 
 	if (update_entity_lag(cfs_rq, se)) {
-		cfs_rq->nr_running--;
+		cfs_rq->nr_queued--;
 		if (se != cfs_rq->curr)
 			__dequeue_entity(cfs_rq, se);
 		place_entity(cfs_rq, se, 0);
 		if (se != cfs_rq->curr)
 			__enqueue_entity(cfs_rq, se);
-		cfs_rq->nr_running++;
+		cfs_rq->nr_queued++;
 	}
 
 	update_load_avg(cfs_rq, se, 0);
@@ -9097,7 +9097,7 @@ pick:
 	 * dequeued a delayed task. If there are still entities queued in
 	 * cfs, check if the next one will be p.
 	 */
-	if (!nse && cfs_rq->nr_running)
+	if (!nse && cfs_rq->nr_queued)
 		goto pick;
 
 	/*
@@ -9130,7 +9130,7 @@ pick_next_task_fair(struct rq *rq, struct task_struct *prev, struct rq_flags *rf
 	int new_tasks;
 
 again:
-	if (!cfs_rq->nr_running)
+	if (!cfs_rq->nr_queued)
 		goto idle;
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
@@ -9169,7 +9169,7 @@ again:
 			if (unlikely(check_cfs_rq_runtime(cfs_rq))) {
 				cfs_rq = &rq->cfs;
 
-				if (!cfs_rq->nr_running)
+				if (!cfs_rq->nr_queued)
 					goto idle;
 
 				goto simple;
@@ -9222,7 +9222,7 @@ simple:
 		se = pick_next_entity(rq, cfs_rq, true);
 		if (!se) {
 			cfs_rq = &rq->cfs;
-			if (!cfs_rq->nr_running)
+			if (!cfs_rq->nr_queued)
 				goto idle;
 			continue;
 		}
@@ -9611,7 +9611,7 @@ static
  * Check whether the task is ineligible on the destination cpu
  *
  * When the PLACE_LAG scheduling feature is enabled and
- * dst_cfs_rq->nr_running is greater than 1, if the task
+ * dst_cfs_rq->nr_queued is greater than 1, if the task
  * is ineligible, it will also be ineligible when
  * it is migrated to the destination cpu.
  */
@@ -9624,7 +9624,7 @@ static inline int task_is_ineligible_on_dst_cpu(struct task_struct *p, int dest_
 #else
 	dst_cfs_rq = &cpu_rq(dest_cpu)->cfs;
 #endif
-	if (sched_feat(PLACE_LAG) && dst_cfs_rq->nr_running &&
+	if (sched_feat(PLACE_LAG) && dst_cfs_rq->nr_queued &&
 	    !entity_eligible(task_cfs_rq(p), &p->se))
 		return 1;
 
@@ -10047,7 +10047,7 @@ static void update_blocked_averages(int cpu)
 		if (update_cfs_rq_load_avg(cfs_rq_clock_pelt(cfs_rq), cfs_rq)) {
 			update_tg_load_avg(cfs_rq, 0);
 
-			if (cfs_rq->nr_running == 0)
+			if (cfs_rq->nr_queued == 0)
 				update_idle_cfs_rq_clock_pelt(cfs_rq);
 		}
 

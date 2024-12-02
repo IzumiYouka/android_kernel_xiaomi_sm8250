@@ -543,7 +543,7 @@ do {									\
 /* CFS-related fields in a runqueue */
 struct cfs_rq {
 	struct load_weight	load;
-	unsigned int		nr_running;
+	unsigned int		nr_queued;
 	unsigned int		h_nr_queued;
 	unsigned int		h_nr_runnable;
 	/* h_nr_queued for SCHED_IDLE tasks */
