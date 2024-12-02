@@ -1790,7 +1790,7 @@ static void update_numa_stats(struct numa_stats *ns, int nid)
 	for_each_cpu(cpu, cpumask_of_node(nid)) {
 		struct rq *rq = cpu_rq(cpu);
 
-		ns->nr_running += rq->nr_running;
+		ns->nr_running += rq->cfs.h_nr_runnable;
 		ns->load += weighted_cpuload(rq);
 		ns->compute_capacity += capacity_of(cpu);
 
@@ -10087,7 +10087,7 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 
 		sgs->group_load += load;
 		sgs->group_util += cpu_util(i);
-		sgs->sum_nr_running += rq->cfs.h_nr_running;
+		sgs->sum_nr_running += rq->cfs.h_nr_runnable;
 
 		nr_running = rq->nr_running;
 		if (nr_running > 1)
