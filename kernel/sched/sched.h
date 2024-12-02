@@ -545,6 +545,7 @@ struct cfs_rq {
 	struct load_weight	load;
 	unsigned int		nr_running;
 	unsigned int		h_nr_running;
+	unsigned int		h_nr_runnable;
 	/* h_nr_running for SCHED_IDLE tasks */
 	unsigned int		idle_h_nr_running;
 	unsigned int		h_nr_delayed;
