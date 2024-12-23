@@ -10441,6 +10441,7 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 {
 	int local_group = cpumask_test_cpu(env->dst_cpu, sched_group_span(group));
 	int load_idx = get_sd_load_idx(env->sd, env->idle);
+	bool balancing_at_rd = !env->sd->parent;
 	unsigned long load;
 	int i, nr_running;
 
@@ -10466,8 +10467,6 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 		sgs->sum_nr_running += rq->cfs.h_nr_runnable;
 
 		nr_running = rq->nr_running;
-		if (nr_running > 1)
-			*sg_status |= SG_OVERLOAD;
 
 		if (cpu_overutilized(i)) {
 			*sg_status |= SG_OVERUTILIZED;
@@ -10492,6 +10491,10 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 			sgs->group_misfit_task_load = rq->misfit_task_load;
 			*sg_status |= SG_OVERLOAD;
 		}
+
+		/* Overload indicator is only updated at root domain */
+		if (balancing_at_rd && nr_running > 1)
+			*sg_status |= SG_OVERLOAD;
 	}
 
 	/* Isolated CPU has no weight */
