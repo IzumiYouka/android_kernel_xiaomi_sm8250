@@ -27,6 +27,7 @@
 #include "kgsl_device.h"
 #include "kgsl_mmu.h"
 #include "kgsl_reclaim.h"
+#include "kgsl_sharedmem.h"
 #include "kgsl_sync.h"
 #include "kgsl_trace.h"
 
@@ -5460,9 +5461,6 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 				PM_QOS_DEFAULT_VALUE);
 	}
 
-	/* Initialize the snapshot engine */
-	kgsl_device_snapshot_init(device);
-
 	/* Initialize common sysfs entries */
 	kgsl_pwrctrl_init_sysfs(device);
 
@@ -5488,8 +5486,6 @@ void kgsl_device_platform_remove(struct kgsl_device *device)
 
 	kfree(device->dev->dma_parms);
 	device->dev->dma_parms = NULL;
-
-	kgsl_device_snapshot_close(device);
 
 	kgsl_exit_page_pools();
 
