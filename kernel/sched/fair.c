@@ -9248,13 +9248,13 @@ int can_migrate_task(struct task_struct *p, struct lb_env *env)
 	lockdep_assert_held(&env->src_rq->lock);
 
 	/*
-	 * 1) delayed dequeued, or
+	 * 1) delayed dequeued unless we migrate load, or
 	 * 2) throttled_lb_pair, or
-	 * 3) cannot be migrated to this CPU due to cpus_allowed, or
+	 * 3) cannot be migrated to this CPU due to cpus_ptr, or
 	 * 4) running (obviously), or
 	 * 5) are cache-hot on their current CPU.
 	 */
-	if (p->se.sched_delayed)
+	if ((p->se.sched_delayed) && (env->migration_type != migrate_load))
 		return 0;
 
 	if (throttled_lb_pair(task_group(p), env->src_cpu, env->dst_cpu))
