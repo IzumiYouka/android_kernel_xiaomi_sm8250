@@ -721,6 +721,8 @@ u64 avg_vruntime(struct cfs_rq *cfs_rq)
 	return cfs_rq->zero_vruntime;
 }
 
+static inline u64 cfs_rq_max_slice(struct cfs_rq *cfs_rq);
+
 /*
  * lag_i = S - s_i = w_i * (V - v_i)
  *
@@ -734,15 +736,14 @@ u64 avg_vruntime(struct cfs_rq *cfs_rq)
  * EEVDF gives the following limit for a steady state system:
  *
  *   -r_max < lag < max(r_max, q)
- *
- * XXX could add max_slice to the augmented data to track this.
  */
-static s64 entity_lag(u64 avruntime, struct sched_entity *se)
+static s64 entity_lag(struct cfs_rq *cfs_rq, struct sched_entity *se, u64 avruntime)
 {
+	u64 max_slice = cfs_rq_max_slice(cfs_rq) + TICK_NSEC;
 	s64 vlag, limit;
 
 	vlag = avruntime - se->vruntime;
-	limit = calc_delta_fair(max_t(u64, 2*se->slice, TICK_NSEC), se);
+	limit = calc_delta_fair(max_slice, se);
 
 	return clamp(vlag, -limit, limit);
 }
@@ -766,7 +767,7 @@ static __always_inline
 bool update_entity_lag(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 	u64 avruntime = avg_vruntime(cfs_rq);
-	s64 vlag = entity_lag(avruntime, se);
+	s64 vlag = entity_lag(cfs_rq, se, avruntime);
 
 	SCHED_WARN_ON(!se->on_rq);
 
@@ -866,6 +867,21 @@ static inline u64 cfs_rq_min_slice(struct cfs_rq *cfs_rq)
 	return min_slice;
 }
 
+static inline u64 cfs_rq_max_slice(struct cfs_rq *cfs_rq)
+{
+	struct sched_entity *root = __pick_root_entity(cfs_rq);
+	struct sched_entity *curr = cfs_rq->curr;
+	u64 max_slice = 0ULL;
+
+	if (curr && curr->on_rq)
+		max_slice = curr->slice;
+
+	if (root)
+		max_slice = max(max_slice, root->max_slice);
+
+	return max_slice;
+}
+
 #define __node_2_se(node) \
 	rb_entry((node), struct sched_entity, run_node)
 
@@ -888,6 +904,15 @@ static inline void __min_slice_update(struct sched_entity *se, struct rb_node *n
 	}
 }
 
+static inline void __max_slice_update(struct sched_entity *se, struct rb_node *node)
+{
+	if (node) {
+		struct sched_entity *rse = __node_2_se(node);
+		if (rse->max_slice > se->max_slice)
+			se->max_slice = rse->max_slice;
+	}
+}
+
 /*
  * se->min_vruntime = min(se->vruntime, {left,right}->min_vruntime)
  * se->min_slice = min(se->slice, {left,right}->min_slice)
@@ -904,6 +929,10 @@ static inline u64 min_vruntime_update(struct sched_entity *se)
 	__min_slice_update(se, node->rb_right);
 	__min_slice_update(se, node->rb_left);
 
+	se->max_slice = se->slice;
+	__max_slice_update(se, node->rb_right);
+	__max_slice_update(se, node->rb_left);
+
 	return se->min_vruntime;
 }
 
@@ -914,10 +943,12 @@ min_vruntime_cb_propagate(struct rb_node *rb, struct rb_node *stop)
 		struct sched_entity *se = __node_2_se(rb);
 		u64 old_min_vruntime = se->min_vruntime;
 		u64 old_min_slice = se->min_slice;
+		u64 old_max_slice = se->max_slice;
 
 		min_vruntime_update(se);
 		if (se->min_vruntime == old_min_vruntime &&
-		    se->min_slice == old_min_slice)
+		    se->min_slice == old_min_slice &&
+		    se->max_slice == old_max_slice)
 			break;
 		rb = rb_parent(&se->run_node);
 	}
@@ -931,6 +962,7 @@ min_vruntime_cb_copy(struct rb_node *rb_old, struct rb_node *rb_new)
 
 	new->min_vruntime = old->min_vruntime;
 	new->min_slice = old->min_slice;
+	new->max_slice = old->max_slice;
 }
 
 static void
@@ -941,6 +973,7 @@ min_vruntime_cb_rotate(struct rb_node *rb_old, struct rb_node *rb_new)
 
 	new->min_vruntime = old->min_vruntime;
 	new->min_slice = old->min_slice;
+	new->max_slice = old->max_slice;
 	min_vruntime_update(old);
 }
 
@@ -981,6 +1014,7 @@ static void __enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	sum_w_vruntime_add(cfs_rq, se);
 	se->min_vruntime = se->vruntime;
 	se->min_slice = se->slice;
+	se->max_slice = se->slice;
 	rb_link_node(&se->run_node, parent, link);
 	rb_insert_augmented_cached(&se->run_node, &cfs_rq->tasks_timeline,
 				   leftmost, &min_vruntime_cb);
@@ -3387,8 +3421,8 @@ static inline void
 dequeue_load_avg(struct cfs_rq *cfs_rq, struct sched_entity *se) { }
 #endif
 
-static void reweight_eevdf(struct sched_entity *se, u64 avruntime,
-			   unsigned long weight)
+static void reweight_eevdf(struct cfs_rq *cfs_rq, struct sched_entity *se,
+			   u64 avruntime, unsigned long weight)
 {
 	unsigned long old_weight = se->load.weight;
 	s64 vlag, vslice;
@@ -3471,7 +3505,7 @@ static void reweight_eevdf(struct sched_entity *se, u64 avruntime,
 	 *	   = V  - vl'
 	 */
 	if (avruntime != se->vruntime) {
-		vlag = entity_lag(avruntime, se);
+		vlag = entity_lag(cfs_rq, se, avruntime);
 		vlag = div_s64(vlag * old_weight, weight);
 		se->vruntime = avruntime - vlag;
 	}
@@ -3516,7 +3550,7 @@ static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
 	dequeue_load_avg(cfs_rq, se);
 
 	if (se->on_rq) {
-		reweight_eevdf(se, avruntime, weight);
+		reweight_eevdf(cfs_rq, se, avruntime, weight);
 	} else {
 		/*
 		 * Because we keep se->vlag = V - v_i, while: lag_i = w_i*(V - v_i),
