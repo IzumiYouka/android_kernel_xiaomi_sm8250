@@ -33,17 +33,18 @@ static inline unsigned long map_util_freq(unsigned long util,
 					  unsigned long freq,
 					  unsigned long cap)
 {
-	unsigned long headroom;
+	unsigned long delta, headroom;
 
 	if (util >= cap)
 		return freq;
 
 	/*
-	 * Tapered DVFS headroom:
-	 * Instead of boosting target freq by fixed 25%,
-	 * add 25% of remaining capacity to util.
+	 * Quadratic tapered DVFS headroom:
+	 * maximum headroom is around 25% at low util,
+	 * then it fades more aggressively near max capacity.
 	 */
-	headroom = (cap - util) >> 2;
+	delta = cap - util;
+	headroom = (delta * delta) / (cap << 2);
 	util += headroom;
 
 	return freq * util / cap;
