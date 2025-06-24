@@ -5389,6 +5389,7 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 {
 	int status = -EINVAL;
 	int cpu;
+	struct sched_param param = { .sched_priority = 16 };
 
 	status = _register_device(device);
 	if (status)
@@ -5527,6 +5528,8 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 				PM_QOS_DEFAULT_VALUE);
 	}
 
+	device->events_worker = kthread_create_worker(0, "kgsl-events");
+	sched_setscheduler(device->events_worker->task, SCHED_FIFO, &param);
 	/* Initialize common sysfs entries */
 	kgsl_pwrctrl_init_sysfs(device);
 
