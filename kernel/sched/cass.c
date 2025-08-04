@@ -30,6 +30,7 @@ struct cass_cpu_cand {
 	unsigned int exit_lat;
 	unsigned long cap;
 	unsigned long cap_max;
+	unsigned long cap_orig;
 	unsigned long util;
 };
 
@@ -51,17 +52,15 @@ void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
 		}
 	}
 
-	/* Get this CPU's capacity, without any thermal pressure applied */
-	c->cap = arch_scale_cpu_capacity(c->cpu);
-
 	/*
 	 * Account for lost capacity due to time spent in RT/DL tasks and IRQs.
 	 * Capacity is considered lost to RT tasks even when @p is an RT task in
 	 * order to produce consistently balanced task placement results between
-	 * CFS and RT tasks when CASS selects a CPU for them.
+	 * CFS and RT tasks when CASS selects a CPU for them. cap_max already
+	 * has the thermal throttling deducted.
 	 */
-	c->cap -= min(cpu_util_rt(rq) + cpu_util_dl(rq) + cpu_util_irq(rq),
-		      c->cap - 1);
+	c->cap = c->cap_max - min(cpu_util_rt(rq) + cpu_util_dl(rq) +
+				  cpu_util_irq(rq), c->cap_max - 1);
 
 	/*
 	 * Deduct @current's util from this CPU if this is a sync wake, unless
@@ -219,12 +218,11 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync, bool rt
 		struct cpuidle_state *idle_state;
 		struct rq *rq = cpu_rq(cpu);
 
-		/*
-		 * The maximum possible capacity of this CPU. This tree has no
-		 * thermal pressure accounting, so the maximum and current
-		 * capacities are the same.
-		 */
-		curr->cap_max = arch_scale_cpu_capacity(cpu);
+		/* Get the original, maximum _possible_ capacity of this CPU */
+		curr->cap_orig = arch_scale_cpu_capacity(cpu);
+
+		/* Get the _current_, thermally throttled capacity */
+		curr->cap_max = curr->cap_orig - thermal_load_avg(rq);
 
 		/* Prefer the CPU that more closely meets the uclamp minimum */
 		if (curr->cap_max < uc_min && curr->cap_max < best->cap_max)
