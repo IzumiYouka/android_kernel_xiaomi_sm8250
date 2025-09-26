@@ -555,6 +555,7 @@ struct cfs_rq {
 
 	u64			exec_clock;
 	u64			zero_vruntime;
+	unsigned int		sum_shift;
 
 	struct rb_root_cached	tasks_timeline;
 
