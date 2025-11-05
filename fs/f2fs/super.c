@@ -4454,7 +4454,7 @@ try_onemore:
 				err = -EINVAL;
 				goto free_meta;
 			} else {
-				f2fs_info(sbi, "drop all fsynced data");
+				f2fs_err(sbi, "drop all fsynced data");
 				err = 0;
 			}
 		}
