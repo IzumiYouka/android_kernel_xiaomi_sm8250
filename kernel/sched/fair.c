@@ -12626,7 +12626,6 @@ static int newidle_balance(struct rq *this_rq, struct rq_flags *rf)
 	u64 t0, t1, curr_cost = 0;
 	struct sched_domain *sd;
 	int pulled_task = 0;
-	u64 avg_idle = this_rq->avg_idle;
 
 	if (cpu_isolated(this_cpu))
 		return 0;
@@ -12655,14 +12654,15 @@ static int newidle_balance(struct rq *this_rq, struct rq_flags *rf)
 
 	rcu_read_lock();
 	sd = rcu_dereference_check_sched_domain(this_rq->sd);
+	if (!sd) {
+		rcu_read_unlock();
+		goto out;
+	}
 
 	if (!READ_ONCE(this_rq->rd->overload) ||
-	    (sd && avg_idle < sd->max_newidle_lb_cost)) {
-
-		if (sd)
-			update_next_balance(sd, &next_balance);
+	    this_rq->avg_idle < sd->max_newidle_lb_cost) {
+		update_next_balance(sd, &next_balance);
 		rcu_read_unlock();
-
 		goto out;
 	}
 	rcu_read_unlock();
@@ -12686,10 +12686,10 @@ static int newidle_balance(struct rq *this_rq, struct rq_flags *rf)
 		if (!(sd->flags & SD_LOAD_BALANCE))
 			continue;
 
-		if (avg_idle < curr_cost + sd->max_newidle_lb_cost) {
-			update_next_balance(sd, &next_balance);
+		update_next_balance(sd, &next_balance);
+
+		if (this_rq->avg_idle < curr_cost + sd->max_newidle_lb_cost)
 			break;
-		}
 
 		if (sd->flags & SD_BALANCE_NEWIDLE) {
 			pulled_task = load_balance(this_cpu, this_rq,
@@ -12703,8 +12703,6 @@ static int newidle_balance(struct rq *this_rq, struct rq_flags *rf)
 			curr_cost += domain_cost;
 			t0 = t1;
 		}
-
-		update_next_balance(sd, &next_balance);
 
 		/*
 		 * Stop searching for tasks to pull if there are now runnable
