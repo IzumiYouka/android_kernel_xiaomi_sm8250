@@ -9854,16 +9854,11 @@ static inline bool cfs_rq_is_decayed(struct cfs_rq *cfs_rq)
 	return true;
 }
 
-static void update_blocked_averages(int cpu)
+static void __update_blocked_averages(struct rq *rq)
 {
-	struct rq *rq = cpu_rq(cpu);
 	struct cfs_rq *cfs_rq, *pos;
 	const struct sched_class *curr_class;
-	struct rq_flags rf;
 	bool done = true;
-
-	rq_lock_irqsave(rq, &rf);
-	update_rq_clock(rq);
 
 	/*
 	 * Iterates the task_group tree in a bottom up fashion, see
@@ -9880,7 +9875,7 @@ static void update_blocked_averages(int cpu)
 		}
 
 		/* Propagate pending load changes to the parent, if any: */
-		se = cfs_rq->tg->se[cpu];
+		se = cfs_rq->tg->se[cpu_of(rq)];
 		if (se && !skip_blocked_update(se))
 			update_load_avg(cfs_rq_of(se), se, UPDATE_TG);
 
@@ -9911,6 +9906,16 @@ static void update_blocked_averages(int cpu)
 	if (done)
 		rq->has_blocked_load = 0;
 #endif
+}
+
+static void update_blocked_averages(int cpu)
+{
+	struct rq *rq = cpu_rq(cpu);
+	struct rq_flags rf;
+
+	rq_lock_irqsave(rq, &rf);
+	update_rq_clock(rq);
+	__update_blocked_averages(rq);
 	rq_unlock_irqrestore(rq, &rf);
 }
 
@@ -12646,9 +12651,15 @@ static int idle_balance(struct rq *this_rq, struct rq_flags *rf)
 		goto out;
 	}
 
-	raw_spin_unlock(&this_rq->lock);
+	/*
+	 * The rq lock is already held here, so update the blocked load
+	 * while keeping it: this avoids the unlock/relock bounce that
+	 * update_blocked_averages() used to cause in the newidle path.
+	 */
+	update_rq_clock(this_rq);
+	__update_blocked_averages(this_rq);
 
-	update_blocked_averages(this_cpu);
+	raw_spin_unlock(&this_rq->lock);
 	rcu_read_lock();
 	for_each_domain(this_cpu, sd) {
 		int continue_balancing = 1;
