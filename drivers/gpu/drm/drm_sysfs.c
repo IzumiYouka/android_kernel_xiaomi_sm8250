@@ -227,16 +227,52 @@ static ssize_t modes_show(struct device *device,
 	return written;
 }
 
+int dsi_display_set_disp_param(struct drm_connector *connector,
+		u32 param_type);
+static ssize_t disp_param_store(struct device *device,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct drm_connector *connector = to_drm_connector(device);
+	char *input_copy, *input_dup = NULL;
+	u32 param;
+	int ret;
+
+	input_copy = kstrdup(buf, GFP_KERNEL);
+	if (!input_copy) {
+		DRM_ERROR("can not allocate memory\n");
+		ret = -ENOMEM;
+		goto exit;
+	}
+	input_dup = input_copy;
+	/* removes leading and trailing whitespace from input_copy */
+	input_copy = strim(input_copy);
+	ret = kstrtouint(input_copy, 16, &param);
+	if (ret) {
+		DRM_ERROR("input buffer conversion failed\n");
+		ret = -EAGAIN;
+		goto exit_free;
+	}
+
+	ret = dsi_display_set_disp_param(connector, param);
+
+exit_free:
+	kfree(input_dup);
+exit:
+	return ret ? ret : count;
+}
+
 static DEVICE_ATTR_RW(status);
 static DEVICE_ATTR_RO(enabled);
 static DEVICE_ATTR_RO(dpms);
 static DEVICE_ATTR_RO(modes);
+static DEVICE_ATTR_WO(disp_param);
 
 static struct attribute *connector_dev_attrs[] = {
 	&dev_attr_status.attr,
 	&dev_attr_enabled.attr,
 	&dev_attr_dpms.attr,
 	&dev_attr_modes.attr,
+	&dev_attr_disp_param.attr,
 	NULL
 };
 
