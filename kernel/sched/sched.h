@@ -201,6 +201,11 @@ static inline int task_has_dl_policy(struct task_struct *p)
 	return dl_policy(p->policy);
 }
 
+static inline int task_has_idle_policy(struct task_struct *p)
+{
+	return idle_policy(p->policy);
+}
+
 #define cap_scale(v, s) ((v)*(s) >> SCHED_CAPACITY_SHIFT)
 
 /*
@@ -420,17 +425,6 @@ struct task_group {
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 #define ROOT_TASK_GROUP_LOAD	NICE_0_LOAD
-
-/*
- * A weight of 0 or 1 can cause arithmetics problems.
- * A weight of a cfs_rq is the sum of weights of which entities
- * are queued on this cfs_rq, so a weight of a entity should not be
- * too large, so as the shares value of a task group.
- * (The default weight is 1024 - so there's no practical
- *  limitation from this.)
- */
-#define MIN_SHARES		(1UL <<  1)
-#define MAX_SHARES		(1UL << 18)
 #endif
 
 typedef int (*tg_visitor)(struct task_group *, void *);
@@ -502,6 +496,21 @@ struct cfs_bandwidth { };
 #endif	/* CONFIG_CGROUP_SCHED */
 
 /*
+ * A weight of 0 or 1 can cause arithmetics problems.
+ * A weight of a cfs_rq is the sum of weights of which entities
+ * are queued on this cfs_rq, so a weight of a entity should not be
+ * too large, so as the shares value of a task group.
+ * (The default weight is 1024 - so there's no practical
+ *  limitation from this.)
+ */
+#define MIN_SHARES		(1UL <<  1)
+#define MAX_SHARES		(1UL << 18)
+
+extern void unregister_rt_sched_group(struct task_group *tg);
+extern void free_rt_sched_group(struct task_group *tg);
+extern int alloc_rt_sched_group(struct task_group *tg, struct task_group *parent);
+
+/*
  * u64_u32_load/u64_u32_store
  *
  * Use a copy of a u64 value to protect against data race. This is only
@@ -548,7 +557,6 @@ struct cfs_rq {
 	unsigned int		h_nr_runnable;
 	/* h_nr_queued for SCHED_IDLE tasks */
 	unsigned int		h_nr_idle;
-	unsigned int		h_nr_delayed;
 
 	s64			sum_w_vruntime;
 	u64			sum_weight;
@@ -574,6 +582,7 @@ struct cfs_rq {
 	/*
 	 * CFS load tracking
 	 */
+	struct sched_entity	*h_curr;
 	struct sched_avg	avg;
 #ifndef CONFIG_64BIT
 	u64			load_last_update_time_copy;
@@ -1841,6 +1850,7 @@ extern const u32		sched_prio_to_wmult[40];
 #define ENQUEUE_INITIAL		0x100
 #define ENQUEUE_DELAYED		0x200
 #define ENQUEUE_RQ_SELECTED	0x400
+#define ENQUEUE_QUEUED		0x00000800
 
 #define RETRY_TASK		((void *)-1UL)
 
@@ -2012,7 +2022,7 @@ extern void init_sched_dl_class(void);
 extern void init_sched_rt_class(void);
 extern void init_sched_fair_class(void);
 
-extern void reweight_task(struct task_struct *p, int prio);
+extern void reweight_task(struct task_struct *p, const struct load_weight *lw);
 
 extern void resched_curr(struct rq *rq);
 extern void resched_cpu(int cpu);

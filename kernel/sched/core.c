@@ -725,7 +725,12 @@ static void set_load_weight(struct task_struct *p, bool update_load)
 	 * weight
 	 */
 	if (update_load && p->sched_class == &fair_sched_class) {
-		reweight_task(p, prio);
+		struct load_weight lw = {
+			.weight = scale_load(sched_prio_to_weight[prio]),
+			.inv_weight = sched_prio_to_wmult[prio],
+		};
+
+		reweight_task(p, &lw);
 	} else {
 		load->weight = scale_load(sched_prio_to_weight[prio]);
 		load->inv_weight = sched_prio_to_wmult[prio];
@@ -3867,11 +3872,7 @@ EXPORT_PER_CPU_SYMBOL(kernel_cpustat);
  */
 static inline void prefetch_curr_exec_start(struct task_struct *p)
 {
-#ifdef CONFIG_FAIR_GROUP_SCHED
-	struct sched_entity *curr = (&p->se)->cfs_rq->curr;
-#else
-	struct sched_entity *curr = (&task_rq(p)->cfs)->curr;
-#endif
+	struct sched_entity *curr = task_rq(p)->cfs.curr;
 	prefetch(curr);
 	prefetch(&curr->exec_start);
 }
