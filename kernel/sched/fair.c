@@ -3335,12 +3335,17 @@ static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
 {
 	unsigned long old_weight = se->load.weight;
 	bool curr = cfs_rq->curr == se;
-	u64 avruntime;
+	bool rel_vprot = false;
+	u64 avruntime, vprot;
 
 	if (se->on_rq) {
 		/* commit outstanding execution time */
 		update_curr(cfs_rq);
 		avruntime = avg_vruntime(cfs_rq);
+		if (curr && protect_slice(se)) {
+			vprot = se->vprot - se->vruntime;
+			rel_vprot = true;
+		}
 		if (!curr)
 			__dequeue_entity(cfs_rq, se);
 		account_entity_dequeue(cfs_rq, se);
@@ -3357,6 +3362,9 @@ static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
 		se->vlag = div_s64(se->vlag * old_weight, weight);
 	}
 
+	if (rel_vprot)
+		vprot = div_s64(vprot * old_weight, weight);
+
 	update_load_set(&se->load, weight);
 
 #ifdef CONFIG_SMP
@@ -3370,6 +3378,8 @@ static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
 	enqueue_load_avg(cfs_rq, se);
 	if (se->on_rq) {
 		account_entity_enqueue(cfs_rq, se);
+		if (rel_vprot)
+			se->vprot = se->vruntime + vprot;
 		if (!curr)
 			__enqueue_entity(cfs_rq, se);
 	}
