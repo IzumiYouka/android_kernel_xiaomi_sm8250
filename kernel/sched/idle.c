@@ -6,6 +6,7 @@
  *        tasks which are handled in sched/fair.c )
  */
 #include "sched.h"
+#include "pelt.h"
 
 #include <trace/events/power.h>
 
@@ -402,6 +403,12 @@ pick_next_task_idle(struct rq *rq, struct task_struct *prev, struct rq_flags *rf
 	put_prev_task(rq, prev);
 	update_idle_core(rq);
 	schedstat_inc(rq->sched_goidle);
+
+	/*
+	 * rq is about to be idle, check if we need to update the
+	 * lost_idle_time of clock_pelt
+	 */
+	update_idle_rq_clock_pelt(rq);
 
 	return rq->idle;
 }
