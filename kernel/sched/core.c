@@ -7833,6 +7833,8 @@ void sched_move_task(struct task_struct *tsk)
 		enqueue_task(rq, tsk, queue_flags);
 	if (running)
 		set_curr_task(rq, tsk);
+	else if (queued)
+		check_preempt_curr(rq, tsk, 0);
 
 	task_rq_unlock(rq, tsk, &rf);
 }
