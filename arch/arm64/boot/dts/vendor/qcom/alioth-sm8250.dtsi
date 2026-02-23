@@ -187,6 +187,7 @@ And public attribution of xiaomi platforms(like alioth and so and)
 
 &qupv3_se4_spi {
 	status = "ok";
+	qcom,rt;
 	pinctrl-0 = <&qupv3_se4_spi_active &ts_cs_active>;
 	pinctrl-1 = <&qupv3_se4_spi_sleep &ts_cs_suspend>;
 	focaltech@0 {
