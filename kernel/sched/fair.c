@@ -1139,6 +1139,7 @@ static bool update_deadline(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	 * EEVDF: vd_i = ve_i + r_i / w_i
 	 */
 	se->deadline = se->vruntime + calc_delta_fair(se->slice, se);
+	avg_vruntime(cfs_rq);
 
 	/*
 	 * The task has consumed its request, reschedule.
@@ -5259,11 +5260,6 @@ entity_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr, int queued)
 	 */
 	update_load_avg(cfs_rq, curr, UPDATE_TG);
 	update_cfs_group(curr);
-
-	/*
-	 * Pulls along cfs_rq::zero_vruntime.
-	 */
-	avg_vruntime(cfs_rq);
 
 #ifdef CONFIG_SCHED_HRTICK
 	/*
