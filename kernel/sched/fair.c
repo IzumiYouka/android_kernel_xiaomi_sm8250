@@ -615,12 +615,13 @@ sum_w_vruntime_add_paranoid(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 	unsigned long weight;
 	s64 key, tmp;
+	struct rb_node *node;
 
 again:
 	weight = avg_vruntime_weight(cfs_rq, se->load.weight);
 	key = entity_key(cfs_rq, se);
 
-	if (check_mul_overflow(key, weight, &key))
+	if (check_mul_overflow(key, (s64)weight, &key))
 		goto overflow;
 
 	if (check_add_overflow(cfs_rq->sum_w_vruntime, key, &tmp))
@@ -644,9 +645,9 @@ overflow:
 	cfs_rq->sum_w_vruntime = 0;
 	cfs_rq->sum_weight = 0;
 
-	for (struct rb_node *node = cfs_rq->tasks_timeline.rb_leftmost;
+	for (node = cfs_rq->tasks_timeline.rb_leftmost;
 	     node; node = rb_next(node))
-		__sum_w_vruntime_add(cfs_rq, __node_2_se(node));
+		__sum_w_vruntime_add(cfs_rq, rb_entry(node, struct sched_entity, run_node));
 
 	goto again;
 }
