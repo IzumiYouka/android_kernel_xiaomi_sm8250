@@ -97,10 +97,6 @@ static const struct fs_parameter_spec virtio_param_specs[] = {
 	{}
 };
 
-static const struct fs_parameter_description virtio_fs_parameters = {
-       .specs          = virtio_param_specs,
-};
-
 static int virtio_fs_parse_param(struct fs_context *fsc,
 				 struct fs_parameter *param)
 {
@@ -1027,7 +1023,7 @@ __releases(fiq->lock)
 }
 
 static void virtio_fs_wake_interrupt_and_unlock(struct fuse_iqueue *fiq,
-											   bool sync)
+						bool sync)
 __releases(fiq->lock)
 {
 	/*
@@ -1243,7 +1239,7 @@ out:
 }
 
 static void virtio_fs_wake_pending_and_unlock(struct fuse_iqueue *fiq,
-											 bool sync)
+						bool sync)
 __releases(fiq->lock)
 {
 	unsigned int queue_id = VQ_REQUEST; /* TODO multiqueue */
