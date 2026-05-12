@@ -49,7 +49,7 @@
 * Private constant and macro definitions using #define
 *****************************************************************************/
 #define FTS_DRIVER_NAME "fts_ts"
-#define INTERVAL_READ_REG 200 /* unit:ms */
+#define INTERVAL_READ_REG 50 /* unit:ms */
 #define TIMEOUT_READ_REG 1000 /* unit:ms */
 #if FTS_POWER_SOURCE_CUST_EN
 #define FTS_VTG_MIN_UV 3200000
