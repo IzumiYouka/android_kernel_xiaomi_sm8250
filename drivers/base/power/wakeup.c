@@ -36,8 +36,7 @@ suspend_state_t pm_suspend_target_state;
  */
 bool events_check_enabled __read_mostly;
 
-/* First wakeup IRQ seen by the kernel in the last cycle. */
-unsigned int pm_wakeup_irq __read_mostly;
+unsigned int pm_wakeup_irq;
 
 /* If greater than 0 and the system is suspending, terminate the suspend. */
 static atomic_t pm_abort_suspend __read_mostly;

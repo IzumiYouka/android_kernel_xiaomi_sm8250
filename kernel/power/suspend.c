@@ -18,7 +18,6 @@
 #include <linux/console.h>
 #include <linux/cpu.h>
 #include <linux/cpuidle.h>
-#include <linux/syscalls.h>
 #include <linux/gfp.h>
 #include <linux/io.h>
 #include <linux/kernel.h>
@@ -55,7 +54,7 @@ static const char * const mem_sleep_labels[] = {
 };
 const char *mem_sleep_states[PM_SUSPEND_MAX];
 
-suspend_state_t mem_sleep_current = PM_SUSPEND_TO_IDLE;
+suspend_state_t mem_sleep_current = PM_SUSPEND_MEM;
 suspend_state_t mem_sleep_default = PM_SUSPEND_MAX;
 suspend_state_t pm_suspend_target_state;
 EXPORT_SYMBOL_GPL(pm_suspend_target_state);
@@ -70,11 +69,17 @@ static DECLARE_SWAIT_QUEUE_HEAD(s2idle_wait_head);
 enum s2idle_states __read_mostly s2idle_state;
 static DEFINE_RAW_SPINLOCK(s2idle_lock);
 
-bool pm_suspend_via_s2idle(void)
+/**
+ * pm_suspend_default_s2idle - Check if suspend-to-idle is the default suspend.
+ *
+ * Return 'true' if suspend-to-idle has been selected as the default system
+ * suspend method.
+ */
+bool pm_suspend_default_s2idle(void)
 {
 	return mem_sleep_current == PM_SUSPEND_TO_IDLE;
 }
-EXPORT_SYMBOL_GPL(pm_suspend_via_s2idle);
+EXPORT_SYMBOL_GPL(pm_suspend_default_s2idle);
 
 void s2idle_set_ops(const struct platform_s2idle_ops *ops)
 {
@@ -82,7 +87,6 @@ void s2idle_set_ops(const struct platform_s2idle_ops *ops)
 	s2idle_ops = ops;
 	unlock_system_sleep();
 }
-EXPORT_SYMBOL_GPL(s2idle_set_ops);
 
 static void s2idle_begin(void)
 {
@@ -259,14 +263,21 @@ static int platform_suspend_prepare_late(suspend_state_t state)
 
 static int platform_suspend_prepare_noirq(suspend_state_t state)
 {
-	return state != PM_SUSPEND_TO_IDLE && suspend_ops->prepare_late ?
-		suspend_ops->prepare_late() : 0;
+	if (state == PM_SUSPEND_TO_IDLE)
+		return s2idle_ops && s2idle_ops->prepare_late ?
+			s2idle_ops->prepare_late() : 0;
+
+	return suspend_ops->prepare_late ? suspend_ops->prepare_late() : 0;
 }
 
 static void platform_resume_noirq(suspend_state_t state)
 {
-	if (state != PM_SUSPEND_TO_IDLE && suspend_ops->wake)
+	if (state == PM_SUSPEND_TO_IDLE) {
+		if (s2idle_ops && s2idle_ops->restore_early)
+			s2idle_ops->restore_early();
+	} else if (suspend_ops->wake) {
 		suspend_ops->wake();
+	}
 }
 
 static void platform_resume_early(suspend_state_t state)
@@ -322,7 +333,7 @@ static int suspend_test(int level)
 {
 #ifdef CONFIG_PM_DEBUG
 	if (pm_test_level == level) {
-		pr_info("suspend debug: Waiting for %d second(s).\n",
+		pr_debug("suspend debug: Waiting for %d second(s).\n",
 				pm_test_delay);
 		mdelay(pm_test_delay * 1000);
 		return 1;
@@ -426,9 +437,9 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 		goto Platform_wake;
 
 	if (state == PM_SUSPEND_TO_IDLE) {
- 		s2idle_loop();
- 		goto Platform_wake;
- 	}
+		s2idle_loop();
+		goto Platform_wake;
+	}
 
         error = pm_sleep_disable_secondary_cpus();
 	if (error || suspend_test(TEST_CPUS)) {
@@ -492,6 +503,9 @@ int suspend_devices_and_enter(suspend_state_t state)
 		return -ENOSYS;
 
 	pm_suspend_target_state = state;
+
+	if (state == PM_SUSPEND_TO_IDLE)
+		pm_set_suspend_no_platform();
 
 	error = platform_suspend_begin(state);
 	if (error)
@@ -575,13 +589,11 @@ static int enter_state(suspend_state_t state)
 	if (state == PM_SUSPEND_TO_IDLE)
 		s2idle_begin();
 
-#ifndef CONFIG_SUSPEND_SKIP_SYNC
-	trace_suspend_resume(TPS("sync_filesystems"), 0, true);
-	pr_debug("Syncing filesystems ... ");
-	ksys_sync();
-	pr_debug("done.\n");
-	trace_suspend_resume(TPS("sync_filesystems"), 0, false);
-#endif
+	if (!IS_ENABLED(CONFIG_SUSPEND_SKIP_SYNC)) {
+		trace_suspend_resume(TPS("sync_filesystems"), 0, true);
+		ksys_sync();
+		trace_suspend_resume(TPS("sync_filesystems"), 0, false);
+	}
 
 	pm_pr_dbg("Preparing system for sleep (%s)\n", mem_sleep_labels[state]);
 	pm_suspend_clear_flags();

@@ -13,7 +13,6 @@
 
 #include <linux/export.h>
 #include <linux/suspend.h>
-#include <linux/syscalls.h>
 #include <linux/reboot.h>
 #include <linux/string.h>
 #include <linux/device.h>
@@ -31,6 +30,7 @@
 #include <linux/ctype.h>
 #include <linux/genhd.h>
 #include <linux/ktime.h>
+#include <linux/security.h>
 #include <trace/events/power.h>
 
 #include "power.h"
@@ -69,7 +69,7 @@ static const struct platform_hibernation_ops *hibernation_ops;
 
 bool hibernation_available(void)
 {
-	return (nohibernate == 0);
+	return nohibernate == 0 && !security_locked_down(LOCKDOWN_HIBERNATION);
 }
 
 /**
@@ -106,7 +106,7 @@ EXPORT_SYMBOL(system_entering_hibernation);
 #ifdef CONFIG_PM_DEBUG
 static void hibernation_debug_sleep(void)
 {
-	pr_info("hibernation debug: Waiting for 5 seconds.\n");
+	pr_debug("hibernation debug: Waiting for 5 seconds.\n");
 	mdelay(5000);
 }
 
@@ -129,7 +129,7 @@ static int hibernation_test(int level) { return 0; }
 static int platform_begin(int platform_mode)
 {
 	return (platform_mode && hibernation_ops) ?
-		hibernation_ops->begin() : 0;
+		hibernation_ops->begin(PMSG_FREEZE) : 0;
 }
 
 /**
@@ -252,7 +252,7 @@ void swsusp_show_speed(ktime_t start, ktime_t stop,
 		centisecs = 1;	/* avoid div-by-zero */
 	k = nr_pages * (PAGE_SIZE / 1024);
 	kps = (k * 100) / centisecs;
-	pr_info("%s %u kbytes in %u.%02u seconds (%u.%02u MB/s)\n",
+	pr_debug("%s %u kbytes in %u.%02u seconds (%u.%02u MB/s)\n",
 		msg, k, centisecs / 100, centisecs % 100, kps / 1000,
 		(kps % 1000) / 10);
 }
@@ -411,6 +411,7 @@ int hibernation_snapshot(int platform_mode)
 
 	resume_console();
 	dpm_complete(msg);
+
  Close:
 	platform_end(platform_mode);
 	return error;
@@ -424,7 +425,7 @@ int hibernation_snapshot(int platform_mode)
 
 int __weak hibernate_resume_nonboot_cpu_disable(void)
 {
-	return disable_nonboot_cpus();
+	return suspend_disable_secondary_cpus();
 }
 
 /**
@@ -552,7 +553,7 @@ int hibernation_platform_enter(void)
 	 * hibernation_ops->finish() before saving the image, so we should let
 	 * the firmware know that we're going to enter the sleep state after all
 	 */
-	error = hibernation_ops->begin();
+	error = hibernation_ops->begin(PMSG_HIBERNATE);
 	if (error)
 		goto Close;
 
@@ -783,6 +784,7 @@ int hibernate(void)
 	atomic_inc(&snapshot_device_available);
  Unlock:
 	unlock_system_sleep();
+	pr_debug("hibernation exit\n");
 
 	return error;
 }
@@ -836,7 +838,7 @@ static int software_resume(void)
 	pm_pr_dbg("Checking hibernation image partition %s\n", resume_file);
 
 	if (resume_delay) {
-		pr_info("Waiting %dsec before reading resume device ...\n",
+		pr_debug("Waiting %dsec before reading resume device ...\n",
 			resume_delay);
 		ssleep(resume_delay);
 	}
@@ -879,7 +881,7 @@ static int software_resume(void)
 		goto Unlock;
 	}
 
-	pr_info("resume from hibernation\n");
+	pr_debug("resume from hibernation\n");
 	pm_prepare_console();
 	error = __pm_notifier_call_chain(PM_RESTORE_PREPARE, -1, &nr_calls);
 	if (error) {
@@ -903,7 +905,7 @@ static int software_resume(void)
  Finish:
 	__pm_notifier_call_chain(PM_POST_RESTORE, nr_calls, NULL);
 	pm_restore_console();
-	pr_info("resume from hibernation failed (%d)\n", error);
+	pr_debug("resume from hibernation failed (%d)\n", error);
 	atomic_inc(&snapshot_device_available);
 	/* For success case, the suspend path will release the lock */
  Unlock:
