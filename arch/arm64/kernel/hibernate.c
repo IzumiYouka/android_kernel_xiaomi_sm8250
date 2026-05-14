@@ -99,15 +99,6 @@ static inline void arch_hdr_invariants(struct arch_hibernate_hdr_invariants *i)
 	memcpy(i->uts_version, init_utsname()->version, sizeof(i->uts_version));
 }
 
-int pfn_is_nosave(unsigned long pfn)
-{
-	unsigned long nosave_begin_pfn = sym_to_pfn(&__nosave_begin);
-	unsigned long nosave_end_pfn = sym_to_pfn(&__nosave_end - 1);
-
-	return ((pfn >= nosave_begin_pfn) && (pfn <= nosave_end_pfn)) ||
-		crash_is_nosave(pfn);
-}
-
 void notrace save_processor_state(void)
 {
 	WARN_ON(num_online_cpus() != 1);

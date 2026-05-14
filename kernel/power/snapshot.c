@@ -1291,7 +1291,7 @@ static struct page *saveable_page(struct zone *zone, unsigned long pfn)
 		return NULL;
 
 	if (PageReserved(page)
-	    && (!kernel_page_present(page) || pfn_is_nosave(pfn)))
+	    && (!kernel_page_present(page)))
 		return NULL;
 
 	if (page_is_guard(page))
