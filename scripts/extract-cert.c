@@ -21,7 +21,25 @@
 #include <openssl/bio.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
-#include <openssl/engine.h>
+#if defined(__has_include)
+# if __has_include(<openssl/engine.h>)
+#  include <openssl/engine.h>
+#  define HAVE_OPENSSL_ENGINE 1
+# else
+#  define HAVE_OPENSSL_ENGINE 0
+static inline void ENGINE_load_builtin_engines(void) {}
+static inline ENGINE *ENGINE_by_id(const char *id) { return NULL; }
+static inline int ENGINE_init(ENGINE *e) { return 0; }
+static inline int ENGINE_ctrl_cmd_string(ENGINE *e, const char *cmd, const char *arg, int optional) { return 0; }
+static inline int ENGINE_ctrl_cmd(ENGINE *e, const char *cmd_name, long i, void *p, void (*f)(void), int cmd_optional) { return 0; }
+static inline EVP_PKEY *ENGINE_load_private_key(ENGINE *e, const char *key_id, void *ui_method, void *callback_data) { return NULL; }
+static inline int ENGINE_finish(ENGINE *e) { return 0; }
+static inline int ENGINE_free(ENGINE *e) { return 0; }
+# endif
+#else
+# include <openssl/engine.h>
+# define HAVE_OPENSSL_ENGINE 1
+#endif
 
 /*
  * OpenSSL 3.0 deprecates the OpenSSL's ENGINE API.
