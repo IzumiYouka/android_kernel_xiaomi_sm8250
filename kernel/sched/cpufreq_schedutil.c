@@ -96,7 +96,7 @@ static bool sugov_should_rate_limit(struct sugov_policy *sg_policy, u64 time)
 {
 	s64 delta_ns = time - sg_policy->last_freq_update_time;
 
-	return delta_ns < sg_policy->freq_update_delay_ns;
+	return delta_ns < min(sg_policy->up_rate_delay_ns, sg_policy->down_rate_delay_ns);
 }
 
 static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
