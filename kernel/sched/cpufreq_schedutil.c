@@ -121,7 +121,7 @@ static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 
 	if (unlikely(READ_ONCE(sg_policy->limits_changed))) {
 		WRITE_ONCE(sg_policy->limits_changed, false);
-		sg_policy->need_freq_update = cpufreq_driver_test_flags(CPUFREQ_NEED_UPDATE_LIMITS);
+		sg_policy->need_freq_update = false;
 
 		/*
 		 * The above limits_changed update must occur before the reads
@@ -200,7 +200,7 @@ static bool sugov_update_next_freq(struct sugov_policy *sg_policy, u64 time,
 	 */
 	if (sg_policy->need_freq_update)
 		sg_policy->need_freq_update =
-			cpufreq_driver_test_flags(CPUFREQ_NEED_UPDATE_LIMITS);
+			false;
 	else if (next_freq == sg_policy->next_freq ||
 		 (next_freq < sg_policy->next_freq &&
 		  sugov_should_rate_limit(sg_policy, time)))
@@ -1404,7 +1404,7 @@ static int sugov_start(struct cpufreq_policy *policy)
 	sg_policy->cached_raw_freq		= 0;
 	sg_policy->prev_cached_raw_freq		= 0;
 
-	sg_policy->need_freq_update = cpufreq_driver_test_flags(CPUFREQ_NEED_UPDATE_LIMITS);
+	sg_policy->need_freq_update = false;
 
 	for_each_cpu(cpu, policy->cpus) {
 		struct sugov_cpu *sg_cpu = &per_cpu(sugov_cpu, cpu);
