@@ -5403,7 +5403,7 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 	device->dev->dma_parms =
 		kzalloc(sizeof(*device->dev->dma_parms), GFP_KERNEL);
 
-	dma_set_max_seg_size(device->dev, KGSL_DMA_BIT_MASK);
+	dma_set_max_seg_size(device->dev, (unsigned int)KGSL_DMA_BIT_MASK);
 
 	/* Initialize the memory pools */
 	kgsl_init_page_pools(device);
@@ -5433,8 +5433,6 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 				PM_QOS_CPU_DMA_LATENCY,
 				PM_QOS_DEFAULT_VALUE);
 
-	device->events_wq = alloc_workqueue("kgsl-events",
-		WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS | WQ_HIGHPRI, 0);
 
 	/* Initialize the snapshot engine */
 	kgsl_device_snapshot_init(device);
