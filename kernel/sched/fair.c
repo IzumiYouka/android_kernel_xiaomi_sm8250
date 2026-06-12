@@ -22,6 +22,10 @@
  */
 #include "sched.h"
 
+#ifndef fits_capacity
+#define fits_capacity(cap, max) ((cap) * 1280 < (max) * 1024)
+#endif
+
 #include <trace/events/sched.h>
 
 #include "walt.h"
@@ -6727,7 +6731,7 @@ select_idle_capacity(struct task_struct *p, struct sched_domain *sd, int target)
 
 		if (cpu_isolated(cpu))
 			continue;
-		if (!available_idle_cpu(cpu) && !sched_idle_cpu(cpu))
+		if (!available_idle_cpu(cpu) && !idle_cpu(cpu))
 			continue;
 		if (fits_capacity(task_util, cpu_cap))
 			return cpu;
@@ -6767,7 +6771,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 		task_util = uclamp_task_util(p);
 	}
 
-	if ((available_idle_cpu(target) || sched_idle_cpu(target)) &&
+	if ((available_idle_cpu(target) || idle_cpu(target)) &&
 	    !cpu_isolated(target) &&
 	    asym_fits_capacity(task_util, target))
 		return target;
@@ -6776,7 +6780,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	 * If the previous CPU is cache affine and idle, don't be stupid:
 	 */
 	if (prev != target && cpus_share_cache(prev, target) &&
-	    (available_idle_cpu(prev) || sched_idle_cpu(prev)) &&
+	    (available_idle_cpu(prev) || idle_cpu(prev)) &&
 	    !cpu_isolated(prev) &&
 	    asym_fits_capacity(task_util, prev))
 		return prev;
@@ -6786,7 +6790,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	if (recent_used_cpu != prev &&
 	    recent_used_cpu != target &&
 	    cpus_share_cache(recent_used_cpu, target) &&
-	    (available_idle_cpu(recent_used_cpu) || sched_idle_cpu(recent_used_cpu)) &&
+	    (available_idle_cpu(recent_used_cpu) || idle_cpu(recent_used_cpu)) &&
 	    !cpu_isolated(recent_used_cpu) &&
 	    cpumask_test_cpu(p->recent_used_cpu, &p->cpus_allowed) &&
 	    asym_fits_capacity(task_util, recent_used_cpu)) {
