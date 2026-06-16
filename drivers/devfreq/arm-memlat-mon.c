@@ -26,6 +26,7 @@
 #include <linux/perf_event.h>
 #include <linux/of_device.h>
 #include <linux/mutex.h>
+#include <soc/qcom/scm.h>
 
 enum common_ev_idx {
 	INST_IDX,
@@ -221,6 +222,13 @@ static unsigned long get_cnt(struct memlat_hwmon *hw)
 	struct memlat_mon *mon = to_mon(hw);
 	struct memlat_cpu_grp *cpu_grp = mon->cpu_grp;
 	unsigned int cpu;
+
+	/*
+	 * Some of SCM call is very heavy(+20ms) so perf IPI could
+	 * be stuck on the CPU which contributes long latency.
+	 */
+	if (under_scm_call())
+		return 0;
 
 	for_each_cpu(cpu, &mon->cpus) {
 		struct cpu_data *cpu_data = to_cpu_data(cpu_grp, cpu);
@@ -624,7 +632,8 @@ static int memlat_mon_probe(struct platform_device *pdev, bool is_compute)
 	unsigned int event_id, num_cpus, cpu;
 
 	if (!memlat_wq)
-		memlat_wq = create_freezable_workqueue("memlat_wq");
+		memlat_wq = alloc_workqueue("memlat_wq", WQ_HIGHPRI | WQ_FREEZABLE |
+				            WQ_UNBOUND | WQ_MEM_RECLAIM, 1);
 
 	if (!memlat_wq) {
 		dev_err(dev, "Couldn't create memlat workqueue.\n");

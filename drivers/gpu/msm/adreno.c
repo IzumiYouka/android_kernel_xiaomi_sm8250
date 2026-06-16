@@ -35,7 +35,7 @@ static unsigned int counter_delta(struct kgsl_device *device,
 
 static struct devfreq_msm_adreno_tz_data adreno_tz_data = {
 	.bus = {
-		.max = 350,
+		.max = 1200,
 		.floating = true,
 	},
 	.device_id = KGSL_DEVICE_3D0,
@@ -639,9 +639,6 @@ static irqreturn_t adreno_irq_handler(struct kgsl_device *device)
 	unsigned int status = 0, fence = 0, fence_retries = 0, tmp, int_bit;
 	unsigned int shadow_status = 0;
 	int i;
-	u64 ts, ts1, ts2;
-
-	ts = gmu_core_dev_read_ao_counter(device);
 
 	atomic_inc(&adreno_dev->pending_irq_refcnt);
 	/* Ensure this increment is done before the IRQ status is updated */
@@ -668,8 +665,6 @@ static irqreturn_t adreno_irq_handler(struct kgsl_device *device)
 				&fence);
 
 		while (fence != 0) {
-			ts1 =  gmu_core_dev_read_ao_counter(device);
-
 			/* Wait for small time before trying again */
 			udelay(1);
 			adreno_readreg(adreno_dev,
@@ -677,16 +672,14 @@ static irqreturn_t adreno_irq_handler(struct kgsl_device *device)
 					&fence);
 
 			if (fence_retries == FENCE_RETRY_MAX && fence != 0) {
-				ts2 =  gmu_core_dev_read_ao_counter(device);
-
 				adreno_readreg(adreno_dev,
 					ADRENO_REG_GMU_RBBM_INT_UNMASKED_STATUS,
 					&shadow_status);
 
 				dev_crit_ratelimited(device->dev,
-					"Status=0x%x Unmasked status=0x%x Timestamps:%llx %llx %llx\n",
+					"Status=0x%x Unmasked status=0x%x\n",
 					shadow_status & irq_params->mask,
-					shadow_status, ts, ts1, ts2);
+					shadow_status);
 
 				adreno_set_gpu_fault(adreno_dev,
 						ADRENO_GMU_FAULT);
@@ -1250,18 +1243,13 @@ static int adreno_of_get_power(struct adreno_device *adreno_dev,
 		&device->pwrctrl.pm_qos_active_latency))
 		device->pwrctrl.pm_qos_active_latency = 501;
 
-	/* get pm-qos-cpu-mask-latency, set it to default if not found */
-	if (of_property_read_u32(node, "qcom,l2pc-cpu-mask-latency",
-		&device->pwrctrl.pm_qos_cpu_mask_latency))
-		device->pwrctrl.pm_qos_cpu_mask_latency = 501;
-
 	/* get pm-qos-wakeup-latency, set it to default if not found */
 	if (of_property_read_u32(node, "qcom,pm-qos-wakeup-latency",
 		&device->pwrctrl.pm_qos_wakeup_latency))
 		device->pwrctrl.pm_qos_wakeup_latency = 101;
 
 	if (of_property_read_u32(node, "qcom,idle-timeout", &timeout))
-		timeout = 80;
+		timeout = 58;
 
 	device->pwrctrl.interval_timeout = msecs_to_jiffies(timeout);
 
@@ -2077,10 +2065,6 @@ static int _adreno_start(struct adreno_device *adreno_dev)
 
 	/* make sure ADRENO_DEVICE_STARTED is not set here */
 	WARN_ON(test_bit(ADRENO_DEVICE_STARTED, &adreno_dev->priv));
-
-	/* disallow l2pc during wake up to improve GPU wake up time */
-	kgsl_pwrctrl_update_l2pc(&adreno_dev->dev,
-			KGSL_L2PC_WAKEUP_TIMEOUT);
 
 	pm_qos_update_request(&device->pwrctrl.pm_qos_req_dma,
 			pmqos_wakeup_vote);
@@ -3207,6 +3191,9 @@ int adreno_spin_idle(struct adreno_device *adreno_dev, unsigned int timeout)
 		if (adreno_isidle(KGSL_DEVICE(adreno_dev)))
 			return 0;
 
+		/* relax tight loop */
+		cond_resched();
+
 	} while (time_before(jiffies, wait));
 
 	/*
@@ -3434,14 +3421,12 @@ int adreno_gmu_fenced_write(struct adreno_device *adreno_dev,
 	struct adreno_gpudev *gpudev = ADRENO_GPU_DEVICE(adreno_dev);
 	unsigned int reg_offset = gpudev->reg_offsets->offsets[offset];
 	struct kgsl_device *device = KGSL_DEVICE(adreno_dev);
-	u64 ts1, ts2;
 
 	adreno_writereg(adreno_dev, offset, val);
 
 	if (!gmu_core_isenabled(KGSL_DEVICE(adreno_dev)))
 		return 0;
 
-	ts1 = gmu_core_dev_read_ao_counter(device);
 	for (i = 0; i < GMU_CORE_LONG_WAKEUP_RETRY_LIMIT; i++) {
 		/*
 		 * Make sure the previous register write is posted before
@@ -3460,7 +3445,11 @@ int adreno_gmu_fenced_write(struct adreno_device *adreno_dev,
 			break;
 
 		/* Wait a small amount of time before trying again */
-		udelay(GMU_CORE_WAKEUP_DELAY_US);
+		if (in_atomic())
+			udelay(GMU_CORE_WAKEUP_DELAY_US);
+		else
+			usleep_range(GMU_CORE_WAKEUP_DELAY_US,
+				     3 * GMU_CORE_WAKEUP_DELAY_US);
 
 		/* Try to write the fenced register again */
 		adreno_writereg(adreno_dev, offset, val);
@@ -3469,13 +3458,11 @@ int adreno_gmu_fenced_write(struct adreno_device *adreno_dev,
 	if (i < GMU_CORE_SHORT_WAKEUP_RETRY_LIMIT)
 		return 0;
 
-	ts2 = gmu_core_dev_read_ao_counter(device);
-
 	if (i == GMU_CORE_LONG_WAKEUP_RETRY_LIMIT) {
 		dev_err(device->dev,
-			"Timed out waiting %d usecs to write fenced register 0x%x, timestamps %llu %llu, status 0x%x\n",
+			"Timed out waiting %d usecs to write fenced register 0x%x, status 0x%x\n",
 			i * GMU_CORE_WAKEUP_DELAY_US,
-			reg_offset, ts1, ts2, status);
+			reg_offset, status);
 
 		return -ETIMEDOUT;
 	}

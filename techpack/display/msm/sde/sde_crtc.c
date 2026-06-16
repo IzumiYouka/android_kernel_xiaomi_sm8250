@@ -44,6 +44,11 @@
 #include "sde_trace.h"
 #include "dsi_display.h"
 
+#ifdef CONFIG_DRM_SDE_EXPO
+#include "dsi_display.h"
+#include "dsi_panel.h"
+#endif
+
 #define SDE_PSTATES_MAX (SDE_STAGE_MAX * 4)
 #define SDE_MULTIRECT_PLANE_MAX (SDE_STAGE_MAX * 2)
 
@@ -1522,6 +1527,13 @@ static void _sde_crtc_blend_setup_mixer(struct drm_crtc *crtc,
 		if (cstate->fod_dim_layer)
 			_sde_crtc_setup_dim_layer_cfg(crtc, sde_crtc,
 					mixer, cstate->fod_dim_layer);
+#ifdef CONFIG_DRM_SDE_EXPO
+		if (cstate->exposure_dim_layer) {
+			_sde_crtc_setup_dim_layer_cfg(crtc, sde_crtc,
+					mixer, cstate->exposure_dim_layer);
+		}
+#endif
+
 	}
 
 	_sde_crtc_program_lm_output_roi(crtc);
@@ -2636,6 +2648,51 @@ static void _sde_crtc_set_dim_layer_v1(struct drm_crtc *crtc,
 	}
 }
 
+#ifdef CONFIG_DRM_SDE_EXPO
+static int sde_crtc_config_exposure_dim_layer(struct drm_crtc_state *crtc_state, int stage)
+{
+	struct sde_kms *kms;
+	struct sde_hw_dim_layer *dim_layer;
+	struct sde_crtc_state *cstate = to_sde_crtc_state(crtc_state);
+	struct drm_display_mode *mode = &crtc_state->adjusted_mode;
+	int alpha = sde_crtc_get_property(cstate, CRTC_PROP_DIM_LAYER_EXPO);
+
+	kms = _sde_crtc_get_kms(crtc_state->crtc);
+	if (!kms || !kms->catalog) {
+		return -EINVAL;
+	}
+
+	if (cstate->num_dim_layers == SDE_MAX_DIM_LAYERS - 1) {
+		pr_err("failed to get available dim layer for exposure\n");
+		return -EINVAL;
+	}
+
+	if (!alpha) {
+		cstate->exposure_dim_layer = NULL;
+		return 0;
+	}
+
+	if ((stage + SDE_STAGE_0) >= kms->catalog->mixer[0].sblk->maxblendstages) {
+		return -EINVAL;
+	}
+
+	dim_layer = &cstate->dim_layer[cstate->num_dim_layers];
+	dim_layer->flags = SDE_DRM_DIM_LAYER_INCLUSIVE;
+	dim_layer->stage = stage + SDE_STAGE_0;
+
+	dim_layer->rect.x = 0;
+	dim_layer->rect.y = 0;
+	dim_layer->rect.w = mode->hdisplay;
+	dim_layer->rect.h = mode->vdisplay;
+	dim_layer->color_fill = (struct sde_mdss_color) {0, 0, 0, alpha};
+	cstate->exposure_dim_layer = dim_layer;
+
+	dim_layer->flags = SDE_CRTC_DIRTY_DIM_LAYER_EXPO;
+
+	return 0;
+}
+#endif
+
 /**
  * _sde_crtc_set_dest_scaler - copy dest scaler settings from userspace
  * @sde_crtc   :  Pointer to sde crtc
@@ -3734,8 +3791,6 @@ void sde_crtc_commit_kickoff(struct drm_crtc *crtc,
 		SDE_EVT32(DRMID(crtc), SDE_EVTLOG_FUNC_CASE2);
 	}
 	sde_crtc->play_count++;
-
-	sde_vbif_clear_errors(sde_kms);
 
 	if (is_error) {
 		_sde_crtc_remove_pipe_flush(crtc);
@@ -4852,6 +4907,34 @@ static int _sde_crtc_check_get_pstates(struct drm_crtc *crtc,
 	return rc;
 }
 
+#ifdef CONFIG_DRM_SDE_EXPO
+static int sde_crtc_exposure_atomic_check(struct sde_crtc_state *cstate,
+		struct plane_state *pstates, int cnt)
+{
+	int i, zpos = 0;
+	struct dsi_display *dsi_display = get_main_display();
+	struct dsi_panel *panel = dsi_display->panel;
+
+	if (!panel->dimlayer_exposure) {
+		cstate->exposure_dim_layer = NULL;
+		return 0;
+	}
+
+	for (i = 0; i < cnt; i++) {
+		if (pstates[i].stage > zpos)
+			zpos = pstates[i].stage;
+	}
+	zpos++;
+
+	if (sde_crtc_config_exposure_dim_layer(&cstate->base, zpos)) {
+		SDE_ERROR("Failed to config dim layer\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+#endif
+
 static int _sde_crtc_check_zpos(struct drm_crtc_state *state,
 		struct sde_crtc *sde_crtc,
 		struct plane_state *pstates,
@@ -4951,6 +5034,12 @@ static int _sde_crtc_atomic_check_pstates(struct drm_crtc *crtc,
 
 	sde_crtc_fod_atomic_check(cstate, pstates, cnt);
 
+#ifdef CONFIG_DRM_SDE_EXPO
+	rc = sde_crtc_exposure_atomic_check(cstate, pstates, cnt);
+	if (rc)
+		return rc;
+#endif
+
 	/* assign mixer stages based on sorted zpos property */
 	rc = _sde_crtc_check_zpos(state, sde_crtc, pstates, cstate, mode, cnt);
 	if (rc)
@@ -4978,11 +5067,11 @@ static int sde_crtc_atomic_check(struct drm_crtc *crtc,
 {
 	struct drm_device *dev;
 	struct sde_crtc *sde_crtc;
-	struct plane_state *pstates = NULL;
+	struct plane_state pstates[SDE_PSTATES_MAX];
 	struct sde_crtc_state *cstate;
 	struct drm_display_mode *mode;
 	int rc = 0;
-	struct sde_multirect_plane_states *multirect_plane = NULL;
+	struct sde_multirect_plane_states multirect_plane[SDE_MULTIRECT_PLANE_MAX];
 	struct drm_connector *conn;
 	struct drm_connector_list_iter conn_iter;
 
@@ -4998,18 +5087,6 @@ static int sde_crtc_atomic_check(struct drm_crtc *crtc,
 	if (!state->enable || !state->active) {
 		SDE_DEBUG("crtc%d -> enable %d, active %d, skip atomic_check\n",
 				crtc->base.id, state->enable, state->active);
-		goto end;
-	}
-
-	pstates = kcalloc(SDE_PSTATES_MAX,
-			sizeof(struct plane_state), GFP_KERNEL);
-
-	multirect_plane = kcalloc(SDE_MULTIRECT_PLANE_MAX,
-			sizeof(struct sde_multirect_plane_states),
-			GFP_KERNEL);
-
-	if (!pstates || !multirect_plane) {
-		rc = -ENOMEM;
 		goto end;
 	}
 
@@ -5068,8 +5145,6 @@ static int sde_crtc_atomic_check(struct drm_crtc *crtc,
 		goto end;
 	}
 end:
-	kfree(pstates);
-	kfree(multirect_plane);
 	return rc;
 }
 
@@ -5386,6 +5461,11 @@ static void sde_crtc_install_properties(struct drm_crtc *crtc,
 
 	msm_property_install_volatile_range(&sde_crtc->property_info,
 		"output_fence", 0x0, 0, ~0, 0, CRTC_PROP_OUTPUT_FENCE);
+
+#ifdef CONFIG_DRM_SDE_EXPO
+	msm_property_install_volatile_range(&sde_crtc->property_info,
+			"dim_layer_exposure", 0x0, 0, ~0, 0, CRTC_PROP_DIM_LAYER_EXPO);
+#endif
 
 	msm_property_install_range(&sde_crtc->property_info,
 			"output_fence_offset", 0x0, 0, 1, 0,

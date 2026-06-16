@@ -20,6 +20,14 @@
 #include "sde_dbg.h"
 #include "dsi_mi_feature.h"
 
+#if defined(CONFIG_DRM_DYNAMIC_REFRESH_RATE)
+static struct blocking_notifier_head dsi_freq_head =
+			BLOCKING_NOTIFIER_INIT(dsi_freq_head);
+EXPORT_SYMBOL_GPL(dsi_freq_head);
+#endif
+
+#include "exposure_adjustment.h"
+
 /**
  * topology is currently defined by a set of following 3 values:
  * 1. num of layer mixers
@@ -774,7 +782,7 @@ int dsi_panel_update_backlight(struct dsi_panel *panel,
 			use_count = 10;
 
 		if (use_count-- > 0 && mi_cfg->last_bl_level != bl_lvl)
-			DSI_INFO("set backlight from %d to %d\n",
+			DSI_DEBUG("set backlight from %d to %d\n",
 				mi_cfg->last_bl_level, bl_lvl);
 
 		if (!mi_cfg->in_aod &&mi_cfg->vi_setting_enabled) {
@@ -795,11 +803,11 @@ int dsi_panel_update_backlight(struct dsi_panel *panel,
 		if (bl_lvl > 2047 && mi_cfg->dim_fp_dbv_max_in_hbm_flag == false) {
 			dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_MI_DIM_FP_DBV_MAX_IN_HBM);
 			mi_cfg->dim_fp_dbv_max_in_hbm_flag = true;
-			DSI_INFO("set DSI_CMD_SET_MI_DIM_FP_DBV_MAX to hbm\n");
+			DSI_DEBUG("set DSI_CMD_SET_MI_DIM_FP_DBV_MAX to hbm\n");
 		} else if (bl_lvl <= 2047 && mi_cfg->dim_fp_dbv_max_in_hbm_flag == true) {
 			dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_MI_DIM_FP_DBV_MAX_IN_NORMAL);
 			mi_cfg->dim_fp_dbv_max_in_hbm_flag = false;
-			DSI_INFO("set DSI_CMD_SET_MI_DIM_FP_DBV_MAX to normal\n");
+			DSI_DEBUG("set DSI_CMD_SET_MI_DIM_FP_DBV_MAX to normal\n");
 		}
 		if(panel->mi_cfg.local_hbm_cur_status) {
 			mi_dsi_panel_set_fod_brightness(dsi, bl_lvl);
@@ -924,6 +932,7 @@ int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status)
 int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 {
 	int rc = 0;
+	int bl_dc_min = panel->bl_config.bl_min_level * 2;
 	struct dsi_backlight_config *bl = &panel->bl_config;
 	struct dsi_backlight_config *bl_slaver = &panel->bl_slaver_config;
 	struct dsi_panel_mi_cfg *mi_cfg = &panel->mi_cfg;
@@ -931,6 +940,9 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 	if (panel->host_config.ext_bridge_mode)
 		return 0;
 
+	if (bl_lvl > 0)
+                bl_lvl = ea_panel_calc_backlight(bl_lvl < bl_dc_min ? bl_dc_min : bl_lvl);
+                
 	DSI_DEBUG("backlight type:%d lvl:%d\n", bl->type, bl_lvl);
 
 	/* lmi panel must restore to last_bl_level to avoid flash high
@@ -943,7 +955,7 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 	}
 
 	if (dc_skip_set_backlight(panel, bl_lvl)) {
-		DSI_INFO("skip set backlight bacase dc enable %d, bl %d\n",
+		DSI_DEBUG("skip set backlight bacase dc enable %d, bl %d\n",
 			panel->mi_cfg.dc_enable, bl_lvl);
 		return rc;
 	}else if (!panel->mi_cfg.bl_enable) {
@@ -969,13 +981,13 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 		break;
 	case DSI_BACKLIGHT_DCS:
 		if (mi_cfg->fod_backlight_flag) {
-			DSI_INFO("fod_backlight_flag set, skip set backlight %d\n", bl_lvl);
+			DSI_DEBUG("fod_backlight_flag set, skip set backlight %d\n", bl_lvl);
 		} else {
 			if (mi_cfg->hbm_51_ctrl_flag &&
 				(mi_cfg->fod_hbm_enabled || 
 				 (mi_cfg->thermal_hbm_disabled && bl_lvl > 2047 && mi_cfg->last_bl_level > 0) || 
 				 (mi_cfg->hbm_enabled && !mi_cfg->hbm_brightness && !mi_cfg->thermal_hbm_disabled))) {
-				DSI_INFO("fod_hbm_enabled(%d), hbm_enabled(%d), thermal_hbm_disabled(%d), skip set backlight %d\n", 
+				DSI_DEBUG("fod_hbm_enabled(%d), hbm_enabled(%d), thermal_hbm_disabled(%d), skip set backlight %d\n", 
 						mi_cfg->fod_hbm_enabled, mi_cfg->hbm_enabled, mi_cfg->thermal_hbm_disabled, bl_lvl);
 			} else if (mi_cfg->thermal_hbm_disabled && bl_lvl > 2047 && mi_cfg->last_bl_level == 0) {
 				bl_lvl = 2047;
@@ -1005,16 +1017,16 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 	}
 
 	if (mi_cfg->last_bl_level == 0 && bl_lvl && (panel->host_config.cphy_strength || panel->mi_cfg.panel_id == 0x4C38314100420400)){
-		DSI_INFO("disable insert black \n");
+		DSI_DEBUG("disable insert black \n");
 		dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_DISABLE_INSERT_BLACK);
 	}
 
 	if (bl_lvl > 0 && mi_cfg->last_bl_level == 0 && mi_cfg->dc_type) {
-		DSI_INFO("crc off\n");
+		DSI_DEBUG("crc off\n");
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_MI_CRC_OFF);
 	}
 	if (bl_lvl == 0 && mi_cfg->dc_type) {
-		DSI_INFO("DC off\n");
+		DSI_DEBUG("DC off\n");
 		mi_cfg->dc_enable = false;
 	}
 	mi_cfg->last_bl_level = bl_lvl;
@@ -1506,10 +1518,10 @@ static int dsi_panel_parse_misc_host_config(struct dsi_host_common_cfg *host,
 	rc = utils->read_u32(utils->data, "qcom,mdss-dsi-clk-strength", &val);
 	if (!rc) {
 		host->clk_strength = val;
-		DSI_INFO("[%s] clk_strength = %d\n", name, val);
+		DSI_DEBUG("[%s] clk_strength = %d\n", name, val);
 	} else {
 		host->clk_strength = 0;
-		DSI_INFO("[%s] clk_strength default value = %d\n", name, val);
+		DSI_DEBUG("[%s] clk_strength default value = %d\n", name, val);
 	}
 
 	panel_cphy_mode = utils->read_bool(utils->data,
@@ -3485,7 +3497,7 @@ static int dsi_panel_parse_topology(
 	}
 
 	if (topology_override >= 0 && topology_override < top_count) {
-		DSI_INFO("override topology: cfg:%d lm:%d comp_enc:%d intf:%d\n",
+		DSI_DEBUG("override topology: cfg:%d lm:%d comp_enc:%d intf:%d\n",
 			topology_override,
 			topology[topology_override].num_lm,
 			topology[topology_override].num_enc,
@@ -3508,7 +3520,7 @@ static int dsi_panel_parse_topology(
 		goto parse_fail;
 	}
 
-	DSI_INFO("default topology: lm: %d comp_enc:%d intf: %d\n",
+	DSI_DEBUG("default topology: lm: %d comp_enc:%d intf: %d\n",
 		topology[top_sel].num_lm,
 		topology[top_sel].num_enc,
 		topology[top_sel].num_intf);
@@ -3559,7 +3571,7 @@ static int dsi_panel_parse_roi_alignment(struct dsi_parser_utils *utils,
 			align->min_height = value[5];
 		}
 
-		DSI_INFO("roi alignment: [%d, %d, %d, %d, %d, %d]\n",
+		DSI_DEBUG("roi alignment: [%d, %d, %d, %d, %d, %d]\n",
 			align->xstart_pix_align,
 			align->width_pix_align,
 			align->ystart_pix_align,
@@ -3595,7 +3607,7 @@ static int dsi_panel_parse_partial_update_caps(struct dsi_display_mode *mode,
 		else if (!strcmp(data, "single_roi"))
 			roi_caps->num_roi = 1;
 		else {
-			DSI_INFO(
+			DSI_DEBUG(
 			"invalid value for qcom,partial-update-enabled: %s\n",
 			data);
 			return 0;
@@ -4095,6 +4107,45 @@ void dsi_panel_put(struct dsi_panel *panel)
 	kfree(panel);
 }
 
+static struct dsi_panel * set_panel;
+static ssize_t mdss_fb_set_ea_enable(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t len)
+{
+	u32 ea_enable;
+
+	if (sscanf(buf, "%d", &ea_enable) != 1) {
+		DSI_ERR("sccanf buf error!\n");
+		return len;
+	}
+
+	ea_panel_mode_ctrl(set_panel, ea_enable != 0);
+
+	return len;
+}
+
+static ssize_t mdss_fb_get_ea_enable(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	int ret;
+	bool ea_enable = ea_panel_is_enabled();
+
+	ret = scnprintf(buf, PAGE_SIZE, "%d\n", ea_enable ? 1 : 0);
+
+	return ret;
+}
+
+static DEVICE_ATTR(msm_fb_ea_enable, S_IRUGO | S_IWUSR,
+	mdss_fb_get_ea_enable, mdss_fb_set_ea_enable);
+
+static struct attribute *mdss_fb_attrs[] = {
+	&dev_attr_msm_fb_ea_enable.attr,
+	NULL,
+};
+
+static struct attribute_group mdss_fb_attr_group = {
+	.attrs = mdss_fb_attrs,
+};
+
 int dsi_panel_drv_init(struct dsi_panel *panel,
 		       struct mipi_dsi_host *host)
 {
@@ -4148,6 +4199,11 @@ int dsi_panel_drv_init(struct dsi_panel *panel,
 			       panel->name, rc);
 		goto error_gpio_release;
 	}
+
+	rc = sysfs_create_group(&(panel->parent->kobj), &mdss_fb_attr_group);
+	if (rc)
+		pr_err("sysfs group creation failed, rc=%d\n", rc);
+	set_panel = panel;
 
 	goto exit;
 
@@ -4528,7 +4584,7 @@ int dsi_panel_get_mode(struct dsi_panel *panel,
 			if (rc) {
 				rc = 0;
 				mode->panel_mode = panel->panel_mode;
-				DSI_INFO(
+				DSI_DEBUG(
 				"POMS: panel mode isn't specified in timing[%d]\n",
 				child_idx);
 			}
@@ -4743,7 +4799,7 @@ int dsi_panel_set_nolp(struct dsi_panel *panel)
 	cancel_delayed_work(&mi_cfg->enter_aod_delayed_work);
 
 	if (mi_cfg->fod_hbm_enabled || (mi_cfg->fod_skip_nolp && mi_cfg->sysfs_fod_unlock_success && !mi_cfg->fod_to_nolp)) {
-		DSI_INFO("fod_hbm_enabled = %d || (mi_cfg->sysfs_fod_unlock_success = %d && mi_cfg->fod_skip_nolp = %d mi_cfg->layer_fod_unlock_success = %d), skip\n", mi_cfg->fod_hbm_enabled, mi_cfg->sysfs_fod_unlock_success, mi_cfg->fod_skip_nolp, mi_cfg->layer_fod_unlock_success);
+		DSI_DEBUG("fod_hbm_enabled = %d || (mi_cfg->sysfs_fod_unlock_success = %d && mi_cfg->fod_skip_nolp = %d mi_cfg->layer_fod_unlock_success = %d), skip\n", mi_cfg->fod_hbm_enabled, mi_cfg->sysfs_fod_unlock_success, mi_cfg->fod_skip_nolp, mi_cfg->layer_fod_unlock_success);
 		goto exit_skip;
 	}
 
@@ -4775,7 +4831,7 @@ exit_skip:
 		if (rc)
 			DSI_ERR("Failed to send DSI_CMD_SET_MI_DYNAMIC_ELVSS_ON command\n");
 		else
-			DSI_INFO("dynamic elvss on\n");
+			DSI_DEBUG("dynamic elvss on\n");
 	}
 
 	mi_cfg->in_aod = false;
@@ -5072,7 +5128,7 @@ int dsi_panel_switch(struct dsi_panel *panel)
 	}
 
 	if (panel->mi_cfg.panel_id == 0x4C334100420200 && panel->mi_cfg.in_aod) {
-		DSI_INFO("In AOD, skip set fps \n");
+		DSI_DEBUG("In AOD, skip set fps \n");
 		return rc;
 	}
 
@@ -5151,6 +5207,9 @@ int dsi_panel_enable(struct dsi_panel *panel)
 		DSI_ERR("Invalid params\n");
 		return -EINVAL;
 	}
+
+	if (panel->hbm_mode)
+		dsi_panel_apply_hbm_mode(panel);
 
 	mutex_lock(&panel->panel_lock);
 
@@ -5353,7 +5412,7 @@ int dsi_panel_disable(struct dsi_panel *panel)
 
 		priv_info = panel->cur_mode ? panel->cur_mode->priv_info : NULL;
 		if (mi_cfg->fod_hbm_enabled && priv_info) {
-			DSI_INFO("hbm fod off\n");
+			DSI_DEBUG("hbm fod off\n");
 			if (mi_cfg->hbm_51_ctrl_flag) {
 				cmds = priv_info->cmd_sets[DSI_CMD_SET_MI_HBM_FOD_OFF].cmds;
 				count = priv_info->cmd_sets[DSI_CMD_SET_MI_HBM_FOD_OFF].count;
@@ -5363,7 +5422,7 @@ int dsi_panel_disable(struct dsi_panel *panel)
 						tx_buf[1] = 0x00;
 						tx_buf[2] = 0x00;
 					}
-					DSI_INFO("DSI_CMD_SET_MI_HBM_FOD_OFF 0x%02X = 0x%02X 0x%02X\n",
+					DSI_DEBUG("DSI_CMD_SET_MI_HBM_FOD_OFF 0x%02X = 0x%02X 0x%02X\n",
 							tx_buf[0], tx_buf[1], tx_buf[2]);
 				} else {
 					if (tx_buf)
@@ -5395,7 +5454,7 @@ int dsi_panel_disable(struct dsi_panel *panel)
 		}
 	} else {
 		mi_cfg->unset_doze_brightness = mi_cfg->doze_brightness_state;
-		DSI_INFO("save doze brightness state [%d] when ESD recovery is underway\n",
+		DSI_DEBUG("save doze brightness state [%d] when ESD recovery is underway\n",
 				mi_cfg->unset_doze_brightness);
 	}
 	panel->panel_initialized = false;
@@ -5469,5 +5528,28 @@ int dsi_panel_post_unprepare(struct dsi_panel *panel)
 	}
 error:
 	mutex_unlock(&panel->panel_lock);
+	return rc;
+}
+
+int dsi_panel_apply_hbm_mode(struct dsi_panel *panel)
+{
+	static const enum dsi_cmd_set_type type_map[] = {
+		DSI_CMD_SET_MI_HBM_OFF,
+		DSI_CMD_SET_MI_HBM_ON
+	};
+
+	enum dsi_cmd_set_type type;
+	int rc;
+
+	if (panel->hbm_mode >= 0 &&
+		panel->hbm_mode < ARRAY_SIZE(type_map))
+		type = type_map[panel->hbm_mode];
+	else
+		type = type_map[0];
+
+	mutex_lock(&panel->panel_lock);
+	rc = dsi_panel_tx_cmd_set(panel, type);
+	mutex_unlock(&panel->panel_lock);
+
 	return rc;
 }
