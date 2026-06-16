@@ -5231,7 +5231,7 @@ static struct attribute *dynamic_dsi_clock_fs_attrs[] = {
 	&dev_attr_dynamic_dsi_clock.attr,
 	NULL,
 };
-static struct attribute_group dynamic_dsi_clock_fs_attrs_group = {
+static struct attribute_group dynamic_dsi_clock_fs_attrs_group __maybe_unused = {
 	.attrs = dynamic_dsi_clock_fs_attrs,
 };
 
