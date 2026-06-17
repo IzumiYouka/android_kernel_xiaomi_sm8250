@@ -11677,8 +11677,14 @@ no_move:
 			 * ->active_balance synchronizes accesses to
 			 * ->active_balance_work.  Once set, it's cleared
 			 * only after active load balance is finished.
+			 *
+			 * @busiest may have dropped its rq_lock in the
+			 * middle of scheduling out its ->curr task
+			 * (->on_rq := 0); no need to forcefully punt
+			 * that task away with active balance.
 			 */
 			if (!busiest->active_balance &&
+			    busiest->curr->on_rq &&
 			    !cpu_isolated(cpu_of(busiest))) {
 				busiest->active_balance = 1;
 				busiest->push_cpu = this_cpu;
@@ -11692,11 +11698,11 @@ no_move:
 					active_load_balance_cpu_stop, busiest,
 					&busiest->active_balance_work);
 				*continue_balancing = 0;
-			}
 
-			/* We've kicked active balancing, force task migration. */
-			sd->nr_balance_failed = sd->cache_nice_tries +
-					NEED_ACTIVE_BALANCE_THRESHOLD - 1;
+				/* We've kicked active balancing, force task migration. */
+				sd->nr_balance_failed = sd->cache_nice_tries +
+						NEED_ACTIVE_BALANCE_THRESHOLD - 1;
+			}
 		}
 	} else
 		sd->nr_balance_failed = 0;
