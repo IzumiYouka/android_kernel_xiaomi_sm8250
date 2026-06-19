@@ -168,7 +168,6 @@ static void invoke_rcu_core(void);
 static void invoke_rcu_callbacks(struct rcu_state *rsp, struct rcu_data *rdp);
 static void rcu_report_exp_rdp(struct rcu_state *rsp,
 			       struct rcu_data *rdp, bool wake);
-static void rcu_report_qs_rdp(struct rcu_state *rsp, struct rcu_data *rdp); 279366784bbd (rcu: Reduce synchronize_rcu() latency by reporting GP kthread's CPU QS early)
 static void sync_sched_exp_online_cleanup(int cpu);
 
 /* rcuc/rcub kthread realtime priority */
@@ -2029,21 +2028,6 @@ static bool rcu_gp_init(struct rcu_state *rsp)
 		cond_resched_tasks_rcu_qs();
 		WRITE_ONCE(rsp->gp_activity, jiffies);
 	}
-
-	// If strict, make all CPUs aware of new grace period.
-	if (IS_ENABLED(CONFIG_RCU_STRICT_GRACE_PERIOD))
-		on_each_cpu(rcu_strict_gp_boundary, NULL, 0);
-
-	/*
-	 * Immediately report QS for the GP kthread's CPU. The GP kthread
-	 * cannot be in an RCU read-side critical section while running
-	 * the FQS scan. This eliminates the need for a second FQS wait
-	 * when all CPUs are idle.
-	 */
-	preempt_disable();
-	rcu_qs();
-	rcu_report_qs_rdp(this_cpu_ptr(&rcu_data));
-	preempt_enable();
 
 	return true;
 }
