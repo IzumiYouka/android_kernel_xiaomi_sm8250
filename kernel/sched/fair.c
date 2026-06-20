@@ -3289,7 +3289,8 @@ update_tg_cfs_runnable(struct cfs_rq *cfs_rq, struct sched_entity *se, struct cf
 	 * cfs_rq->avg.period_contrib can be used for both cfs_rq and se.
 	 * See ___update_load_avg() for details.
 	 */
-	u32 new_sum, divider = LOAD_AVG_MAX - 1024 + cfs_rq->avg.period_contrib;
+	u64 new_sum;
+	u32 divider = LOAD_AVG_MAX - 1024 + cfs_rq->avg.period_contrib;
 
 	/* Nothing to update */
 	if (!delta_avg)
@@ -3297,7 +3298,7 @@ update_tg_cfs_runnable(struct cfs_rq *cfs_rq, struct sched_entity *se, struct cf
 
 	/* Set new sched_entity's runnable */
 	se->avg.runnable_avg = gcfs_rq->avg.runnable_avg;
-	new_sum = se->avg.runnable_avg * divider;
+	new_sum = (u64)se->avg.runnable_avg * divider;
 	delta_sum = (long)new_sum - (long)se->avg.runnable_sum;
 	se->avg.runnable_sum = new_sum;
 
