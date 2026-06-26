@@ -42,7 +42,7 @@ And public attribution of xiaomi platforms(like apollo and so and)
 		compatible = "xiaomi,spi-for-tp";
 		reg = <0>;
 		status = "ok";
-		spi-max-frequency = <10000000>;  //10M
+		spi-max-frequency = <19200000>;
 	};
 };
 
@@ -175,7 +175,7 @@ And public attribution of xiaomi platforms(like apollo and so and)
 		compatible = "novatek,NVT-ts-spi";
 		status = "ok";
 
-		spi-max-frequency = <15000000>;	//4800000,9600000,15000000,19200000 5M
+		spi-max-frequency = <19200000>;	//4800000,9600000,15000000,19200000 5M
 		novatek,reset-gpio = <&tlmm 38 0x00>;
 		novatek,irq-gpio = <&tlmm 39 0x2001>;
 		/* novatek,reset-tddi = <&pm8150l_gpios 3 0>; */
