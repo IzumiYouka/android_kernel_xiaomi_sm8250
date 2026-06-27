@@ -8,3 +8,4 @@
 };
 
 #include "kona-v2.1-gpu.dtsi"
+#include "kona-v2-gpu.dtsi"
