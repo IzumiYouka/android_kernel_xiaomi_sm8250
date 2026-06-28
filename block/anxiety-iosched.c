@@ -13,10 +13,17 @@
 #include <linux/init.h>
 
 /* Batch this many synchronous requests at a time */
-#define	DEFAULT_SYNC_RATIO	(8)
+#define DEFAULT_SYNC_RATIO	(8)
 
-/* Run each batch this many times*/
+/* Run each batch this many times */
 #define DEFAULT_BATCH_COUNT	(4)
+
+/*
+ * Minimum number of pending requests before batching aggressively.
+ * Below this threshold, dispatch one request at a time to allow
+ * the storage controller to enter low-power states (e.g. UFS hibern8).
+ */
+#define DEFAULT_IDLE_MIN_DEPTH	(4)
 
 struct anxiety_data {
 	struct list_head sync_queue;
@@ -25,28 +32,37 @@ struct anxiety_data {
 	/* Tunables */
 	uint8_t sync_ratio;
 	uint8_t batch_count;
+	uint8_t idle_min_depth;
+
+	/* Queue depth counter */
+	uint16_t depth;
 };
 
 static inline struct request *anxiety_next_entry(struct list_head *queue)
 {
-	return list_first_entry(queue, struct request,
-		queuelist);
+	return list_first_entry(queue, struct request, queuelist);
 }
 
 static void anxiety_merged_requests(struct request_queue *q, struct request *rq,
 		struct request *next)
 {
+	struct anxiety_data *adata = q->elevator->elevator_data;
+
 	list_del_init(&next->queuelist);
+	adata->depth--;
 }
 
 static inline int __anxiety_dispatch(struct request_queue *q,
 		struct request *rq)
 {
+	struct anxiety_data *adata = q->elevator->elevator_data;
+
 	if (unlikely(!rq))
 		return -EINVAL;
 
 	list_del_init(&rq->queuelist);
 	elv_dispatch_add_tail(q, rq);
+	adata->depth--;
 
 	return 0;
 }
@@ -57,6 +73,26 @@ static uint16_t anxiety_dispatch_batch(struct request_queue *q)
 	uint8_t i, j;
 	uint16_t dispatched = 0;
 	int ret;
+
+	/*
+	 * If total pending depth is below idle_min_depth, dispatch only
+	 * one request to give the storage controller a chance to enter
+	 * a low-power idle state (e.g. UFS hibern8).
+	 */
+	if (adata->depth < adata->idle_min_depth) {
+		if (!list_empty(&adata->sync_queue)) {
+			ret = __anxiety_dispatch(q,
+				anxiety_next_entry(&adata->sync_queue));
+			if (!ret)
+				dispatched++;
+		} else if (!list_empty(&adata->async_queue)) {
+			ret = __anxiety_dispatch(q,
+				anxiety_next_entry(&adata->async_queue));
+			if (!ret)
+				dispatched++;
+		}
+		return dispatched;
+	}
 
 	/* Perform each batch adata->batch_count many times */
 	for (i = 0; i < adata->batch_count; i++) {
@@ -95,14 +131,9 @@ static uint16_t anxiety_dispatch_drain(struct request_queue *q)
 	uint16_t dispatched = 0;
 	int ret;
 
-	/*
-	 * Drain out all of the synchronous requests first,
-	 * then drain the asynchronous requests.
-	 */
 	while (!list_empty(&adata->sync_queue)) {
 		ret = __anxiety_dispatch(q,
 			anxiety_next_entry(&adata->sync_queue));
-
 		if (!ret)
 			dispatched++;
 	}
@@ -110,7 +141,6 @@ static uint16_t anxiety_dispatch_drain(struct request_queue *q)
 	while (!list_empty(&adata->async_queue)) {
 		ret = __anxiety_dispatch(q,
 			anxiety_next_entry(&adata->async_queue));
-
 		if (!ret)
 			dispatched++;
 	}
@@ -120,10 +150,6 @@ static uint16_t anxiety_dispatch_drain(struct request_queue *q)
 
 static int anxiety_dispatch(struct request_queue *q, int force)
 {
-	/*
-	 * When requested by the elevator, a full queue drain can be
-	 * performed in one scheduler dispatch.
-	 */
 	if (unlikely(force))
 		return anxiety_dispatch_drain(q);
 
@@ -136,6 +162,7 @@ static void anxiety_add_request(struct request_queue *q, struct request *rq)
 
 	list_add_tail(&rq->queuelist,
 		rq_is_sync(rq) ? &adata->sync_queue : &adata->async_queue);
+	adata->depth++;
 }
 
 static int anxiety_init_queue(struct request_queue *q,
@@ -147,23 +174,21 @@ static int anxiety_init_queue(struct request_queue *q,
 	if (!eq)
 		return -ENOMEM;
 
-	/* Allocate the data */
 	adata = kmalloc_node(sizeof(*adata), GFP_KERNEL, q->node);
 	if (!adata) {
 		kobject_put(&eq->kobj);
 		return -ENOMEM;
 	}
 
-	/* Set the elevator data */
 	eq->elevator_data = adata;
 
-	/* Initialize */
 	INIT_LIST_HEAD(&adata->sync_queue);
 	INIT_LIST_HEAD(&adata->async_queue);
 	adata->sync_ratio = DEFAULT_SYNC_RATIO;
 	adata->batch_count = DEFAULT_BATCH_COUNT;
+	adata->idle_min_depth = DEFAULT_IDLE_MIN_DEPTH;
+	adata->depth = 0;
 
-	/* Set elevator to Anxiety */
 	spin_lock_irq(q->queue_lock);
 	q->elevator = eq;
 	spin_unlock_irq(q->queue_lock);
@@ -171,11 +196,10 @@ static int anxiety_init_queue(struct request_queue *q,
 	return 0;
 }
 
-/* Sysfs access */
+/* Sysfs */
 static ssize_t anxiety_sync_ratio_show(struct elevator_queue *e, char *page)
 {
 	struct anxiety_data *adata = e->elevator_data;
-
 	return snprintf(page, PAGE_SIZE, "%u\n", adata->sync_ratio);
 }
 
@@ -184,18 +208,15 @@ static ssize_t anxiety_sync_ratio_store(struct elevator_queue *e,
 {
 	struct anxiety_data *adata = e->elevator_data;
 	int ret;
-
 	ret = kstrtou8(page, 0, &adata->sync_ratio);
 	if (ret < 0)
 		return ret;
-
 	return count;
 }
 
 static ssize_t anxiety_batch_count_show(struct elevator_queue *e, char *page)
 {
 	struct anxiety_data *adata = e->elevator_data;
-
 	return snprintf(page, PAGE_SIZE, "%u\n", adata->batch_count);
 }
 
@@ -204,22 +225,35 @@ static ssize_t anxiety_batch_count_store(struct elevator_queue *e,
 {
 	struct anxiety_data *adata = e->elevator_data;
 	int ret;
-
 	ret = kstrtou8(page, 0, &adata->batch_count);
 	if (ret < 0)
 		return ret;
-
 	if (adata->batch_count < 1)
 		adata->batch_count = 1;
+	return count;
+}
 
+static ssize_t anxiety_idle_min_depth_show(struct elevator_queue *e, char *page)
+{
+	struct anxiety_data *adata = e->elevator_data;
+	return snprintf(page, PAGE_SIZE, "%u\n", adata->idle_min_depth);
+}
+
+static ssize_t anxiety_idle_min_depth_store(struct elevator_queue *e,
+		const char *page, size_t count)
+{
+	struct anxiety_data *adata = e->elevator_data;
+	int ret;
+	ret = kstrtou8(page, 0, &adata->idle_min_depth);
+	if (ret < 0)
+		return ret;
 	return count;
 }
 
 static struct elv_fs_entry anxiety_attrs[] = {
-	__ATTR(sync_ratio, 0644, anxiety_sync_ratio_show,
-		anxiety_sync_ratio_store),
-	__ATTR(batch_count, 0644, anxiety_batch_count_show,
-		anxiety_batch_count_store),
+	__ATTR(sync_ratio, 0644, anxiety_sync_ratio_show, anxiety_sync_ratio_store),
+	__ATTR(batch_count, 0644, anxiety_batch_count_show, anxiety_batch_count_store),
+	__ATTR(idle_min_depth, 0644, anxiety_idle_min_depth_show, anxiety_idle_min_depth_store),
 	__ATTR_NULL
 };
 
