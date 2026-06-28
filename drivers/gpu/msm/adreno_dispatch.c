@@ -2317,6 +2317,7 @@ static inline int drawobj_consumed(struct kgsl_drawobj *drawobj,
 		(timestamp_cmp(retired, drawobj->timestamp) < 0));
 }
 
+void __weak kgsl_cmdbatch_retired_hook(void) { }
 static void _print_recovery(struct kgsl_device *device,
 		struct kgsl_drawobj_cmd *cmdobj)
 {
@@ -2387,6 +2388,8 @@ static void retire_cmdobj(struct adreno_device *adreno_dev,
 			(int) dispatcher->inflight, start, end,
 			ADRENO_DRAWOBJ_RB(drawobj),
 			adreno_get_rptr(drawctxt->rb), cmdobj->fault_recovery);
+
+	kgsl_cmdbatch_retired_hook();
 
 	kgsl_drawobj_destroy(drawobj);
 }

@@ -42,14 +42,14 @@ struct cpu_sync {
 	unsigned int input_boost_freq;
 };
 
+static unsigned int input_boost_ms = 40;
+
 static DEFINE_PER_CPU(struct cpu_sync, sync_info);
 static struct workqueue_struct *cpu_boost_wq;
-
 static struct work_struct input_boost_work;
 
 static bool input_boost_enabled;
 
-static unsigned int input_boost_ms = 40;
 show_one(input_boost_ms);
 store_one(input_boost_ms);
 cpu_boost_attr_rw(input_boost_ms);
@@ -60,7 +60,6 @@ store_one(sched_boost_on_input);
 cpu_boost_attr_rw(sched_boost_on_input);
 
 static bool sched_boost_active;
-
 static struct delayed_work input_boost_rem;
 static u64 last_input_time;
 
@@ -340,6 +339,7 @@ static struct input_handler cpuboost_input_handler = {
 };
 
 struct kobject *cpu_boost_kobj;
+
 static int cpu_boost_init(void)
 {
 	int cpu, ret;
