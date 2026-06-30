@@ -114,7 +114,7 @@ void topology_update_thermal_pressure(const struct cpumask *cpus,
 	int cpu;
 
 	cpu = cpumask_first(cpus);
-	max_capacity = arch_scale_cpu_capacity(cpu);
+	max_capacity = arch_scale_cpu_capacity(NULL, cpu);
 	max_freq = per_cpu(freq_factor, cpu);
 
 	/* Convert to MHz scale which is used in 'freq_factor' */
