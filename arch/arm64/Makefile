@@ -56,6 +56,7 @@ $(warning Detected assembler with broken .inst; disassembly will be unreliable)
 endif
 
 KBUILD_CFLAGS	+= -mgeneral-regs-only
+KBUILD_CFLAGS	+= -Wno-address-of-packed-member
 KBUILD_CFLAGS	+= $(lseinstr) $(brokengasinst) $(compat_vdso)
 
 ifeq ($(CONFIG_ARCH_KONA), y)
