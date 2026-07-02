@@ -31,6 +31,16 @@ static inline unsigned long topology_get_thermal_pressure(int cpu)
 {
 	return per_cpu(thermal_pressure, cpu);
 }
+DECLARE_PER_CPU(unsigned long, arch_min_freq_scale);
+
+static inline unsigned long topology_get_min_freq_scale(int cpu)
+{
+	return per_cpu(arch_min_freq_scale, cpu);
+}
+
+void arch_set_min_freq_scale(const struct cpumask *cpus,
+			     unsigned long min_freq, unsigned long max_freq);
+
 void topology_set_thermal_pressure(const struct cpumask *cpus,
 				   unsigned long th_pressure);
 void topology_update_thermal_pressure(const struct cpumask *cpus,
