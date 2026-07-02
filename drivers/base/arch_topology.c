@@ -83,6 +83,25 @@ void topology_set_cpu_scale(unsigned int cpu, unsigned long capacity)
 
 DEFINE_PER_CPU(unsigned long, thermal_pressure);
 
+DEFINE_PER_CPU(unsigned long, arch_min_freq_scale);
+
+void arch_set_min_freq_scale(const struct cpumask *cpus,
+			     unsigned long min_freq, unsigned long max_freq)
+{
+	unsigned long scale;
+	int i;
+	
+	if (!max_freq) {
+		pr_debug("%s: invalid max_freq\n", __func__);
+		return;
+	}
+	scale = (min_freq * SCHED_CAPACITY_SCALE) / max_freq;
+
+	for_each_cpu(i, cpus)
+		per_cpu(arch_min_freq_scale, i) = scale;
+}
+EXPORT_SYMBOL_GPL(arch_set_min_freq_scale);
+
 void topology_set_thermal_pressure(const struct cpumask *cpus,
 			       unsigned long th_pressure)
 {
