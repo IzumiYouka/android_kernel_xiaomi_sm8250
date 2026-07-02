@@ -30,6 +30,7 @@
 #include <linux/pm_opp.h>
 #include <linux/slab.h>
 #include <linux/cpu.h>
+#include <linux/arch_topology.h>
 #include <linux/cpu_cooling.h>
 #include <linux/energy_model.h>
 #include <linux/of_device.h>
@@ -424,7 +425,6 @@ static int cpufreq_set_cur_state(struct thermal_cooling_device *cdev,
 {
 	struct cpufreq_cooling_device *cpufreq_cdev = cdev->devdata;
 	unsigned int clip_freq;
-	struct cpumask *cpus;
 
 	/* Request state should be less than max_level */
 	if (WARN_ON(state > cpufreq_cdev->max_level))
@@ -437,10 +437,8 @@ static int cpufreq_set_cur_state(struct thermal_cooling_device *cdev,
 	clip_freq = get_state_freq(cpufreq_cdev, state);
 	cpufreq_cdev->cpufreq_state = state;
 	cpufreq_cdev->clipped_freq = clip_freq;
-
-	cpus = cpufreq_cdev->policy->related_cpus;
-	arch_update_thermal_pressure(cpus, clip_freq);
-
+	arch_update_thermal_pressure(cpufreq_cdev->policy->related_cpus,
+				     clip_freq);
 	/* Check if the device has a platform mitigation function that
 	 * can handle the CPU freq mitigation, if not, notify cpufreq
 	 * framework.
