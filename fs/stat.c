@@ -359,6 +359,11 @@ SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
 {
 	struct kstat stat;
 	int error;
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	extern int ksu_handle_stat(int *dfd, const char __user **filename_user,
+				   int *flags);
+	ksu_handle_stat(&dfd, &filename, &flag);
+#endif
 
 	error = vfs_fstatat(dfd, filename, &stat, flag);
 	if (error)
@@ -370,10 +375,19 @@ SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
 SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
 {
 	struct kstat stat;
-	int error = vfs_fstat(fd, &stat);
+	int error;
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	extern int ksu_handle_newfstat_ret(unsigned int *fd,
+				       struct stat __user **statbuf,
+				       int *ret);
+#endif
+	error = vfs_fstat(fd, &stat);
 
 	if (!error)
 		error = cp_new_stat(&stat, statbuf);
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	ksu_handle_newfstat_ret(&fd, &statbuf, &error);
+#endif
 
 	return error;
 }
@@ -496,10 +510,19 @@ SYSCALL_DEFINE2(lstat64, const char __user *, filename,
 SYSCALL_DEFINE2(fstat64, unsigned long, fd, struct stat64 __user *, statbuf)
 {
 	struct kstat stat;
-	int error = vfs_fstat(fd, &stat);
+	int error;
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	extern int ksu_handle_fstat64_ret(unsigned long *fd,
+				       struct stat64 __user **statbuf,
+				       int *ret);
+#endif
+	error = vfs_fstat(fd, &stat);
 
 	if (!error)
 		error = cp_new_stat64(&stat, statbuf);
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	ksu_handle_fstat64_ret(&fd, &statbuf, &error);
+#endif
 
 	return error;
 }
