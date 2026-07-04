@@ -60,6 +60,11 @@ static int fas_adjust_notify(struct notifier_block *nb, unsigned long val,
 		if (!boost_min)
 			break;
 
+		/* Only apply boost under schedutil */
+		if (!policy->governor ||
+		    strcmp(policy->governor->name, "schedutil"))
+			break;
+
 		pr_debug("CPU%u policy min before boost: %u kHz\n",
 			 cpu, policy->min);
 		pr_debug("CPU%u boost min: %u kHz\n", cpu, boost_min);
