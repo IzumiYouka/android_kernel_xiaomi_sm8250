@@ -663,6 +663,7 @@ static ssize_t show_##file_name				\
 show_one(cpuinfo_min_freq, cpuinfo.min_freq);
 show_one(cpuinfo_transition_latency, cpuinfo.transition_latency);
 
+#ifdef CONFIG_SCHED_FAS
 /*
  * A hack that best with FAS and disabled userspace flooring.
  */
@@ -670,6 +671,9 @@ static ssize_t show_scaling_min_freq(struct cpufreq_policy *policy, char *buf)
 {
 	return sprintf(buf, "%u\n", policy->user_policy.min);
 }
+#else
+show_one(scaling_min_freq, min);
+#endif
 show_one(scaling_max_freq, max);
 
 unsigned int cpuinfo_max_freq_cached;
