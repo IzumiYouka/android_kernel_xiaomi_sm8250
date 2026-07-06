@@ -33,7 +33,7 @@ struct fas_cpu_sync {
 };
 
 /* How long a boost floor is held before being released, in ms. */
-static unsigned int fas_boost_ms = 80;
+static unsigned int fas_boost_ms = 50;
 
 static DEFINE_PER_CPU(struct fas_cpu_sync, fas_sync_info);
 static struct workqueue_struct *fas_wq;
@@ -148,8 +148,8 @@ static void fas_do_boost(struct work_struct *work)
 			s->boost_min = (i <= 3) ? 1401600 :
 					(i <= 6) ? 748800 : 0;
 		} else {
-			s->boost_min = (i <= 3) ? 1708800 :
-					(i <= 6) ? 940800 : 0;
+			s->boost_min = (i <= 3) ? 1804800 :
+					(i <= 6) ? 1056000 : 0;
 		}
 	}
 
