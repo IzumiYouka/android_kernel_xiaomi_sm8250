@@ -137,3 +137,4 @@ kernel/configs/android-*.cfg
 
 # Local build script
 build.sh
+.env
