@@ -24,6 +24,7 @@
 #include <linux/ktime.h>
 #include <linux/slab.h>
 #include <linux/input.h>
+#include <linux/atomic.h>
 #include <drm/drm_refresh_rate.h>
 
 struct fas_cpu_sync {
@@ -39,6 +40,9 @@ static struct workqueue_struct *fas_wq;
 static struct work_struct fas_boost_work;
 static struct delayed_work fas_boost_rem;
 static u64 fas_last_input_time;
+
+/* Tracks last applied fps to avoid redundant policy updates. */
+static unsigned int fas_active_fps;
 
 /* Debounce window for touch-triggered boosts. */
 #define FAS_MIN_INPUT_INTERVAL (150 * USEC_PER_MSEC)
@@ -107,6 +111,7 @@ static void fas_do_boost_rem(struct work_struct *work)
 		s->boost_min = 0;
 	}
 
+	fas_active_fps = 0;
 	fas_update_policy_online();
 }
 
@@ -119,7 +124,21 @@ static void fas_do_boost(struct work_struct *work)
 	if (fps <= 60)
 		return;
 
-	cancel_delayed_work_sync(&fas_boost_rem);
+	/*
+	 * If same fps tier is already active, just re-arm the expiry
+	 * timer — no need to walk per-cpu data or update policies again.
+	 */
+	if (fps == fas_active_fps) {
+		mod_delayed_work(fas_wq, &fas_boost_rem,
+				 msecs_to_jiffies(fas_boost_ms));
+		return;
+	}
+
+	fas_active_fps = fps;
+
+	/* Non-blocking cancel — rem work only zeros boost_min, no harm if
+	 * it races and runs once more; next boost will overwrite anyway. */
+	cancel_delayed_work(&fas_boost_rem);
 
 	/* Set boost_min per-CPU based on current refresh rate. */
 	pr_debug("Setting boost min for all CPUs (fps=%u)\n", fps);
@@ -149,11 +168,12 @@ static void fas_input_event(struct input_handle *handle,
 	if (now - fas_last_input_time < FAS_MIN_INPUT_INTERVAL)
 		return;
 
+	fas_last_input_time = now;
+
 	if (work_pending(&fas_boost_work))
 		return;
 
 	queue_work(fas_wq, &fas_boost_work);
-	fas_last_input_time = ktime_to_us(ktime_get());
 }
 
 static int fas_input_connect(struct input_handler *handler,
