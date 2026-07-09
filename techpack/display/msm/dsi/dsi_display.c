@@ -27,6 +27,15 @@
 #include "sde_expo_dim_layer.h"
 #endif
 
+/* FAS: current panel refresh rate */
+static unsigned int cur_refresh_rate;
+
+unsigned int dsi_panel_get_refresh_rate(void)
+{
+	return READ_ONCE(cur_refresh_rate);
+}
+EXPORT_SYMBOL(dsi_panel_get_refresh_rate);
+
 #define to_dsi_display(x) container_of(x, struct dsi_display, host)
 #define INT_BASE_10 10
 
@@ -4508,6 +4517,9 @@ static int dsi_display_dfps_update(struct dsi_display *display,
 	 * display panel's mode and shouldn't be saved into the cached currently
 	 * active mode.
 	 */
+
+	/* FAS: update refresh rate on DFPS change */
+	WRITE_ONCE(cur_refresh_rate, panel_mode->timing.refresh_rate);
 	panel_mode->dsi_mode_flags = 0;
 
 error:
@@ -7159,6 +7171,7 @@ int dsi_display_set_mode(struct dsi_display *display,
 			sysfs_notify(&display->drm_conn->kdev->kobj, NULL, "dynamic_fps");
 	}
 
+	WRITE_ONCE(cur_refresh_rate, adj_mode.timing.refresh_rate);
 	memcpy(display->panel->cur_mode, &adj_mode, sizeof(adj_mode));
 error:
 	mutex_unlock(&display->display_lock);
