@@ -202,7 +202,7 @@ static int mem_process_reclaim(pid_t pid, int type, int nr_to_reclaim)
 	rp.nr_reclaimed = 0;
 	reclaim_walk.private = &rp;
 
-	down_read(&mm->mmap_sem);
+	down_read(&mm->mmap_lock);
 
 	for (vma = mm->mmap; vma; vma = vma->vm_next) {
 		if (is_vm_hugetlb_page(vma))
@@ -222,7 +222,7 @@ static int mem_process_reclaim(pid_t pid, int type, int nr_to_reclaim)
 	}
 
 	flush_tlb_mm(mm);
-	up_read(&mm->mmap_sem);
+	up_read(&mm->mmap_lock);
 
 	mmput(mm);
 
