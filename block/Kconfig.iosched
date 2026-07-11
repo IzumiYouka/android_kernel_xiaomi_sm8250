@@ -51,7 +51,7 @@ config IOSCHED_ANXIETY
 choice
 
 	prompt "Default I/O scheduler"
-	default DEFAULT_MQ_DEADLINE
+	default DEFAULT_CFQ
 	help
 	  Select the I/O scheduler which will be used by default for all
 	  block devices.
@@ -64,9 +64,6 @@ choice
 	
 	config DEFAULT_MQ_DEADLINE
 		bool "MQ Deadline" if MQ_IOSCHED_DEADLINE=y
-
-	config DEFAULT_ANXIETY
-		bool "Anxiety" if IOSCHED_ANXIETY=y
 
 	config DEFAULT_NOOP
 		bool "No-op"
