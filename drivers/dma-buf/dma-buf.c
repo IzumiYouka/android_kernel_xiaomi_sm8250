@@ -57,7 +57,6 @@ void __init init_dma_buf_kmem_pool(void)
 		SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
 }
 
-static inline int is_dma_buf_file(struct file *);
 #include "dma-buf-sysfs-stats.h"
 
 struct dma_buf_list {
