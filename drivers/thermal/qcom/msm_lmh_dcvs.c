@@ -198,7 +198,7 @@ static unsigned long limits_mitigation_notify(struct limits_dcvs_hw *hw)
 	if (max_cpu_ct == cpumask_weight(&hw->core_map))
 		lmh_max_limit = max_cpu_limit;
 
-	max_capacity = arch_scale_cpu_capacity(cpumask_first(&hw->core_map));
+	max_capacity = arch_scale_cpu_capacity(NULL, cpumask_first(&hw->core_map));
 
 	if (lmh_max_limit >= hw->cluster_fmax)
 		capacity = max_capacity;
@@ -215,7 +215,7 @@ static unsigned long limits_mitigation_notify(struct limits_dcvs_hw *hw)
 			cpumask_first(&hw->core_map), capacity, max_capacity,
 			lmh_max_limit, hw->cluster_fmax);
 	trace_lmh_dcvs_freq(cpumask_first(&hw->core_map), lmh_max_limit);
-	
+
 notify_exit:
 	hw->hw_freq_limit = lmh_max_limit;
 	return lmh_max_limit;
