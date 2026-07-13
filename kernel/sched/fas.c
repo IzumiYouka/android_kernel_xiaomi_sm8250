@@ -43,6 +43,7 @@ static struct delayed_work fas_boost_rem;
 static u64 fas_last_input_time;
 static unsigned int fas_active_fps;
 static unsigned long fas_next_boost;
+static bool fas_enabled = true;
 
 #define FAS_MIN_INPUT_INTERVAL (150 * USEC_PER_MSEC)
 
@@ -94,6 +95,9 @@ static void fas_do_boost(struct work_struct *work)
 {
 	unsigned int fps = dsi_panel_get_refresh_rate();
 	unsigned int i;
+
+	if (!fas_enabled)
+		return;
 
 	if (fps <= 60)
 		return;
@@ -217,6 +221,9 @@ static struct input_handler fas_input_handler = {
 
 void kgsl_cmdbatch_retired_hook(void)
 {
+	if (!fas_enabled)
+		return;
+
 	if (dsi_panel_get_refresh_rate() <= 60)
 		return;
 
@@ -226,6 +233,46 @@ void kgsl_cmdbatch_retired_hook(void)
 	fas_next_boost = jiffies + msecs_to_jiffies(fas_boost_ms);
 	fas_queue_boost();
 }
+
+static struct kobject *fas_kobj;
+
+static ssize_t fas_enabled_show(struct kobject *kobj,
+				struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", fas_enabled);
+}
+
+static ssize_t fas_enabled_store(struct kobject *kobj,
+				 struct kobj_attribute *attr,
+				 const char *buf, size_t count)
+{
+	unsigned int val;
+
+	if (kstrtouint(buf, 10, &val))
+		return -EINVAL;
+
+	fas_enabled = !!val;
+
+	if (!fas_enabled) {
+		cancel_work_sync(&fas_boost_work);
+		cancel_delayed_work_sync(&fas_boost_rem);
+		fas_do_boost_rem(NULL);
+	}
+
+	return count;
+}
+
+static struct kobj_attribute fas_enabled_attr =
+	__ATTR(enabled, 0644, fas_enabled_show, fas_enabled_store);
+
+static struct attribute *fas_attrs[] = {
+	&fas_enabled_attr.attr,
+	NULL,
+};
+
+static struct attribute_group fas_attr_group = {
+	.attrs = fas_attrs,
+};
 
 static int fas_init(void)
 {
@@ -237,6 +284,10 @@ static int fas_init(void)
 	INIT_DELAYED_WORK(&fas_boost_rem, fas_do_boost_rem);
 
 	cpufreq_register_notifier(&fas_adjust_nb, CPUFREQ_POLICY_NOTIFIER);
+
+	fas_kobj = kobject_create_and_add("sched_fas", kernel_kobj);
+	if (fas_kobj)
+		sysfs_create_group(fas_kobj, &fas_attr_group);
 
 	return input_register_handler(&fas_input_handler);
 }
