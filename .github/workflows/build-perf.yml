@@ -1,0 +1,470 @@
+name: Build perf Kernel (with KernelSU Manual Hooks)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ref: dream
+
+      - name: Install Dependencies and Restore Timestamps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc build-essential zip curl wget libssl-dev flex bison libncurses-dev git-core gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu gcc-arm-linux-gnueabi binutils-arm-linux-gnueabi lib32ncurses-dev lib32z1 ccache python3 git-restore-mtime
+          git restore-mtime
+
+      - name: Cache Toolchain
+        uses: actions/cache@v4
+        id: cache-toolchain
+        with:
+          path: clang
+          key: zyc-clang-15.0.7-20260208
+          restore-keys: zyc-clang-
+
+      - name: Setup Toolchain
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p clang
+          ZYC_TAG="15.0.7-20260208-release"
+          ZYC_URL="https://github.com/ZyCromerZ/Clang/releases/download/${ZYC_TAG}/Clang-15.0.7-20260208.tar.gz"
+          echo "Downloading ZyC Clang: $ZYC_TAG"
+          echo "URL: $ZYC_URL"
+          curl -L "$ZYC_URL" -o clang.tar.gz
+          tar -xf clang.tar.gz -C clang
+          rm clang.tar.gz
+          echo "Toolchain setup completed"
+          ls -lah clang/bin/ | head
+
+      - name: Toolchain Info
+        run: |
+          echo "========================================="
+          echo "         ZyC Clang Toolchain Info        "
+          echo "========================================="
+          echo "Version  : $(clang/bin/clang --version | head -1)"
+          echo "Location : clang/bin/clang"
+          echo "Date     : 20260208"
+          echo "========================================="
+
+      - name: Restore Build Output Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: out/
+          key: out-cache-v5-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            out-cache-v5-${{ runner.os }}-
+
+      - name: Build Process
+        run: |
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export CLANG_PATH=$(pwd)/clang/bin
+          export PATH=$CLANG_PATH:$PATH
+          export KBUILD_BUILD_VERSION=1
+
+          # Branding & Clean Version Info (Oxygen+ and Raikiri)
+          echo "" > .scmversion
+          sed -i 's/^res="$res${scm_info}"/res="$res"/g' scripts/setlocalversion
+          grep -rl "Oxygen+" . | xargs sed -i 's/Oxygen+/perf/g' || true
+          grep -rl "Raikiri" . | xargs sed -i 's/Raikiri/perf/g' || true
+          sed -i 's/^EXTRAVERSION =.*/EXTRAVERSION =/' Makefile
+          sed -i 's/^NAME =.*/NAME = /' Makefile
+
+          # Fix build date mismatch error
+          grep -rl "Tue Feb 10 10:59:44 UTC 2026" . | xargs sed -i 's/Tue Feb 10 10:59:44 UTC 2026/2026-02-10/g' || true
+
+          # [DYNAMIC AUTO-FIX] Complete fix for struct cs_target and unused function in cpuset.c (if file exists)
+          if [ -f kernel/cgroup/cpuset.c ]; then
+            echo "Applying full struct cs_target definition and fixing unused function error..."
+            sed -i '/static void cpuset_attach/i struct cs_target {\n\tstruct cpuset *cs;\n\tstruct task_struct *task;\n\tchar *name;\n\tchar *cpus;\n};\n' kernel/cgroup/cpuset.c || true
+            sed -i 's/static ssize_t cpuset_write_resmask_assist/static ssize_t __maybe_unused cpuset_write_resmask_assist/g' kernel/cgroup/cpuset.c || true
+          fi
+
+          # [DYNAMIC AUTO-FIX] Fix kgsl_device_snapshot_init implicit declaration in kgsl.c (if file exists)
+          if [ -f drivers/gpu/msm/kgsl.c ]; then
+            echo "Applying dynamic auto-fix for kgsl_device_snapshot_init..."
+            sed -i 's|#include "kgsl_device.h"|#include "kgsl_device.h"\n#ifndef CONFIG_MSM_KGSL_SNAPSHOT\nstatic inline void kgsl_device_snapshot_init(struct kgsl_device *device) { }\n#endif|g' drivers/gpu/msm/kgsl.c || true
+          fi
+
+          # [DYNAMIC AUTO-FIX] Fix unused function errors in ufshcd.c caused by disabling tracing (if file exists)
+          if [ -f drivers/scsi/ufs/ufshcd.c ]; then
+            echo "Applying dynamic auto-fix for unused tracing functions in ufshcd.c..."
+            sed -i 's/static void ufshcd_add_cmd_upiu_trace/static void __maybe_unused ufshcd_add_cmd_upiu_trace/g' drivers/scsi/ufs/ufshcd.c || true
+            sed -i 's/static void __ufshcd_cmd_log/static void __maybe_unused __ufshcd_cmd_log/g' drivers/scsi/ufs/ufshcd.c || true
+          fi
+
+          # [DYNAMIC AUTO-FIX] Fix missing module.h in rpmh-rsc.c (Inject after pr_fmt to avoid macro redefinition) (if file exists)
+          if [ -f drivers/soc/qcom/rpmh-rsc.c ]; then
+            echo "Applying dynamic auto-fix for missing module.h in rpmh-rsc.c..."
+            sed -i '/#define pr_fmt/a #include <linux/module.h>' drivers/soc/qcom/rpmh-rsc.c || true
+          fi
+
+          # [DYNAMIC AUTO-FIX] Fix shift count overflow error in dma-mapping.h (if file exists)
+          if [ -f include/linux/dma-mapping.h ] && ! grep -q "((n)\&63)" include/linux/dma-mapping.h; then
+            echo "Applying shift-count-overflow fix in dma-mapping.h..."
+            sed -i 's/1ULL<<(n)/1ULL<<((n)\&63)/g' include/linux/dma-mapping.h || true
+          fi
+
+          # [DYNAMIC AUTO-FIX] Log silencing isolated to *.c source files only (preserves system *.h headers) (if directories exist)
+          TARGET_DIRS="drivers/power/supply/ drivers/usb/ drivers/soc/qcom/ drivers/misc/ kernel/time/ techpack/audio/ drivers/base/firmware_loader"
+          echo "Silencing non-essential logs safely..."
+          for dir in $TARGET_DIRS; do
+            if [ -d "$dir" ]; then
+              find "$dir" -type f -name "*.c" -exec sed -i 's/\bpr_info\s*(/pr_debug(/g' {} + || true
+              find "$dir" -type f -name "*.c" -exec sed -i 's/\bdev_info\s*(/dev_dbg(/g' {} + || true
+              find "$dir" -type f -name "*.c" -exec sed -i 's/KERN_INFO/KERN_DEBUG/g' {} + || true
+              find "$dir" -type f -name "*.c" -exec sed -i 's/\bpr_warn\s*(/pr_debug(/g' {} + || true
+              find "$dir" -type f -name "*.c" -exec sed -i 's/\bKERN_WARNING\b/KERN_DEBUG/g' {} + || true
+              find "$dir" -type f -name "*.c" -exec sed -i 's/\bdev_warn\s*(/dev_dbg(/g' {} + || true
+            fi
+          done
+
+          # Silence TI Chargers logs (if directory exists)
+          if [ -d drivers/power/supply/ti ]; then
+            find drivers/power/supply/ti/ -name "*.c" -exec sed -i 's/pr_err(/pr_debug(/g' {} + || true
+            find drivers/power/supply/ti/ -name "*.c" -exec sed -i 's/pr_notice(/pr_debug(/g' {} + || true
+            find drivers/power/supply/ti/ -name "*.c" -exec sed -i 's/pr_info(/pr_debug(/g' {} + || true
+            find drivers/power/supply/ti/ -name "*.c" -exec sed -i 's/dev_err(/dev_dbg(/g' {} + || true
+            find drivers/power/supply/ti/ -name "*.c" -exec sed -i 's/dev_info(/dev_dbg(/g' {} + || true
+          fi
+
+          # Silence generic power supply logs (if directory exists)
+          if [ -d drivers/power/supply ]; then
+            find drivers/power/supply/ -type f -name "*.c" -exec sed -i '/bq2597x_charger_get_property/s/\bpr_info\s*(/pr_debug(/g' {} + || true
+            find drivers/power/supply/ -type f -name "*.c" -exec sed -i '/verify_get_property/s/\bdev_info\s*(/dev_dbg(/g' {} + || true
+            find drivers/power/supply/ -name "bq2597x*.c" -exec sed -i 's/pr_info(/pr_debug(/g' {} + || true
+            find drivers/power/supply/ -type f -name "*.c" -exec sed -i 's/pr_info\s*(/pr_debug(/g' {} + || true
+            find drivers/power/supply/ -name "bq2597x*.c" -exec sed -i 's/dev_info(/dev_dbg(/g' {} + || true
+            find drivers/power/supply/ -name "bq2597x*.c" -exec sed -i 's/pr_info(/pr_debug(/g' {} + || true
+          fi
+
+          # Silence USB logs (if directory exists)
+          if [ -d drivers/usb ]; then
+            find drivers/usb/ -type f -name "*.c" -exec sed -i '/pd_phy_write/s/\bdev_info\s*(/dev_dbg(/g' {} + || true
+            find drivers/usb/ -name "*.c" -exec sed -i 's/dev_info(/dev_dbg(/g' {} + || true
+            find drivers/usb/ -name "*.c" -exec sed -i 's/pr_info(/pr_debug(/g' {} + || true
+          fi
+
+          # ds28e16 - fix tab matching and silence logs (if file exists)
+          [ -f drivers/power/supply/maxim/ds28e16.c ] && sed -i 's/#define ds_err.*pr_err/#define ds_err\tpr_debug/' drivers/power/supply/maxim/ds28e16.c || true
+          [ -f drivers/power/supply/maxim/ds28e16.c ] && sed -i '/verify_get_property.*chip_ok/s/^/\/\//' drivers/power/supply/maxim/ds28e16.c || true
+          find drivers/ -name "ds28e16*.c" -exec sed -i 's/dev_info(/dev_dbg(/g' {} + || true
+          find drivers/ -name "ds28e16*.c" -exec sed -i 's/pr_info(/pr_debug(/g' {} + || true
+
+          # Comment out noisy log lines in specific chargers (if files exist)
+          [ -f drivers/power/supply/ti/bq2597x_charger.c ] && sed -i '/bq2597x_charger_get_property.*CHARGING_ENABLED/s/^/\/\//' drivers/power/supply/ti/bq2597x_charger.c || true
+          [ -f drivers/power/supply/ti/bq2597x_charger_dagu.c ] && sed -i '/bq2597x_charger_get_property.*CHARGING_ENABLED/s/^/\/\//' drivers/power/supply/ti/bq2597x_charger_dagu.c || true
+          [ -f drivers/power/supply/ti/bq2597x_charger_munch.c ] && sed -i '/bq2597x_charger_get_property.*CHARGING_ENABLED/s/^/\/\//' drivers/power/supply/ti/bq2597x_charger_munch.c || true
+
+          # Alarmtimer logs silencing (if file exists)
+          if [ -f kernel/time/alarmtimer.c ]; then
+            sed -i 's/pr_info("\[oem\]\[alarm\].*/pr_debug("/g' kernel/time/alarmtimer.c || true
+          fi
+
+          # Configure defconfig (if file exists)
+          DEFCONFIG="arch/arm64/configs/alioth_defconfig"
+          if [ -f $DEFCONFIG ]; then
+            echo "Configuring defconfig: $DEFCONFIG"
+            items=(
+              "CONFIG_ARCH_SUPPORTS_DEBUG_PAGEALLOC"
+              "CONFIG_HAVE_DEBUG_BUGVERBOSE"
+              "CONFIG_DEBUG_BUGVERBOSE"
+              "CONFIG_DEBUG_LIST"
+              "CONFIG_QNOVO"
+              "CONFIG_QNOVO5"
+              "CONFIG_DYNAMIC_DEBUG"
+              "CONFIG_HAVE_DEBUG_KMEMLEAK"
+              "CONFIG_SCHED_DEBUG"
+              "CONFIG_ARCH_HAS_DEBUG_VIRTUAL"
+              "CONFIG_MSM_TZ_LOG"
+              "CONFIG_NETFILTER_NETLINK_LOG"
+              "CONFIG_NF_LOG_COMMON"
+              "CONFIG_NETFILTER_XT_TARGET_LOG"
+              "CONFIG_NETFILTER_XT_TARGET_NFLOG"
+              "CONFIG_NETFILTER_XT_MATCH_QUOTA2_LOG"
+              "CONFIG_NF_LOG_IPV4"
+              "CONFIG_NF_LOG_IPV6"
+              "CONFIG_DEBUG_PREEMPT"
+              "CONFIG_USB_PD_PHY_DEBUG"
+              "CONFIG_BQ2597X_DEBUG"
+              "CONFIG_CHARGER_DEBUG"
+              "CONFIG_DEBUG_PD_PHY"
+              "CONFIG_AUDIT_TREE"
+              "CONFIG_STACK_TRACER"
+              "CONFIG_FUNCTION_TRACER"
+              "CONFIG_SLUB_DEBUG"
+              "CONFIG_DEBUG_STACK_USAGE"
+              "CONFIG_SCHEDSTATS"
+              "CONFIG_DEBUG_VM"
+              "CONFIG_LOCK_DEBUGGING_SUPPORT"
+              "CONFIG_SCSI_LOGGING"
+              "CONFIG_NET_VENDOR_QLOGIC"
+              "CONFIG_XLOGCHAR"
+              "CONFIG_LOGO"
+              "CONFIG_LOGO_LINUX_CLUT224"
+              "CONFIG_QCOM_INITIAL_LOGBUF"
+              "CONFIG_QTI_RPM_STATS_LOG"
+              "CONFIG_QTI_DDR_STATS_LOG"
+              "CONFIG_IPC_LOGGING"
+              "CONFIG_DEBUG_KERNEL"
+              "CONFIG_MEMCG_SWAP_ENABLED"
+              "CONFIG_BPF_EVENTS"
+              "CONFIG_NET_ACT_BPF"
+              "CONFIG_LWTUNNEL_BPF"
+              "CONFIG_BPF_KPROBE_OVERRIDE"
+              "CONFIG_BPF_STREAM_PARSER"
+              "CONFIG_KASAN"
+              "CONFIG_KASAN_OUTLINE"
+              "CONFIG_PAGE_POISONING"
+              "CONFIG_BPF_LSM"
+            )
+            for item in "${items[@]}"; do
+                sed -i "/$item/d" $DEFCONFIG
+                echo "# $item is not set" >> $DEFCONFIG
+                echo "$item=n" >> $DEFCONFIG
+            done
+            sed -i '/CONFIG_LOG_BUF_SHIFT/d' $DEFCONFIG
+            sed -i '/CONFIG_LOG_CPU_MAX_BUF_SHIFT/d' $DEFCONFIG
+            sed -i '/CONFIG_PRINTK_SAFE_LOG_BUF_SHIFT/d' $DEFCONFIG
+            sed -i '/CONFIG_CONSOLE_LOGLEVEL_DEFAULT/d' $DEFCONFIG
+            sed -i '/CONFIG_MESSAGE_LOGLEVEL_DEFAULT/d' $DEFCONFIG
+            sed -i '/CONFIG_CONSOLE_LOGLEVEL_QUIET/d' $DEFCONFIG
+            sed -i '/CONFIG_SLUB/d' $DEFCONFIG
+            sed -i '/CONFIG_SLUB_CPU_PARTIAL/d' $DEFCONFIG
+
+            echo "CONFIG_SLUB=y" >> $DEFCONFIG
+            echo "CONFIG_SLUB_CPU_PARTIAL=y" >> $DEFCONFIG
+            sed -i '/CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE/d' $DEFCONFIG
+            sed -i '/CONFIG_CC_OPTIMIZE_FOR_SIZE/d' $DEFCONFIG
+            echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> $DEFCONFIG
+            echo "# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set" >> $DEFCONFIG
+            sed -i '/CONFIG_ZRAM/d' $DEFCONFIG
+            sed -i '/CONFIG_ZSMALLOC/d' $DEFCONFIG
+            echo "CONFIG_ZRAM=y" >> $DEFCONFIG
+            echo "CONFIG_ZSMALLOC=y" >> $DEFCONFIG
+            echo "CONFIG_MESSAGE_LOGLEVEL_DEFAULT=1" >> $DEFCONFIG
+            echo "CONFIG_CONSOLE_LOGLEVEL_QUIET=1" >> $DEFCONFIG
+            echo "CONFIG_LOG_BUF_SHIFT=8" >> $DEFCONFIG
+            echo "CONFIG_LOG_CPU_MAX_BUF_SHIFT=12" >> $DEFCONFIG
+            echo "CONFIG_PRINTK_SAFE_LOG_BUF_SHIFT=12" >> $DEFCONFIG
+            echo "CONFIG_CONSOLE_LOGLEVEL_DEFAULT=1" >> $DEFCONFIG
+            echo "CONFIG_NETFILTER_NETLINK_LOG=n" >> $DEFCONFIG
+            echo "CONFIG_NF_LOG_COMMON=n" >> $DEFCONFIG
+            echo "CONFIG_BPF_EVENTS=n" >> $DEFCONFIG
+            echo "CONFIG_NET_ACT_BPF=n" >> $DEFCONFIG
+            echo "CONFIG_LWTUNNEL_BPF=n" >> $DEFCONFIG
+            echo "CONFIG_BPF_KPROBE_OVERRIDE=n" >> $DEFCONFIG
+            echo "CONFIG_BPF_STREAM_PARSER=n" >> $DEFCONFIG
+            echo "CONFIG_KASAN=n" >> $DEFCONFIG
+            echo "CONFIG_KASAN_OUTLINE=n" >> $DEFCONFIG
+            echo "CONFIG_SLUB_DEBUG=n" >> $DEFCONFIG
+            echo "CONFIG_PAGE_POISONING=n" >> $DEFCONFIG
+            echo "CONFIG_LTO_CLANG=y" >> $DEFCONFIG
+            echo "CONFIG_THINLTO=y" >> $DEFCONFIG
+            sed -i '/CONFIG_DEBUG_INFO/d' $DEFCONFIG
+            echo "# CONFIG_DEBUG_INFO is not set" >> $DEFCONFIG
+            echo "CONFIG_DEBUG_MISC=n" >> $DEFCONFIG
+            echo "CONFIG_DEBUG_ATOMIC_SLEEP=n" >> $DEFCONFIG
+            echo "CONFIG_DEBUG_VM=n" >> $DEFCONFIG
+            echo "CONFIG_PERF_EVENTS=y" >> $DEFCONFIG
+            echo "CONFIG_HW_PERF_EVENTS=y" >> $DEFCONFIG
+            echo "CONFIG_PROFILING=y" >> $DEFCONFIG
+          fi
+
+          [ -f arch/arm64/include/asm/kgdb.h ] && sed -i 's/"I" (KGDB_COMPILED_DBG_BRK_IMM)/"i" (KGDB_COMPILED_DBG_BRK_IMM)/g' arch/arm64/include/asm/kgdb.h || true
+          [ -f init/version.c ] && sed -i 's/ (" LINUX_COMPILER ")//g' init/version.c || true
+          [ -f scripts/mkcompile_h ] && sed -i 's/.*LINUX_COMPILER.*/echo "#define LINUX_COMPILER \\"\\""/' scripts/mkcompile_h || true
+
+          # ==========================================================
+          # جایگزینی KernelSU-Next با هوک‌های دستی (Manual Hooks)
+          # این بخش با کامیت‌های 93fb317 و a855dfe هماهنگ است
+          # ==========================================================
+          echo "Using KernelSU Manual Hooks (already present in source)"
+          # اطمینان از وجود کامیت‌های مورد نظر
+          if git log --oneline | grep -q "93fb317"; then
+            echo "✅ Commit 93fb317 (add KernelSU manual hooks) is present."
+          else
+            echo "⚠️ Commit 93fb317 not found! Please update your branch."
+          fi
+          if git log --oneline | grep -q "a855dfe"; then
+            echo "✅ Commit a855dfe (scope-minimized manual hooks & ReSukiSU) is present."
+          else
+            echo "⚠️ Commit a855dfe not found! Please update your branch."
+          fi
+
+          # 1. Base Config Generation
+          make O=out ARCH=arm64 alioth_defconfig \
+            CC=$CLANG_PATH/clang \
+            LD=$CLANG_PATH/ld.lld \
+            AR=$CLANG_PATH/llvm-ar \
+            NM=$CLANG_PATH/llvm-nm \
+            HOSTCC=gcc \
+            HOSTAR=ar \
+            HOSTLD=ld \
+            LLVM=1 \
+            LLVM_IAS=1 \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu-
+
+          # 2. Config Tweaks and Optimization Options
+          if [ -f out/.config ]; then
+            # فعال‌سازی هوک‌های دستی (مطابق با کامیت‌های مورد نظر)
+            ./scripts/config --file out/.config -e CONFIG_KSU_MANUAL_HOOK
+            ./scripts/config --file out/.config -e CONFIG_KSU_MULTI_MANAGER_SUPPORT
+            
+            # غیرفعال‌سازی گزینه‌های اضافی (در صورت وجود)
+            ./scripts/config --file out/.config -d CONFIG_KSU_SUSFS 2>/dev/null || true
+            ./scripts/config --file out/.config -d CONFIG_PRINTK_TIME
+            ./scripts/config --file out/.config -d CONFIG_TRACING
+            ./scripts/config --file out/.config -d CONFIG_UPROBE_EVENTS
+            ./scripts/config --file out/.config -e CONFIG_RELR
+            ./scripts/config --file out/.config -e CONFIG_ARCH_HAS_RELR
+            ./scripts/config --file out/.config -d CONFIG_BPF_LSM
+
+            # LTO Compiler Configurations
+            ./scripts/config --file out/.config -d LTO_NONE
+            ./scripts/config --file out/.config -e LTO_CLANG
+            ./scripts/config --file out/.config -e LTO_CLANG_THIN
+            ./scripts/config --file out/.config -d LTO_CLANG_FULL
+            ./scripts/config --file out/.config -e THINLTO
+
+            # Disable heavy debugging options to improve speed and stability
+            ./scripts/config --file out/.config -d CONFIG_DYNAMIC_DEBUG
+            ./scripts/config --file out/.config -d CONFIG_USBPD_DEBUG
+            ./scripts/config --file out/.config -d CONFIG_IPA_DEBUG
+            ./scripts/config --file out/.config -d CONFIG_QUICKCHARGE_DEBUG
+            ./scripts/config --file out/.config -d CONFIG_DEBUG_KERNEL
+            ./scripts/config --file out/.config -d CONFIG_PANIC_ON_REFCOUNT_ERROR
+            ./scripts/config --file out/.config -d CONFIG_KPROBES
+            ./scripts/config --file out/.config -d CONFIG_UPROBES
+            ./scripts/config --file out/.config -d CONFIG_BATTERY_SWELLING_DETERMINE
+            ./scripts/config --file out/.config --set-val CONFIG_LOG_BUF_SHIFT 4
+            ./scripts/config --file out/.config --set-str CONFIG_LOCALVERSION "-perf"
+          fi
+
+          [ -f scripts/mkcompile_h ] && sed -i 's/UTS_VERSION="#\$VERSION"/UTS_VERSION=""/g' scripts/mkcompile_h || true
+
+          # 3. Apply Olddefconfig on top of base config
+          make O=out ARCH=arm64 olddefconfig \
+            CC=$CLANG_PATH/clang \
+            LD=$CLANG_PATH/ld.lld \
+            AR=$CLANG_PATH/llvm-ar \
+            NM=$CLANG_PATH/llvm-nm \
+            OBJCOPY=$CLANG_PATH/llvm-objcopy \
+            OBJDUMP=$CLANG_PATH/llvm-objdump \
+            STRIP=$CLANG_PATH/llvm-strip \
+            READELF=$CLANG_PATH/llvm-readelf \
+            HOSTCC=gcc \
+            HOSTAR=ar \
+            HOSTLD=ld \
+            LLVM=1 \
+            LLVM_IAS=1 \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu-
+
+          # [DYNAMIC AUTO-FIX] Force and Verify KernelSU Configuration
+          if [ -f out/.config ]; then
+            if grep -q "CONFIG_KSU_MANUAL_HOOK=y" out/.config; then
+              echo "SUCCESS: CONFIG_KSU_MANUAL_HOOK is verified and enabled."
+            else
+              echo "WARNING: CONFIG_KSU_MANUAL_HOOK missing! Forcing injection now..."
+              sed -i '/CONFIG_KSU_MANUAL_HOOK/d' out/.config
+              echo "CONFIG_KSU_MANUAL_HOOK=y" >> out/.config
+              # Re-run olddefconfig to apply the forced change
+              make O=out ARCH=arm64 olddefconfig \
+                CC=$CLANG_PATH/clang \
+                LD=$CLANG_PATH/ld.lld \
+                AR=$CLANG_PATH/llvm-ar \
+                NM=$CLANG_PATH/llvm-nm \
+                OBJCOPY=$CLANG_PATH/llvm-objcopy \
+                OBJDUMP=$CLANG_PATH/llvm-objdump \
+                STRIP=$CLANG_PATH/llvm-strip \
+                READELF=$CLANG_PATH/llvm-readelf \
+                HOSTCC=gcc \
+                HOSTAR=ar \
+                HOSTLD=ld \
+                LLVM=1 \
+                LLVM_IAS=1 \
+                CLANG_TRIPLE=aarch64-linux-gnu- \
+                CROSS_COMPILE=aarch64-linux-gnu-
+            fi
+          fi
+
+          # 4. Main Build Execution with strict error handling and pipefail
+          set -o pipefail
+          make -j$(nproc --all) O=out ARCH=arm64 \
+            CC=$CLANG_PATH/clang \
+            LD=$CLANG_PATH/ld.lld \
+            AR=$CLANG_PATH/llvm-ar \
+            NM=$CLANG_PATH/llvm-nm \
+            OBJCOPY=$CLANG_PATH/llvm-objcopy \
+            OBJDUMP=$CLANG_PATH/llvm-objdump \
+            STRIP=$CLANG_PATH/llvm-strip \
+            READELF=$CLANG_PATH/llvm-readelf \
+            HOSTCC=gcc \
+            HOSTAR=ar \
+            HOSTLD=ld \
+            LLVM=1 \
+            LLVM_IAS=1 \
+            KBUILD_COMPILER_STRING="OS" \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            KBUILD_BUILD_USER=android \
+            KBUILD_BUILD_HOST=build \
+            KBUILD_BUILD_TIMESTAMP="2026-02-10" \
+            Image.gz dtbo.img dtbs 2>&1 | tee build.log || touch .build_failed
+
+          set +o pipefail
+
+          # --- ERROR EXTRACTOR START ---
+          # Strict log parser to detect build failure immediately
+          if [ -f .build_failed ] || grep -q -iE "error:|ld.lld:" build.log; then
+            echo "==== COMPILER ERRORS DETECTED ====" > errors_only.log
+            grep -B 3 -A 5 -iE "error:|warning:|make\[|ld\.lld:" build.log >> errors_only.log || true
+
+            echo "----------------------------------------"
+            echo "        CRITICAL COMPILER ERRORS        "
+            echo "----------------------------------------"
+            cat errors_only.log
+            echo "----------------------------------------"
+            exit 1
+          fi
+          # --- ERROR EXTRACTOR END ---
+
+      - name: Save Build Output Cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: out/
+          key: out-cache-v5-${{ runner.os }}-${{ github.run_id }}
+
+      - name: Package Logs
+        if: always()
+        run: |
+          mkdir -p packaged_logs
+          [ -f build.log ] && cp build.log packaged_logs/ || true
+          [ -f errors_only.log ] && cp errors_only.log packaged_logs/ || true
+          zip -r execution_logs.zip packaged_logs/ || true
+
+      - name: Upload Build and Error Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Compilation-Logs
+          path: execution_logs.zip
+
+      - name: Upload Kernel Artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Perf-Kernel-Alioth
+          path: |
+            out/arch/arm64/boot/Image.gz
+            out/arch/arm64/boot/dtbo.img
+            out/arch/arm64/boot/dts/qcom/*.dtb
