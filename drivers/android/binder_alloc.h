@@ -7,6 +7,7 @@
 #define _LINUX_BINDER_ALLOC_H
 
 #include <linux/rbtree.h>
+#include <linux/spinlock.h>
 #include <linux/list.h>
 #include <linux/mm.h>
 #include <linux/rtmutex.h>
@@ -54,7 +55,7 @@ struct binder_buffer {
 	size_t data_size;
 	size_t offsets_size;
 	size_t extra_buffers_size;
-	void __user *user_data;
+	unsigned long user_data;
 	int pid;
 };
 
@@ -98,10 +99,10 @@ struct binder_lru_page {
  * struct binder_buffer objects used to track the user buffers
  */
 struct binder_alloc {
-	struct mutex mutex;
+	spinlock_t lock;
 	struct vm_area_struct *vma;
 	struct mm_struct *vma_vm_mm;
-	void __user *buffer;
+	unsigned long buffer;
 	struct list_head buffers;
 	struct rb_root free_buffers;
 	struct rb_root allocated_buffers;
