@@ -44,6 +44,7 @@
 
 #include <uapi/linux/dma-buf.h>
 #include <uapi/linux/magic.h>
+#include "dma-buf-sysfs-stats.h"
 
 static struct kmem_cache *kmem_attach_pool;
 static struct kmem_cache *kmem_dma_buf_pool;
@@ -57,7 +58,6 @@ void __init init_dma_buf_kmem_pool(void)
 		SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
 }
 
-#include "dma-buf-sysfs-stats.h"
 
 struct dma_buf_list {
 	struct list_head head;
