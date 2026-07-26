@@ -23,3 +23,7 @@ endif # CONFIG_MACH_XIAOMI
 always		:= $(dtb-y)
 subdir-y	:= $(dts-dirs)
 clean-files    := *.dtb *.dtbo
+ifeq ($(CONFIG_MACH_XIAOMI_MUNCH),y)
+        dtbo-$(CONFIG_ARCH_KONA) += munch-sm8250-overlay.dtbo
+munch-sm8250-overlay.dtbo-base := kona-v2.1.dtb
+endif # CONFIG_MACH_XIAOMI_MUNCH
