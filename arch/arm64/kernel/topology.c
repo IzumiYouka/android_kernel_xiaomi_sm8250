@@ -452,5 +452,3 @@ void __init init_cpu_topology(void)
 			update_possible_siblings_masks(cpu);
 	}
 }
-
-
