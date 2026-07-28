@@ -30,32 +30,46 @@ void cpufreq_remove_update_util_hook(int cpu);
 bool cpufreq_this_cpu_can_update(struct cpufreq_policy *policy);
 
 static inline unsigned long map_util_freq(unsigned long util,
-					  unsigned long freq,
-					  unsigned long cap)
+                                          unsigned long freq,
+                                          unsigned long cap)
 {
 	unsigned long delta, headroom, min_util;
+	unsigned int headroom_pct;
 
 	if (util >= cap)
 		return freq;
 
 	/*
-	 * Quadratic tapered DVFS headroom:
-	 * provide extra headroom at low-mid util while tapering it near max
-	 * capacity to avoid over-aggressive top-end frequency boosting.
+	 * Select per-cluster headroom percentage based on CPU capacity.
+	 * Little cores get more headroom to stay responsive at low freq.
+	 * Prime core gets less headroom since top-end boosts are expensive.
+	 * Thresholds derived from runtime cpu_capacity values on sm8250:
+	 *   little=313, big=777, prime=1024.
 	 */
-	delta = cap - util;
-	headroom = (delta * delta) / (cap << 2);
+	if (cap <= 544)
+		headroom_pct = 28;		/* little: ~28% max headroom */
+	else if (cap >= 900)
+		headroom_pct = 12;		/* prime: ~12% max headroom */
+	else
+		headroom_pct = 20;		/* big: ~20% max headroom */
 
 	/*
-	 * Suppress boosting at very low util to avoid unnecessary frequency
-	 * ramping for tiny background work.
+	 * Quadratic taper: headroom is proportional to (delta^2 / cap),
+	 * giving large boost at low util and near-zero boost near capacity.
 	 */
-	min_util = cap / 10;
+	delta = cap - util;
+	headroom = (delta * delta * headroom_pct) / (cap * 100);
+
+	/*
+	 * Suppress boosting at very low util (below ~16% of cap) to avoid
+	 * unnecessary frequency ramping for small background work.
+	 * Interpolates headroom smoothly from 0 up to full value at min_util.
+	 */
+	min_util = cap / 6;
 	if (min_util && util < min_util)
 		headroom = (headroom * util * util) / (min_util * min_util);
 
 	util += headroom;
-
 	return freq * util / cap;
 }
 #endif /* CONFIG_CPU_FREQ */
