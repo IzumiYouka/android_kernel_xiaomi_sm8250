@@ -11,6 +11,7 @@
 #include <trace/events/sched.h>
 #include "sched.h"
 #include "walt.h"
+#include <linux/arch_topology.h>
 
 #include <trace/events/sched.h>
 
@@ -3127,6 +3128,9 @@ void sched_update_cpu_freq_min_max(const cpumask_t *cpus, u32 fmin, u32 fmax)
 
 	for_each_cpu(i, &cpumask)
 		thermal_cap_cpu[i] = do_thermal_cap(i, fmax);
+	
+    /* Propagate thermal cap to arch_topology layer */
+    topology_update_thermal_pressure(cpus, fmax);
 
 	for_each_cpu(i, &cpumask) {
 		cluster = cpu_rq(i)->cluster;
