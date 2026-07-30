@@ -33,45 +33,34 @@ static inline unsigned long map_util_freq(unsigned long util,
                                           unsigned long freq,
                                           unsigned long cap)
 {
-	unsigned long delta, headroom, min_util;
-	unsigned int headroom_pct;
+    unsigned long delta, headroom;
+    unsigned long threshold = (cap * 15) / 100;  /* 15% of capacity */
+    unsigned long delta_t;
 
-	if (util >= cap)
-		return freq;
+    if (util >= cap)
+        return freq;
 
-	/*
-	 * Select per-cluster headroom percentage based on CPU capacity.
-	 * Little cores get more headroom to stay responsive at low freq.
-	 * Prime core gets less headroom since top-end boosts are expensive.
-	 * Thresholds derived from runtime cpu_capacity values on sm8250:
-	 *   little=313, big=777, prime=1024.
-	 */
-	if (cap <= 544)
-		headroom_pct = 28;		/* little: ~28% max headroom */
-	else if (cap >= 900)
-		headroom_pct = 12;		/* prime: ~12% max headroom */
-	else
-		headroom_pct = 20;		/* big: ~20% max headroom */
+    delta = cap - util;
+    delta_t = cap - threshold;
 
-	/*
-	 * Quadratic taper: headroom is proportional to (delta^2 / cap),
-	 * giving large boost at low util and near-zero boost near capacity.
-	 */
-	delta = cap - util;
-	headroom = (delta * delta * headroom_pct) / (cap * 100);
+    /*
+     * Cubic normalized headroom: capacity-aware curve that peaks
+     * earlier in the utilization range and backs off faster near
+     * saturation. Shape is consistent across CPU clusters regardless
+     * of capacity tier.
+     */
+    headroom = (delta * delta * delta * 5) / (delta_t * cap * 16);
 
-	/*
-	 * Suppress boosting at very low util (below ~16% of cap) to avoid
-	 * unnecessary frequency ramping for small background work.
-	 * Interpolates headroom smoothly from 0 up to full value at min_util.
-	 */
-	min_util = cap / 6;
-	if (min_util && util < min_util)
-		headroom = (headroom * util * util) / (min_util * min_util);
+    /*
+     * Suppress boosting below 15% capacity threshold to avoid
+     * unnecessary frequency ramping for light background work.
+     */
+    if (util < threshold)
+        headroom = (headroom * util * util) / (threshold * threshold);
 
-	util += headroom;
-	return freq * util / cap;
+    return (util + headroom) * freq / cap;
 }
+
 #endif /* CONFIG_CPU_FREQ */
 
 #endif /* _LINUX_SCHED_CPUFREQ_H */
