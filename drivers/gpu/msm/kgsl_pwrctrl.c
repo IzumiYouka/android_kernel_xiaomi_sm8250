@@ -556,7 +556,6 @@ unsigned int kgsl_pwrctrl_adjust_pwrlevel(struct kgsl_device *device,
 {
 	struct kgsl_pwrctrl *pwr = &device->pwrctrl;
 #ifdef CONFIG_DEBUG_KERNEL
-	unsigned int old_level = pwr->active_pwrlevel;
 #endif
 
 	/* If a pwr constraint is expired, remove it */
@@ -2612,7 +2611,6 @@ static int _wake(struct kgsl_device *device)
 {
 	struct kgsl_pwrctrl *pwr = &device->pwrctrl;
 	int status = 0;
-	unsigned int state = device->state;
 
 	switch (device->state) {
 	case KGSL_STATE_SUSPEND:
@@ -2639,9 +2637,6 @@ static int _wake(struct kgsl_device *device)
 		/* Turn on the core clocks */
 		kgsl_pwrctrl_clk(device, KGSL_PWRFLAGS_ON, KGSL_STATE_ACTIVE);
 
-		if (state == KGSL_STATE_SLUMBER || state == KGSL_STATE_SUSPEND)
-			trace_gpu_frequency(
-			pwr->pwrlevels[pwr->active_pwrlevel].gpu_freq/1000, 0);
 		/*
 		 * No need to turn on/off irq here as it no longer affects
 		 * power collapse
@@ -2801,7 +2796,6 @@ _slumber(struct kgsl_device *device)
 		kgsl_pwrctrl_clk_set_options(device, false);
 		kgsl_pwrctrl_disable(device);
 		kgsl_pwrscale_sleep(device);
-		trace_gpu_frequency(0, 0);
 		kgsl_pwrctrl_set_state(device, KGSL_STATE_SLUMBER);
 		pm_qos_update_request(&device->pwrctrl.pm_qos_req_dma,
 						PM_QOS_DEFAULT_VALUE);
@@ -2813,7 +2807,6 @@ _slumber(struct kgsl_device *device)
 		break;
 	case KGSL_STATE_AWARE:
 		kgsl_pwrctrl_disable(device);
-		trace_gpu_frequency(0, 0);
 		kgsl_pwrctrl_set_state(device, KGSL_STATE_SLUMBER);
 		break;
 	case KGSL_STATE_RESET:
