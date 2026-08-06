@@ -73,6 +73,7 @@ struct sugov_cpu {
 	unsigned int flags;
 
 	unsigned long		bw_dl;
+	unsigned long 		min;
 	unsigned long		max;
 
 	/* The field below is for single-CPU policies only: */
@@ -177,15 +178,6 @@ static bool sugov_up_down_rate_limit(struct sugov_policy *sg_policy, u64 time,
 			return true;
 
 	return false;
-}
-
-static inline bool conservative_pl(void)
-{
-#ifdef CONFIG_SCHED_WALT
-	return sysctl_sched_conservative_pl;
-#else
-	return false;
-#endif
 }
 
 static bool sugov_update_next_freq(struct sugov_policy *sg_policy, u64 time,
@@ -1390,7 +1382,8 @@ static int sugov_start(struct cpufreq_policy *policy)
 
 		memset(sg_cpu, 0, sizeof(*sg_cpu));
 		sg_cpu->cpu			= cpu;
-		sg_cpu->sg_policy		= sg_policy;
+		sg_cpu->sg_policy	= sg_policy;
+		sg_cpu->min         = (SCHED_CAPACITY_SCALE * policy->cpuinfo.min_freq) / policy->cpuinfo.max_freq;
 	}
 
 	for_each_cpu(cpu, policy->cpus) {
