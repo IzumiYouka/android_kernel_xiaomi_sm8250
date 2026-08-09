@@ -97,7 +97,7 @@ static inline unsigned long __dl_bw_capacity(const struct cpumask *mask)
 	int i;
 
 	for_each_cpu_and(i, mask, cpu_active_mask)
-		cap += arch_scale_cpu_capacity(i);
+		cap += arch_scale_cpu_capacity(NULL, i);
 
 	return cap;
 }
@@ -109,7 +109,7 @@ static inline unsigned long __dl_bw_capacity(const struct cpumask *mask)
 static inline unsigned long dl_bw_capacity(int i)
 {
 	if (!static_branch_unlikely(&sched_asym_cpucapacity) &&
-	arch_scale_cpu_capacity(i) == SCHED_CAPACITY_SCALE) {
+	arch_scale_cpu_capacity(NULL, i) == SCHED_CAPACITY_SCALE) {
 		return dl_bw_cpus(i) << SCHED_CAPACITY_SHIFT;
 	} else {
 		RCU_LOCKDEP_WARN(!rcu_read_lock_sched_held(),
@@ -569,7 +569,8 @@ static void dequeue_pushable_dl_task(struct rq *rq, struct task_struct *p)
 	if (RB_EMPTY_NODE(&p->pushable_dl_tasks))
 		return;
 
-	leftmost = rb_erase_cached(&p->pushable_dl_tasks, root);
+	rb_erase_cached(&p->pushable_dl_tasks, root);
+	leftmost = rb_first_cached(root);
 	if (leftmost)
 		dl_rq->earliest_dl.next = __node_2_pdl(leftmost)->dl.deadline;
 

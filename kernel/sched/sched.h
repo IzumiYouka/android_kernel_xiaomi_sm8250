@@ -2561,7 +2561,7 @@ static inline void cpufreq_update_util(struct rq *rq, unsigned int flags) {}
  */
 static inline bool dl_task_fits_capacity(struct task_struct *p, int cpu)
 {
-	unsigned long cap = arch_scale_cpu_capacity(cpu);
+	unsigned long cap = arch_scale_cpu_capacity(NULL, cpu);
 
 	return cap >= p->dl.dl_density >> (BW_SHIFT - SCHED_CAPACITY_SHIFT);
 }
