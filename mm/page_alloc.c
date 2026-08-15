@@ -2719,10 +2719,10 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 			unsigned long count, struct list_head *list,
 			int migratetype, unsigned int alloc_flags)
 {
-	const bool can_resched = !preempt_count() && !irqs_disabled();
-	int i, alloced = 0, last_mod = 0;
-	struct list_head *prev_tail = list->prev;
-	struct page *pos, *n;
+	int i, alloced = 0;
+	int last_mod = 0;
+	bool can_resched = !preempt_count() && !irqs_disabled() &&
+			   system_state >= SYSTEM_RUNNING;
 
 	spin_lock(&zone->lock);
 	for (i = 0; i < count; ++i) {
@@ -2741,7 +2741,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 		if (unlikely(page == NULL))
 			break;
 
-		/* Reschedule and ease the contention on the lock if needed */
+/* Reschedule and ease the contention on the lock if needed */
 		if (i + 1 < count && ((can_resched && need_resched()) ||
 				      spin_needbreak(&zone->lock))) {
 			__mod_zone_page_state(zone, NR_FREE_PAGES,
@@ -2752,6 +2752,9 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 				cond_resched();
 			spin_lock(&zone->lock);
 		}
+
+		if (unlikely(check_pcp_refill(page)))
+			continue;
 
 		/*
 		 * Split buddy pages returned by expand() are received here in
@@ -2765,6 +2768,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 		 */
 
 		list_add_tail(&page->lru, list);
+		alloced++;
 		if (is_migrate_cma(get_pcppage_migratetype(page)))
 			__mod_zone_page_state(zone, NR_FREE_CMA_PAGES,
 					      -(1 << order));
@@ -2778,24 +2782,6 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 	 */
 	__mod_zone_page_state(zone, NR_FREE_PAGES, -((i - last_mod) << order));
 	spin_unlock(&zone->lock);
-
-	/*
-	 * Pages are appended to the pcp list without checking to reduce the
-	 * time holding the zone lock. Checking the appended pages happens right
-	 * after the critical section while still holding the pcp lock.
-	 */
-	if (prev_tail->next != list) {
-		pos = list_entry(prev_tail->next, struct page, lru);
-		list_for_each_entry_safe_from(pos, n, list, lru) {
-			if (unlikely(check_pcp_refill(pos))) {
-				list_del(&pos->lru);
-				continue;
-			}
-
-			alloced++;
-		}
-	}
-
 	return alloced;
 }
 
