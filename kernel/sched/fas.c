@@ -24,6 +24,7 @@
 #include <drm/drm_notifier_mi.h>
 #include <uapi/linux/sched/types.h>
 #include <drm/drm_refresh_rate.h>
+#include <linux/kobject.h>
 
 /*
  * Silver cluster CPUs (0-3) boost frequencies by FPS tier.
@@ -37,6 +38,8 @@
 #define FAS_ADAPTIVE_MIN_MS	50U
 #define FAS_ADAPTIVE_MAX_MS	200U
 #define FAS_MIN_INPUT_INTERVAL	(150 * USEC_PER_MSEC)
+
+static bool fas_enabled = true;
 
 enum {
 	SCREEN_OFF,
@@ -186,6 +189,9 @@ static int fas_cpu_notifier_cb(struct notifier_block *nb, unsigned long action,
 	if (action != CPUFREQ_ADJUST)
 		return NOTIFY_OK;
 
+	if (!READ_ONCE(fas_enabled))
+		return NOTIFY_OK;
+
 	/* Only touch the Silver cluster */
 	if (policy->cpu > 3)
 		return NOTIFY_OK;
@@ -234,6 +240,9 @@ static void fas_input_event(struct input_handle *handle,
 	u64 now = ktime_to_us(ktime_get());
 
 	if (now - fas_last_input_time < FAS_MIN_INPUT_INTERVAL)
+		return;
+
+	if (!READ_ONCE(fas_enabled))
 		return;
 
 	fas_last_input_time = now;
@@ -319,6 +328,9 @@ void fas_do_cmdbatch_boost(void)
 	u64 interval;
 	unsigned int window_ms;
 
+	if (!READ_ONCE(fas_enabled))
+		return;
+
 	if (fps <= 60)
 		return;
 
@@ -337,6 +349,50 @@ void fas_do_cmdbatch_boost(void)
 
 	__fas_kick_cmdbatch(b, window_ms);
 }
+
+static ssize_t fas_enabled_show(struct kobject *kobj,
+                                struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", READ_ONCE(fas_enabled));
+}
+
+static ssize_t fas_enabled_store(struct kobject *kobj,
+                                 struct kobj_attribute *attr,
+                                 const char *buf, size_t count)
+{
+	bool val;
+	int ret = kstrtobool(buf, &val);
+
+	if (ret)
+		return ret;
+
+	WRITE_ONCE(fas_enabled, val);
+
+	/* Clear any in-flight boost immediately when disabling */
+	if (!val) {
+		struct fas_drv *b = &fas_drv_g;
+
+		clear_bit(INPUT_BOOST, &b->state);
+		clear_bit(CMDBATCH_BOOST, &b->state);
+		wake_up(&b->boost_waitq);
+	}
+
+	return count;
+}
+
+static struct kobj_attribute fas_enabled_attr =
+	__ATTR(enabled, 0644, fas_enabled_show, fas_enabled_store);
+
+static struct attribute *fas_attrs[] = {
+	&fas_enabled_attr.attr,
+	NULL,
+};
+
+static struct attribute_group fas_attr_group = {
+	.attrs = fas_attrs,
+};
+
+static struct kobject *fas_kobj;
 
 static int __init fas_init(void)
 {
