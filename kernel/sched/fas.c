@@ -429,8 +429,23 @@ static int __init fas_init(void)
 		goto stop_thread;
 	}
 
-	return 0;
+	fas_kobj = kobject_create_and_add("fas", kernel_kobj);
+	if (!fas_kobj) {
+		pr_err("Failed to create fas kobject\n");
+		goto unregister_input;
+	}
 
+	ret = sysfs_create_group(fas_kobj, &fas_attr_group);
+	if (ret) {
+		pr_err("Failed to create fas sysfs group: %d\n", ret);
+		kobject_put(fas_kobj);
+		goto unregister_input;
+	}
+
+	return 0;
+	
+unregister_input:
+	input_unregister_handler(&fas_input_handler);
 stop_thread:
 	kthread_stop(b->thread);
 unregister_drm_notif:
