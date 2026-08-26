@@ -2723,7 +2723,8 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 	int last_mod = 0;
 	bool can_resched = !preempt_count() && !irqs_disabled() &&
 			   system_state >= SYSTEM_RUNNING;
-
+	struct list_head *prev_tail = list->prev;
+	struct page *pos, *n;
 	spin_lock(&zone->lock);
 	for (i = 0; i < count; ++i) {
 		struct page *page;
@@ -2753,8 +2754,6 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 			spin_lock(&zone->lock);
 		}
 
-		if (unlikely(check_pcp_refill(page)))
-			continue;
 
 		/*
 		 * Split buddy pages returned by expand() are received here in
