@@ -2711,18 +2711,18 @@ static inline struct page *__rmqueue_cma(struct zone *zone, unsigned int order)
 #endif
 
 /*
- * Obtain a specified number of elements from the buddy allocator, all under
- * a single hold of the lock, for efficiency.  Add them to the supplied list.
- * Returns the number of new pages which were placed at *list.
+ * Obtain a specified number of elements from the buddy allocator, and relax the
+ * zone lock when needed. Add them to the supplied list. Returns the number of
+ * new pages which were placed at *list.
  */
 static int rmqueue_bulk(struct zone *zone, unsigned int order,
 			unsigned long count, struct list_head *list,
 			int migratetype, unsigned int alloc_flags)
 {
-	const bool can_resched = !preempt_count() && !irqs_disabled();
-	int i, alloced = 0, last_mod = 0;
-	struct list_head *prev_tail = list->prev;
-	struct page *pos, *n;
+	int i, alloced = 0;
+	int last_mod = 0;
+	bool can_resched = !preempt_count() && !irqs_disabled() &&
+			   system_state >= SYSTEM_RUNNING;
 
 	spin_lock(&zone->lock);
 	for (i = 0; i < count; ++i) {
@@ -2741,7 +2741,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 		if (unlikely(page == NULL))
 			break;
 
-		/* Reschedule and ease the contention on the lock if needed */
+/* Reschedule and ease the contention on the lock if needed */
 		if (i + 1 < count && ((can_resched && need_resched()) ||
 				      spin_needbreak(&zone->lock))) {
 			__mod_zone_page_state(zone, NR_FREE_PAGES,
@@ -2753,6 +2753,9 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 			spin_lock(&zone->lock);
 		}
 
+		if (unlikely(check_pcp_refill(page)))
+			continue;
+
 		/*
 		 * Split buddy pages returned by expand() are received here in
 		 * physical page order. The page is added to the tail of
@@ -2763,6 +2766,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 		 * for IO devices that can merge IO requests if the physical
 		 * pages are ordered properly.
 		 */
+
 		list_add_tail(&page->lru, list);
 		if (is_migrate_cma(get_pcppage_migratetype(page)))
 			__mod_zone_page_state(zone, NR_FREE_CMA_PAGES,
@@ -2775,7 +2779,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 	 * on i. Do not confuse with 'alloced' which is the number of
 	 * pages added to the pcp list.
 	 */
-	__mod_zone_page_state(zone, NR_FREE_PAGES, -(i << order));
+	__mod_zone_page_state(zone, NR_FREE_PAGES, -((i - last_mod) << order));
 	spin_unlock(&zone->lock);
 
 	/*
