@@ -172,6 +172,7 @@
 				qcom,bus-min = <0>;
 				qcom,bus-max = <0>;
 			};
+		};
  
 		qcom,gpu-pwrlevels-1 {
 			#address-cells = <1>;
@@ -285,6 +286,7 @@
 				qcom,bus-min = <0>;
 				qcom,bus-max = <0>;
 			};
+		};
  
 		qcom,gpu-pwrlevels-2 {
 			#address-cells = <1>;
@@ -398,6 +400,7 @@
 				qcom,bus-min = <0>;
 				qcom,bus-max = <0>;
 			};
+		};
  
 		qcom,gpu-pwrlevels-3 {
 			#address-cells = <1>;
