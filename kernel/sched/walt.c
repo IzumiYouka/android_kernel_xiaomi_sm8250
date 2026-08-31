@@ -2248,13 +2248,26 @@ static inline void walt_update_group_thresholds(void)
 static void walt_cpus_capacity_changed(const cpumask_t *cpus)
 {
 	unsigned long flags;
+	bool need_rebalance = false;
 
 	acquire_rq_locks_irqsave(cpu_possible_mask, &flags);
 
-	if (cpumask_intersects(cpus, &sched_cluster[0]->cpus))
+	if (cpumask_intersects(cpus, &sched_cluster[0]->cpus)) {
 		walt_update_group_thresholds();
+		need_rebalance = true;
+	}
 
 	release_rq_locks_irqrestore(cpu_possible_mask, &flags);
+
+	/*
+	 * When thermal pressure on the little cluster is released (capacity
+	 * restored), force a load balance so tasks that were pushed away
+	 * from throttled CPUs are pulled back quickly. Without this, WALT
+	 * waits for its next periodic balance tick, which is what makes the
+	 * device feel laggy for a while after thermal throttling ends.
+	 */
+	if (need_rebalance)
+		trigger_load_balance(cpu_rq(cpumask_first(&sched_cluster[0]->cpus)));
 }
 
 
