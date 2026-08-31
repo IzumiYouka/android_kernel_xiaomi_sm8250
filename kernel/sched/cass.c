@@ -84,7 +84,9 @@ void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
  * (relaxed from ~20% to ~16% so that brief thermal-pressure dips
  *  don't scatter tasks across clusters and cause stutter)
  */
+#ifndef fits_capacity
 #define fits_capacity(cap, max)	((cap) * 1228 < (max) * 1024)
+#endif
 
 /* Returns true if @a is a better CPU than @b */
 static __always_inline

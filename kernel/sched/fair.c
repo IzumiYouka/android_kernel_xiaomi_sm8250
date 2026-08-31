@@ -23,7 +23,7 @@
 #include "sched.h"
 
 #ifndef fits_capacity
-#define fits_capacity(cap, max) ((cap) * 1280 < (max) * 1024)
+#define fits_capacity(cap, max) ((cap) * 1228 < (max) * 1024)
 #endif
 
 #include <trace/events/sched.h>
