@@ -3121,10 +3121,26 @@ unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
 	}
 #endif
 
-	if (cpu_max_table_freq[cpu])
-		return div64_ul(thermal_max_freq * max_cap[cpu],
-				cpu_max_table_freq[cpu]);
-	else
+	if (cpu_max_table_freq[cpu]) {
+		unsigned long new_cap, old_cap;
+
+		new_cap = div64_ul(thermal_max_freq * max_cap[cpu],
+					cpu_max_table_freq[cpu]);
+
+		/*
+		 * Hysteresis: don't let the thermal cap drop by more than
+		 * 30% in a single step. This prevents the scheduler from
+		 * overreacting to sudden thermal throttling, which would
+		 * scatter tasks across clusters and cause stutter. The cap
+		 * still reaches its final value, just over multiple polling
+		 * cycles.
+		 */
+		old_cap = thermal_cap_cpu[cpu];
+		if (old_cap && new_cap < old_cap * 7 / 10)
+			new_cap = old_cap * 7 / 10;
+
+		return new_cap;
+	} else
 		return rq->cpu_capacity_orig;
 }
 
