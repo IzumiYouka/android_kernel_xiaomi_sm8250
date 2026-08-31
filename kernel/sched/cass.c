@@ -36,23 +36,31 @@ static __always_inline
 void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
 {
 	struct rq *rq = cpu_rq(c->cpu);
-	struct cfs_rq *cfs_rq = &rq->cfs;
-	unsigned long est;
+	unsigned long raw_cap;
 
-	/* Get this CPU's utilization from CFS tasks */
-	c->util = READ_ONCE(cfs_rq->avg.util_avg);
-	if (sched_feat(UTIL_EST)) {
-		est = READ_ONCE(cfs_rq->avg.util_est.enqueued);
-		if (est > c->util) {
-			/* Don't deduct @current's util from estimated util */
-			sync = false;
-			c->util = est;
-		}
-	}
+	/*
+	 * Get this CPU's utilization from WALT's demand signal.
+	 *
+	 * WALT and PELT track utilization differently (WALT uses a fixed
+	 * window average, PELT uses an exponentially decaying average).
+	 * Mixing the two signals made CASS misjudge CPU load whenever
+	 * thermal pressure caused the two to diverge, so use WALT's own
+	 * cpu_util() here for consistency with the rest of the scheduler.
+	 */
+	c->util = cpu_util(c->cpu);
 
-	/* Get the capacity of this CPU adjusted for thermal pressure */
-	c->cap = min(arch_scale_cpu_capacity(NULL, c->cpu), thermal_cap(c->cpu));
-	
+	/*
+	 * Get the capacity of this CPU adjusted for thermal pressure.
+	 *
+	 * Floor the thermal cap at 60% of the original capacity so that
+	 * brief thermal throttling doesn't make CASS scatter tasks across
+	 * clusters (needless migrations → wakeup latency → scroll/gaming
+	 * stutter under thermal pressure).
+	 */
+	raw_cap = arch_scale_cpu_capacity(NULL, c->cpu);
+	c->cap = min(raw_cap,
+		     max(thermal_cap(c->cpu), raw_cap * 6 / 10));
+
 	/*
 	 * Account for lost capacity due to time spent in RT/DL tasks and IRQs.
 	 * Capacity is considered lost to RT tasks even when @p is an RT task in
@@ -73,9 +81,10 @@ void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
 /*
  * The margin used when comparing utilization with CPU capacity.
  *
- * (default: ~20%)
+ * (relaxed from ~20% to ~16% so that brief thermal-pressure dips
+ *  don't scatter tasks across clusters and cause stutter)
  */
-#define fits_capacity(cap, max)	((cap) * 1280 < (max) * 1024)
+#define fits_capacity(cap, max)	((cap) * 1228 < (max) * 1024)
 
 /* Returns true if @a is a better CPU than @b */
 static __always_inline
