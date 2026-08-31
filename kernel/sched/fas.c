@@ -21,6 +21,7 @@
 #include <linux/input.h>
 #include <linux/atomic.h>
 #include <linux/kthread.h>
+#include <linux/arch_topology.h>
 #include <drm/drm_notifier_mi.h>
 #include <uapi/linux/sched/types.h>
 #include <drm/drm_refresh_rate.h>
@@ -180,6 +181,36 @@ static int fas_boost_thread(void *data)
 	return 0;
 }
 
+/*
+ * Returns true when thermal pressure on the Silver cluster has dropped
+ * the available capacity below 70% of the original, in which case FAS
+ * must not fight the thermal controller (boosting a capped cluster only
+ * wastes power and delays thermal recovery).
+ *
+ * thermal_pressure == max_capacity - current_capacity (see
+ * topology_update_thermal_pressure()), so pressure >= ~30% of max
+ * capacity means the cluster is heavily throttled.
+ */
+static bool fas_thermal_pressure_high(void)
+{
+	int cpu;
+
+	for_each_online_cpu(cpu) {
+		unsigned long max_cap, pressure;
+
+		if (cpu > 3)
+			break;
+
+		max_cap = topology_get_cpu_scale(NULL, cpu);
+		pressure = topology_get_thermal_pressure(cpu);
+
+		if (max_cap && pressure * 10 >= max_cap * 3)
+			return true;
+	}
+
+	return false;
+}
+
 static int fas_cpu_notifier_cb(struct notifier_block *nb, unsigned long action,
 			       void *data)
 {
@@ -197,6 +228,10 @@ static int fas_cpu_notifier_cb(struct notifier_block *nb, unsigned long action,
 		return NOTIFY_OK;
 
 	if (test_bit(SCREEN_OFF, &b->state))
+		return NOTIFY_OK;
+
+	/* Don't fight the thermal controller when the cluster is hot */
+	if (fas_thermal_pressure_high())
 		return NOTIFY_OK;
 
 	if (test_bit(INPUT_BOOST, &b->state) ||
