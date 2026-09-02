@@ -86,6 +86,7 @@ bool cass_cpu_better(const struct cass_cpu_cand *a,
 #define cass_cmp(a, b) ({ res = (a) - (b); })
 #define cass_eq(a, b) ({ res = (a) == (b); })
 	long res;
+	unsigned long hyst;
 
 	/* Prefer the CPU that fits the task */
 	if (cass_cmp(fits_capacity(p_util, a->cap),
@@ -107,6 +108,29 @@ bool cass_cpu_better(const struct cass_cpu_cand *a,
 	/* Prefer the CPU with lower idle exit latency */
 	if (cass_cmp(b->exit_lat, a->exit_lat))
 		goto done;
+
+	/*
+	 * When both CPUs are idle (or SCHED_IDLE-only) and utilization is
+	 * already normalized to SCHED_CAPACITY_SCALE, keep the previous CPU
+	 * slightly stickier: require a small relative-util advantage before
+	 * preferring the non-previous CPU. This avoids needless migrations
+	 * for negligible utilization differences.
+	 */
+	if (a->exit_lat && b->exit_lat) {
+		hyst = SCHED_CAPACITY_SCALE / 64; /* ~1.5% */
+
+		if (a->cpu == prev_cpu && b->cpu != prev_cpu &&
+		    a->util <= b->util + hyst) {
+			res = 1;
+			goto done;
+		}
+
+		if (b->cpu == prev_cpu && a->cpu != prev_cpu &&
+		    b->util <= a->util + hyst) {
+			res = -1;
+			goto done;
+		}
+	}
 
 	/* Prefer the previous CPU */
 	if (cass_eq(a->cpu, prev_cpu) || !cass_cmp(b->cpu, prev_cpu))
