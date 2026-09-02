@@ -9568,6 +9568,16 @@ static void update_cpu_capacity(struct sched_domain *sd, int cpu)
 	capacity >>= SCHED_CAPACITY_SHIFT;
 
 	capacity = min(capacity, thermal_cap(cpu));
+	/*
+	 * Clamp with the PELT-decayed thermal pressure signal as well:
+	 * during throttle onset the instantaneous thermal_cap() value
+	 * governs, while on recovery this decaying clamp holds the
+	 * capacity back to ramp smoothly instead of snapping to the
+	 * uncapped value.
+	 */
+	capacity = min_t(unsigned long, capacity,
+			 arch_scale_cpu_capacity(sd, cpu) -
+			 thermal_load_avg(cpu_rq(cpu)));
 	cpu_rq(cpu)->cpu_capacity_orig = capacity;
 
 	capacity = scale_rt_capacity(cpu, capacity);
