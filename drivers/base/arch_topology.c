@@ -335,6 +335,11 @@ init_cpu_capacity_callback(struct notifier_block *nb,
 		raw_capacity[cpu] = topology_get_cpu_scale(NULL, cpu) *
 				    policy->cpuinfo.max_freq / 1000UL;
 		capacity_scale = max(raw_capacity[cpu], capacity_scale);
+		/*
+		 * Update freq_factor for thermal pressure conversion
+		 * (kHz -> MHz, per topology_update_thermal_pressure()).
+		 */
+		per_cpu(freq_factor, cpu) = policy->cpuinfo.max_freq / 1000;
 	}
 
 	if (cpumask_empty(cpus_to_visit)) {
