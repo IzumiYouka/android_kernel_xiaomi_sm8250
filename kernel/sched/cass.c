@@ -52,7 +52,17 @@ void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
 
 	/* Get the capacity of this CPU adjusted for thermal pressure */
 	c->cap = min(arch_scale_cpu_capacity(NULL, c->cpu), thermal_cap(c->cpu));
-	
+	/*
+	 * Clamp with the PELT-decayed thermal pressure signal as well:
+	 * during throttle onset the instantaneous thermal_cap() value
+	 * governs, while on recovery this decaying clamp holds the
+	 * capacity back to ramp smoothly instead of snapping to the
+	 * uncapped value.
+	 */
+	c->cap = min_t(unsigned long, c->cap,
+		       arch_scale_cpu_capacity(NULL, c->cpu) -
+		       thermal_load_avg(cpu_rq(c->cpu)));
+
 	/*
 	 * Account for lost capacity due to time spent in RT/DL tasks and IRQs.
 	 * Capacity is considered lost to RT tasks even when @p is an RT task in
