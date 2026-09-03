@@ -56,6 +56,19 @@ struct sugov_policy {
 
 	bool			limits_changed;
 	bool			need_freq_update;
+
+	/*
+	 * Double-buffered DVFS headroom lookup table, indexed by absolute
+	 * utilization (0..SCHED_CAPACITY_SCALE) and holding the headroom to
+	 * add for this policy's nominal CPU capacity. A rebuild always fills
+	 * the inactive buffer and publishes it via dvfs_headroom_lut_cur with
+	 * smp_store_release(), so hot-path readers using smp_load_acquire()
+	 * observe either the previous complete table or the new complete
+	 * table, never a partially written one.
+	 */
+	u16			dvfs_headroom_lut[2][SCHED_CAPACITY_SCALE + 1];
+	u16			*dvfs_headroom_lut_cur;
+	int			dvfs_headroom_lut_next;
 };
 
 struct sugov_cpu {
@@ -330,11 +343,29 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 				  unsigned long util, unsigned long max)
 {
 	struct cpufreq_policy *policy = sg_policy->policy;
+	const u16 *lut;
 	unsigned int freq = arch_scale_freq_invariant() ?
 				policy->cpuinfo.max_freq : policy->cur;
 	unsigned int idx, l_freq, h_freq;
 
-	freq = map_util_freq(util, freq, max);
+	/*
+	 * Apply DVFS headroom from the precomputed lookup table. The table
+	 * is keyed by absolute utilization (0..SCHED_CAPACITY_SCALE) and
+	 * holds headroom in capacity units. The zero-util fast path avoids
+	 * the acquire load entirely.
+	 */
+	if (util) {
+		if (util > SCHED_CAPACITY_SCALE)
+			util = SCHED_CAPACITY_SCALE;
+		lut = smp_load_acquire(&sg_policy->dvfs_headroom_lut_cur);
+		if (lut) {
+			util += lut[util];
+			if (util > max)
+				util = max;
+		}
+	}
+
+	freq = freq * util / max;
 	trace_sugov_next_freq(policy->cpu, util, max, freq);
 
 	if (freq == sg_policy->cached_raw_freq && !sg_policy->need_freq_update)
@@ -1105,6 +1136,57 @@ static struct kobj_type sugov_tunables_ktype = {
 
 static struct cpufreq_governor schedutil_gov;
 
+/*
+ * DVFS decisions are made at discrete points. If the CPU stays busy, its
+ * utilization keeps growing, so it may need to run at a higher frequency
+ * before the next decision point is reached. The headroom below caters for
+ * that delay.
+ *
+ * Cubic normalized headroom: capacity-aware curve that peaks earlier in the
+ * utilization range and backs off near saturation, with low-utilization
+ * suppression below 15% of capacity to avoid ramping for light background
+ * work. This is the exact curve previously applied through the generic
+ * map_util_freq() helper, precomputed here once per policy so the hot path
+ * performs a single table lookup instead of the cubic arithmetic.
+ */
+static unsigned long calc_dvfs_headroom(unsigned long util,
+					unsigned long cap)
+{
+	unsigned long threshold, delta, delta_t, headroom;
+
+	if (!util || util >= cap || !cap)
+		return 0;
+
+	threshold = cap * 15 / 100;
+	delta = cap - util;
+	delta_t = cap - threshold;
+
+	headroom = delta * delta * delta * 5 / (delta_t * cap * 16);
+
+	if (util < threshold)
+		headroom = headroom * util * util / (threshold * threshold);
+
+	return headroom;
+}
+
+static void sugov_build_dvfs_headroom_lut(struct sugov_policy *sg_policy)
+{
+	unsigned long cap = arch_scale_cpu_capacity(NULL, sg_policy->policy->cpu);
+	unsigned long util;
+	u16 *new_lut;
+	int next;
+
+	next = sg_policy->dvfs_headroom_lut_next;
+	new_lut = sg_policy->dvfs_headroom_lut[next];
+
+	for (util = 0; util <= SCHED_CAPACITY_SCALE; util++)
+		new_lut[util] = (u16)calc_dvfs_headroom(util, cap);
+
+	/* Publish the fully populated table before any reader can see it. */
+	smp_store_release(&sg_policy->dvfs_headroom_lut_cur, new_lut);
+	sg_policy->dvfs_headroom_lut_next = !next;
+}
+
 static struct sugov_policy *sugov_policy_alloc(struct cpufreq_policy *policy)
 {
 	struct sugov_policy *sg_policy;
@@ -1376,6 +1458,9 @@ static int sugov_start(struct cpufreq_policy *policy)
 	sg_policy->prev_cached_raw_freq		= 0;
 
 	sg_policy->need_freq_update = false;
+
+	/* Build before publishing any update-util hook that may read it. */
+	sugov_build_dvfs_headroom_lut(sg_policy);
 
 	for_each_cpu(cpu, policy->cpus) {
 		struct sugov_cpu *sg_cpu = &per_cpu(sugov_cpu, cpu);
