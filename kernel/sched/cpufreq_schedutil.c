@@ -344,9 +344,10 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 {
 	struct cpufreq_policy *policy = sg_policy->policy;
 	const u16 *lut;
+	unsigned long headroom;
 	unsigned int freq = arch_scale_freq_invariant() ?
 				policy->cpuinfo.max_freq : policy->cur;
-	unsigned int idx, l_freq, h_freq;
+	unsigned int idx, l_freq, h_freq, limit_level;
 
 	/*
 	 * Apply DVFS headroom from the precomputed lookup table. The table
@@ -359,7 +360,17 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 			util = SCHED_CAPACITY_SCALE;
 		lut = smp_load_acquire(&sg_policy->dvfs_headroom_lut_cur);
 		if (lut) {
-			util += lut[util];
+			headroom = lut[util];
+			limit_level = READ_ONCE(sysctl_sched_hr_limit_level);
+			if (limit_level) {
+				headroom = min(headroom, max * 20 / 100);
+				if (limit_level == 2)
+					headroom = min(headroom,
+						       util * 768 >>
+						       SCHED_CAPACITY_SHIFT);
+			}
+
+			util += headroom;
 			if (util > max)
 				util = max;
 		}
