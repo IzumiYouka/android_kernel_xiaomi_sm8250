@@ -199,6 +199,14 @@ unsigned int sysctl_walt_low_latency_task_threshold; /* disabled by default */
 unsigned int sched_small_task_threshold = 102;
 __read_mostly unsigned int sysctl_sched_force_lb_enable = 1;
 
+/*
+ * DVFS headroom boost limit level:
+ *   0: no limit applied
+ *   1: cap headroom at 20% of CPU capacity
+ *   2: cap headroom at 20% of capacity AND 75% of utilization
+ */
+unsigned int sysctl_sched_hr_limit_level; /* 0 = unchanged curve by default */
+
 static inline void update_load_add(struct load_weight *lw, unsigned long inc)
 {
 	lw->weight += inc;
