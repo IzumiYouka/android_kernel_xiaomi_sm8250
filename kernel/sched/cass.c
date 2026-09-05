@@ -32,6 +32,27 @@ struct cass_cpu_cand {
 	unsigned long util;
 };
 
+/*
+ * Thermal hysteresis to prevent rapid CPU switching during thermal events
+ * Stores last seen thermal capacity per CPU
+ */
+static DEFINE_PER_CPU(unsigned long, cass_last_thermal_cap);
+static int __read_mostly cass_thermal_hyst_pct = 3; /* 3% hysteresis */
+
+static __always_inline
+void cass_apply_thermal_hyst(int cpu, unsigned long *cap)
+{
+	unsigned long current = *cap;
+	unsigned long last = READ_ONCE(per_cpu(cass_last_thermal_cap, cpu));
+
+	/* Apply hysteresis - only update if change > 3% */
+	if (abs(current - last) < (last * cass_thermal_hyst_pct / 100)) {
+		*cap = last; /* Keep previous capacity */
+	} else {
+		WRITE_ONCE(per_cpu(cass_last_thermal_cap, cpu), current);
+	}
+}
+
 static __always_inline
 void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
 {
@@ -62,6 +83,9 @@ void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
 	c->cap = min_t(unsigned long, c->cap,
 		       arch_scale_cpu_capacity(NULL, c->cpu) -
 		       thermal_load_avg(cpu_rq(c->cpu)));
+
+	/* Apply thermal hysteresis to prevent rapid CPU switching */
+	cass_apply_thermal_hyst(c->cpu, &c->cap);
 
 	/*
 	 * Account for lost capacity due to time spent in RT/DL tasks and IRQs.
