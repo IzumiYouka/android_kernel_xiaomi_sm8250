@@ -849,6 +849,36 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= sysctl_sched_uclamp_handler,
 	},
 #endif
+	/*
+	 * Thermal Bridge Controls
+	 */
+	{
+		.procname	= "sched_thermal_bridge_step_ms",
+		.data		= &thermal_bridge_step_ms,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec,
+		.extra1		= &zero,
+		.extra2		= &(int){200},
+	},
+	{
+		.procname	= "sched_thermal_bridge_hyst_pct",
+		.data		= &thermal_bridge_hyst_pct,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec,
+		.extra1		= &zero,
+		.extra2		= &(int){20},
+	},
+	{
+		.procname	= "sched_thermal_pressure_smoothing",
+		.data		= &thermal_pressure_smoothing,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec,
+		.extra1		= &zero,
+		.extra2		= &(int){1},
+	},
 #ifdef CONFIG_SCHED_AUTOGROUP
 	{
 		.procname	= "sched_autogroup_enabled",

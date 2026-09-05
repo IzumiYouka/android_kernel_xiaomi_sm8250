@@ -15,6 +15,14 @@
 
 #include <trace/events/sched.h>
 
+/*
+ * Thermal Bridge - External declarations for sysctls
+ */
+int thermal_bridge_step_ms __read_mostly = 50;
+int thermal_bridge_hyst_pct __read_mostly = 5;
+int cass_thermal_hyst_pct __read_mostly = 3;
+int thermal_pressure_smoothing __read_mostly = 1;
+
 const char *task_event_names[] = {"PUT_PREV_TASK", "PICK_NEXT_TASK",
 				  "TASK_WAKE", "TASK_MIGRATE", "TASK_UPDATE",
 				"IRQ_UPDATE"};
@@ -3076,9 +3084,109 @@ static bool is_cluster_hosting_top_app(struct sched_cluster *cluster)
 static unsigned long max_cap[NR_CPUS];
 static unsigned long thermal_cap_cpu[NR_CPUS];
 
-unsigned long thermal_cap(int cpu)
+/*
+ * Thermal Bridge: Smooth thermal cap transitions
+ * Prevents stutter during thermal throttling
+ */
+struct thermal_bridge {
+	unsigned long target_cap;
+	unsigned long current_cap;
+	struct delayed_work transition_work;
+	bool active;
+};
+static DEFINE_PER_CPU(struct thermal_bridge, thermal_bridge[NR_CPUS]);
+static unsigned long thermal_bridge_calc_cap(int cpu, unsigned long thermal_max_freq)
 {
-	return thermal_cap_cpu[cpu] ?: SCHED_CAPACITY_SCALE;
+	struct rq *rq = cpu_rq(cpu);
+#ifdef CONFIG_ENERGY_MODEL
+	int nr_cap_states;
+	struct root_domain *rd = rq->rd;
+	struct perf_domain *pd;
+	unsigned long freq, scale_cpu;
+
+	if (!max_cap[cpu]) {
+		rcu_read_lock();
+		pd = rcu_dereference(rd->pd);
+
+		if (!pd || !pd->em_pd || !pd->em_pd->table) {
+			rcu_read_unlock();
+			return rq->cpu_capacity_orig;
+		}
+
+		nr_cap_states = em_pd_nr_cap_states(pd->em_pd);
+		scale_cpu = arch_scale_cpu_capacity(NULL, cpu);
+		freq = pd->em_pd->table[nr_cap_states - 1].frequency;
+		max_cap[cpu] = DIV_ROUND_UP(scale_cpu * freq,
+					cpu_max_table_freq[cpu]);
+		rcu_read_unlock();
+	}
+#endif
+
+	if (cpu_max_table_freq[cpu])
+		return div64_ul(thermal_max_freq * max_cap[cpu],
+				cpu_max_table_freq[cpu]);
+	else
+		return rq->cpu_capacity_orig;
+}
+
+static void thermal_bridge_transition(struct work_struct *work)
+{
+	struct thermal_bridge *bridge = container_of(to_delayed_work(work),
+						struct thermal_bridge,
+						transition_work);
+	int cpu = smp_processor_id();
+	struct rq *rq = cpu_rq(cpu);
+	unsigned long old_cap, new_cap;
+	int cpu_id = rq->cpu;
+
+	old_cap = bridge->current_cap;
+	new_cap = bridge->target_cap;
+
+	/* Move 15% closer to target per step */
+	if (bridge->current_cap > bridge->target_cap)
+		bridge->current_cap -= (old_cap - new_cap) * 15 / 100;
+	else if (bridge->current_cap < bridge->target_cap)
+		bridge->current_cap += (new_cap - old_cap) * 15 / 100;
+
+	/* Update thermal_cap_cpu for the transition */
+	thermal_cap_cpu[cpu_id] = bridge->current_cap;
+
+	/* Continue if still not close enough */
+	if (abs(bridge->current_cap - bridge->target_cap) >
+	    (bridge->target_cap * thermal_bridge_hyst_pct / 100)) {
+		schedule_delayed_work(&bridge->transition_work,
+				    msecs_to_jiffies(thermal_bridge_step_ms));
+	} else {
+		bridge->active = false;
+		/* Ensure we end exactly at target */
+		bridge->current_cap = bridge->target_cap;
+		thermal_cap_cpu[cpu_id] = bridge->target_cap;
+	}
+}
+
+unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
+{
+	struct thermal_bridge *bridge = &per_cpu(thermal_bridge[0], cpu);
+	unsigned long new_cap = thermal_bridge_calc_cap(cpu, thermal_max_freq);
+	unsigned long old_cap = thermal_cap_cpu[cpu] ?: SCHED_CAPACITY_SCALE;
+
+	/* Apply hysteresis - ignore small changes */
+	if (abs(new_cap - old_cap) < (old_cap * thermal_bridge_hyst_pct / 100))
+		return old_cap;
+
+	/* Set bridge target and initiate smooth transition */
+	bridge->target_cap = new_cap;
+
+	if (!bridge->active) {
+		bridge->current_cap = old_cap;
+		bridge->active = true;
+		INIT_DELAYED_WORK(&bridge->transition_work,
+				thermal_bridge_transition);
+		/* Schedule immediate start */
+		schedule_delayed_work(&bridge->transition_work, 0);
+	}
+
+	return old_cap; /* Return old cap, new cap applied via bridge */
 }
 
 unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
@@ -3127,10 +3235,10 @@ void sched_update_cpu_freq_min_max(const cpumask_t *cpus, u32 fmin, u32 fmax)
 	cpumask_copy(&cpumask, cpus);
 
 	for_each_cpu(i, &cpumask)
-		thermal_cap_cpu[i] = do_thermal_cap(i, fmax);
-	
-    /* Propagate thermal cap to arch_topology layer */
-    topology_update_thermal_pressure(cpus, fmax);
+		do_thermal_cap(i, fmax);
+
+	/* Propagate thermal cap to arch_topology layer */
+	topology_update_thermal_pressure(cpus, fmax);
 
 	for_each_cpu(i, &cpumask) {
 		cluster = cpu_rq(i)->cluster;

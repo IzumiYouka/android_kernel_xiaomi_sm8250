@@ -25,12 +25,15 @@ unsigned long topology_get_cpu_scale(struct sched_domain *sd, int cpu)
 
 void topology_set_cpu_scale(unsigned int cpu, unsigned long capacity);
 
-DECLARE_PER_CPU(unsigned long, thermal_pressure);
+void topology_set_thermal_pressure(const struct cpumask *cpus, unsigned long th_pressure);
+
+/* Smoothed thermal pressure function - defined in drivers/base/arch_topology.c */
+unsigned long get_smooth_thermal_pressure(int cpu);
 
 static inline
 unsigned long topology_get_thermal_pressure(int cpu)
 {
-	return per_cpu(thermal_pressure, cpu);
+	return get_smooth_thermal_pressure(cpu);
 }
 
 void topology_set_thermal_pressure(const struct cpumask *cpus, unsigned long th_pressure);
