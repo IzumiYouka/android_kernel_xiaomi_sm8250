@@ -83,6 +83,13 @@ void topology_set_cpu_scale(unsigned int cpu, unsigned long capacity)
 
 DEFINE_PER_CPU(unsigned long, thermal_pressure);
 
+/*
+ * Thermal Pressure Bridge: Smooth thermal pressure transitions
+ * Storage for smoothed thermal pressure per CPU
+ */
+static DEFINE_PER_CPU(unsigned long, thermal_pressure_smooth);
+static DEFINE_PER_CPU(unsigned long, thermal_pressure_target);
+
 DEFINE_PER_CPU(unsigned long, arch_min_freq_scale);
 
 void arch_set_min_freq_scale(const struct cpumask *cpus,
@@ -102,13 +109,49 @@ void arch_set_min_freq_scale(const struct cpumask *cpus,
 }
 EXPORT_SYMBOL_GPL(arch_set_min_freq_scale);
 
+static int __read_mostly thermal_pressure_smoothing = 1;
+
+/*
+ * Get thermal pressure with smoothing applied
+ * Returns the smoothed thermal pressure value that gradually
+ * approaches the target value to prevent abrupt changes
+ */
+unsigned long get_smooth_thermal_pressure(int cpu)
+{
+	if (!thermal_pressure_smoothing)
+		return per_cpu(thermal_pressure, cpu);
+
+	unsigned long target = READ_ONCE(per_cpu(thermal_pressure_target, cpu));
+	unsigned long current = READ_ONCE(per_cpu(thermal_pressure_smooth, cpu));
+
+	/* Smooth approach: move 20% closer to target per read */
+	if (current != target) {
+		if (target > current)
+			current += (target - current) * 20 / 100;
+		else
+			current -= (current - target) * 20 / 100;
+
+		WRITE_ONCE(per_cpu(thermal_pressure_smooth, cpu), current);
+	}
+
+	return current;
+}
+EXPORT_SYMBOL_GPL(get_smooth_thermal_pressure);
+
 void topology_set_thermal_pressure(const struct cpumask *cpus,
 			       unsigned long th_pressure)
 {
 	int cpu;
 
-	for_each_cpu(cpu, cpus)
-		WRITE_ONCE(per_cpu(thermal_pressure, cpu), th_pressure);
+	for_each_cpu(cpu, cpus) {
+		/* Store target value for smooth application */
+		WRITE_ONCE(per_cpu(thermal_pressure_target, cpu), th_pressure);
+
+		/* Initialize smooth value if first time */
+		if (thermal_pressure_smoothing &&
+		    per_cpu(thermal_pressure_smooth, cpu) == 0)
+			WRITE_ONCE(per_cpu(thermal_pressure_smooth, cpu), th_pressure);
+	}
 }
 
 /**
