@@ -69,6 +69,7 @@
 #include <linux/mount.h>
 #include <linux/pipe_fs_i.h>
 #include <linux/userfaultfd_k.h>
+#include <linux/arch_topology.h>
 
 #include "../lib/kstrtox.h"
 
@@ -147,6 +148,8 @@ static int six_hundred_forty_kb = 640 * 1024;
 static int max_kswapd_threads = MAX_KSWAPD_THREADS;
 static int two_hundred_fifty_five = 255;
 static int __maybe_unused two_hundred_million = 200000000;
+static int __maybe_unused two_hundred = 200;
+static int __maybe_unused twenty = 20;
 
 #ifdef CONFIG_SCHED_WALT
 const int sched_user_hint_max = 1000;
@@ -852,32 +855,34 @@ static struct ctl_table kern_table[] = {
 	/*
 	 * Thermal Bridge Controls
 	 */
+#ifdef CONFIG_SCHED_WALT
 	{
 		.procname	= "sched_thermal_bridge_step_ms",
 		.data		= &thermal_bridge_step_ms,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
-		.proc_handler	= proc_dointvec,
+		.proc_handler	= proc_dointvec_minmax,
 		.extra1		= &zero,
-		.extra2		= &(int){200},
+		.extra2		= &two_hundred,
 	},
 	{
 		.procname	= "sched_thermal_bridge_hyst_pct",
 		.data		= &thermal_bridge_hyst_pct,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
-		.proc_handler	= proc_dointvec,
+		.proc_handler	= proc_dointvec_minmax,
 		.extra1		= &zero,
-		.extra2		= &(int){20},
+		.extra2		= &twenty,
 	},
+#endif
 	{
 		.procname	= "sched_thermal_pressure_smoothing",
 		.data		= &thermal_pressure_smoothing,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
-		.proc_handler	= proc_dointvec,
+		.proc_handler	= proc_dointvec_minmax,
 		.extra1		= &zero,
-		.extra2		= &(int){1},
+		.extra2		= &one,
 	},
 #ifdef CONFIG_SCHED_AUTOGROUP
 	{

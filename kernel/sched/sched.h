@@ -1246,14 +1246,6 @@ static inline void rq_clock_cancel_skipupdate(struct rq *rq)
 	rq->clock_update_flags &= ~RQCF_REQ_SKIP;
 }
 
-/*
- * Thermal Bridge External Declarations
- */
-#ifdef CONFIG_SCHED_WALT
-extern int thermal_bridge_step_ms;
-extern int thermal_bridge_hyst_pct;
-#endif
-
 struct rq_flags {
 	unsigned long flags;
 	struct pin_cookie cookie;
