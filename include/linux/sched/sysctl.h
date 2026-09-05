@@ -62,6 +62,12 @@ extern unsigned int sysctl_sched_prefer_spread;
 extern unsigned int sysctl_walt_rtg_cfs_boost_prio;
 extern unsigned int sysctl_walt_low_latency_task_threshold;
 
+/*
+ * Thermal Bridge: tunables for smooth thermal throttling transitions
+ */
+extern int thermal_bridge_step_ms;
+extern int thermal_bridge_hyst_pct;
+
 extern int
 walt_proc_group_thresholds_handler(struct ctl_table *table, int write,
 			 void __user *buffer, size_t *lenp,

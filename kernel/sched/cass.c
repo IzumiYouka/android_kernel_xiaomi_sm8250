@@ -33,8 +33,10 @@ struct cass_cpu_cand {
 };
 
 /*
- * Thermal hysteresis to prevent rapid CPU switching during thermal events
- * Stores last seen thermal capacity per CPU
+ * Thermal hysteresis to prevent rapid CPU switching during thermal events.
+ * Keeps the last capacity each CPU was seen with and only accepts an update
+ * once the change exceeds the hysteresis percentage; below the threshold the
+ * previous capacity is kept so CASS doesn't flip-flop between CPUs.
  */
 static DEFINE_PER_CPU(unsigned long, cass_last_thermal_cap);
 static int __read_mostly cass_thermal_hyst_pct = 3; /* 3% hysteresis */
@@ -42,15 +44,20 @@ static int __read_mostly cass_thermal_hyst_pct = 3; /* 3% hysteresis */
 static __always_inline
 void cass_apply_thermal_hyst(int cpu, unsigned long *cap)
 {
-	unsigned long current = *cap;
+	unsigned long new_cap = *cap;
 	unsigned long last = READ_ONCE(per_cpu(cass_last_thermal_cap, cpu));
+	unsigned long diff;
 
-	/* Apply hysteresis - only update if change > 3% */
-	if (abs(current - last) < (last * cass_thermal_hyst_pct / 100)) {
+	if (new_cap > last)
+		diff = new_cap - last;
+	else
+		diff = last - new_cap;
+
+	/* Accept the update only if the change exceeds 3% */
+	if (diff >= (last * cass_thermal_hyst_pct / 100))
+		WRITE_ONCE(per_cpu(cass_last_thermal_cap, cpu), new_cap);
+	else
 		*cap = last; /* Keep previous capacity */
-	} else {
-		WRITE_ONCE(per_cpu(cass_last_thermal_cap, cpu), current);
-	}
 }
 
 static __always_inline

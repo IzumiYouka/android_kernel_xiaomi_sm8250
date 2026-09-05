@@ -30,6 +30,9 @@ void topology_set_thermal_pressure(const struct cpumask *cpus, unsigned long th_
 /* Smoothed thermal pressure function - defined in drivers/base/arch_topology.c */
 unsigned long get_smooth_thermal_pressure(int cpu);
 
+/* Thermal pressure smoothing enable/disable (sysctl) */
+extern int thermal_pressure_smoothing;
+
 static inline
 unsigned long topology_get_thermal_pressure(int cpu)
 {
