@@ -109,7 +109,7 @@ void arch_set_min_freq_scale(const struct cpumask *cpus,
 }
 EXPORT_SYMBOL_GPL(arch_set_min_freq_scale);
 
-static int __read_mostly thermal_pressure_smoothing = 1;
+int thermal_pressure_smoothing __read_mostly = 1;
 
 /*
  * Get thermal pressure with smoothing applied
@@ -118,23 +118,25 @@ static int __read_mostly thermal_pressure_smoothing = 1;
  */
 unsigned long get_smooth_thermal_pressure(int cpu)
 {
+	unsigned long target, cur;
+
 	if (!thermal_pressure_smoothing)
 		return per_cpu(thermal_pressure, cpu);
 
-	unsigned long target = READ_ONCE(per_cpu(thermal_pressure_target, cpu));
-	unsigned long current = READ_ONCE(per_cpu(thermal_pressure_smooth, cpu));
+	target = READ_ONCE(per_cpu(thermal_pressure_target, cpu));
+	cur = READ_ONCE(per_cpu(thermal_pressure_smooth, cpu));
 
 	/* Smooth approach: move 20% closer to target per read */
-	if (current != target) {
-		if (target > current)
-			current += (target - current) * 20 / 100;
+	if (cur != target) {
+		if (target > cur)
+			cur += (target - cur) * 20 / 100;
 		else
-			current -= (current - target) * 20 / 100;
+			cur -= (cur - target) * 20 / 100;
 
-		WRITE_ONCE(per_cpu(thermal_pressure_smooth, cpu), current);
+		WRITE_ONCE(per_cpu(thermal_pressure_smooth, cpu), cur);
 	}
 
-	return current;
+	return cur;
 }
 EXPORT_SYMBOL_GPL(get_smooth_thermal_pressure);
 
