@@ -146,11 +146,20 @@ void topology_set_thermal_pressure(const struct cpumask *cpus,
 	int cpu;
 
 	for_each_cpu(cpu, cpus) {
+		/* Store the raw pressure: the !smoothing reader in
+		 * get_smooth_thermal_pressure() depends on it. */
+		WRITE_ONCE(per_cpu(thermal_pressure, cpu), th_pressure);
+
 		/* Store target value for smooth application */
 		WRITE_ONCE(per_cpu(thermal_pressure_target, cpu), th_pressure);
 
-		/* Initialize smooth value if first time */
-		if (thermal_pressure_smoothing &&
+		/*
+		 * Re-seed the smooth value whenever it is fully decayed and a
+		 * nonzero pressure arrives, regardless of the smoothing flag:
+		 * if smoothing was disabled and re-enabled mid-throttle, the
+		 * smooth value would otherwise stay pinned at 0.
+		 */
+		if (th_pressure &&
 		    per_cpu(thermal_pressure_smooth, cpu) == 0)
 			WRITE_ONCE(per_cpu(thermal_pressure_smooth, cpu), th_pressure);
 	}
