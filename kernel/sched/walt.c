@@ -2468,6 +2468,38 @@ static void update_all_clusters_stats(void)
 	release_rq_locks_irqrestore(cpu_possible_mask, &flags);
 }
 
+/*
+ * Thermal Bridge: Smooth thermal cap transitions
+ *
+ * Instead of snapping the per-cluster capacity to the thermal target in one
+ * step (which causes CASS to reshuffle tasks all at once and produces
+ * visible stutter), the requested cap is applied gradually: a per-cluster
+ * work item walks the capacity toward the target, moving 15% of the
+ * remaining distance per step. Small requests (< hysteresis %) are
+ * ignored to avoid burning workqueue cycles on noise.
+ *
+ * One bridge per cluster: all CPUs in a cluster share a frequency domain,
+ * so they always share the same thermal cap. Fields are written by the
+ * cpufreq poller under cpu_freq_min_max_lock and read unsynchronized by
+ * the transition work; word-atomic unsigned long access on arm64 makes a
+ * stale read at worst a single misdirected step.
+ */
+struct thermal_bridge {
+	unsigned long target_cap;
+	unsigned long current_cap;
+	unsigned long max_cap_em;	/* cached EM max capacity */
+	struct delayed_work transition_work;
+	bool active;
+};
+
+/* Indexed by cluster->id; initialized in update_cluster_topology(). */
+static struct thermal_bridge thermal_bridge[MAX_NR_CLUSTERS];
+
+int thermal_bridge_step_ms __read_mostly = 50;
+int thermal_bridge_hyst_pct __read_mostly = 5;
+
+static void thermal_bridge_transition(struct work_struct *work);
+
 void update_cluster_topology(void)
 {
 	struct cpumask cpus = *cpu_possible_mask;
@@ -2490,6 +2522,17 @@ void update_cluster_topology(void)
 	}
 
 	assign_cluster_ids(&new_head);
+
+	/* Initialize one thermal bridge per cluster, now that cluster ids
+	 * are final. This runs from sched_init_smp(), before the cpufreq
+	 * policy notifiers that drive the bridge can fire. */
+	for (i = 0; i < num_sched_clusters; i++) {
+		struct thermal_bridge *bridge = &thermal_bridge[sched_cluster[i]->id];
+
+		memset(bridge, 0, sizeof(*bridge));
+		INIT_DELAYED_WORK(&bridge->transition_work,
+				  thermal_bridge_transition);
+	}
 
 	/*
 	 * Ensure cluster ids are visible to all CPUs before making
@@ -3073,82 +3116,49 @@ static bool is_cluster_hosting_top_app(struct sched_cluster *cluster)
 	return (is_min_capacity_cluster(cluster) == grp_on_min);
 }
 
-static unsigned long max_cap[NR_CPUS];
-static unsigned long thermal_cap_cpu[NR_CPUS];
-
-/*
- * Thermal Bridge: Smooth thermal cap transitions
- *
- * Instead of snapping the per-CPU capacity to the thermal target in one
- * step (which causes CASS to reshuffle tasks all at once and produces
- * visible stutter), the requested cap is applied gradually: a per-CPU
- * work item walks the capacity toward the target, moving 15% of the
- * remaining distance per step. Small requests (< hysteresis %) are
- * ignored to avoid burning workqueue cycles on noise.
- */
-struct thermal_bridge {
-	unsigned long target_cap;
-	unsigned long current_cap;
-	struct delayed_work transition_work;
-	bool active;
-};
-
-/*
- * One bridge per CPU. Indexed directly with the target CPU rather than
- * per_cpu() so that a remote CPU's transition can be updated while
- * holding the freq min/max spinlock.
- */
-static struct thermal_bridge thermal_bridge[NR_CPUS];
-
-int thermal_bridge_step_ms __read_mostly = 50;
-int thermal_bridge_hyst_pct __read_mostly = 5;
-
 unsigned long thermal_cap(int cpu)
 {
-	struct thermal_bridge *bridge = &thermal_bridge[cpu];
+	struct sched_cluster *cluster = cpu_cluster(cpu);
+	struct thermal_bridge *bridge;
 
-	if (bridge->active)
-		return bridge->current_cap;
+	if (cluster && cluster->id >= 0 && cluster->id < MAX_NR_CLUSTERS) {
+		bridge = &thermal_bridge[cluster->id];
+		return bridge->current_cap ?: SCHED_CAPACITY_SCALE;
+	}
 
-	return thermal_cap_cpu[cpu] ?: SCHED_CAPACITY_SCALE;
+	return SCHED_CAPACITY_SCALE;
 }
 
-static unsigned long thermal_bridge_calc_cap(int cpu, unsigned long thermal_max_freq)
+static unsigned long thermal_bridge_calc_cap(struct sched_cluster *cluster,
+					     unsigned long thermal_max_freq)
 {
+	int cpu = cluster_first_cpu(cluster);
 	struct rq *rq = cpu_rq(cpu);
 #ifdef CONFIG_ENERGY_MODEL
-	int nr_cap_states;
-	struct root_domain *rd = rq->rd;
-	struct perf_domain *pd;
+	struct em_perf_domain *pd;
 	unsigned long freq, scale_cpu;
 
-	if (!max_cap[cpu]) {
-		rcu_read_lock();
-		pd = rcu_dereference(rd->pd);
+	if (!thermal_bridge[cluster->id].max_cap_em) {
+		pd = em_cpu_get(cpu);
 
-		if (!pd || !pd->em_pd || !pd->em_pd->table) {
-			rcu_read_unlock();
+		if (!pd || !pd->table)
 			return rq->cpu_capacity_orig;
-		}
 
 		/* cpu_max_table_freq[] is populated by the cpufreq policy
 		 * notifier, which may not have run yet on the first call. */
-		if (!cpu_max_table_freq[cpu]) {
-			rcu_read_unlock();
+		if (!cpu_max_table_freq[cpu])
 			return rq->cpu_capacity_orig;
-		}
 
-		nr_cap_states = em_pd_nr_cap_states(pd->em_pd);
 		scale_cpu = arch_scale_cpu_capacity(NULL, cpu);
-		freq = pd->em_pd->table[nr_cap_states - 1].frequency;
-		max_cap[cpu] = DIV_ROUND_UP(scale_cpu * freq,
-					cpu_max_table_freq[cpu]);
-		rcu_read_unlock();
+		freq = pd->table[pd->nr_cap_states - 1].frequency;
+		thermal_bridge[cluster->id].max_cap_em =
+			DIV_ROUND_UP(scale_cpu * freq, cpu_max_table_freq[cpu]);
 	}
 #endif
 
 	if (cpu_max_table_freq[cpu])
-		return div64_ul(thermal_max_freq * max_cap[cpu],
+		return div64_ul(thermal_max_freq *
+				thermal_bridge[cluster->id].max_cap_em,
 				cpu_max_table_freq[cpu]);
 	else
 		return rq->cpu_capacity_orig;
@@ -3159,7 +3169,6 @@ static void thermal_bridge_transition(struct work_struct *work)
 	struct thermal_bridge *bridge = container_of(to_delayed_work(work),
 						struct thermal_bridge,
 						transition_work);
-	int cpu = bridge - thermal_bridge;
 	unsigned long diff, step;
 
 	/*
@@ -3179,8 +3188,6 @@ static void thermal_bridge_transition(struct work_struct *work)
 		return;
 	}
 
-	WRITE_ONCE(thermal_cap_cpu[cpu], bridge->current_cap);
-
 	/*
 	 * A step that rounds down to zero can never close the remaining
 	 * distance, which would keep this work rescheduling itself forever.
@@ -3199,38 +3206,16 @@ static void thermal_bridge_transition(struct work_struct *work)
 	} else {
 		/* Land exactly on the target and finish */
 		bridge->current_cap = bridge->target_cap;
-		WRITE_ONCE(thermal_cap_cpu[cpu], bridge->target_cap);
 		bridge->active = false;
 	}
 }
 
-/*
- * One-time init of all bridge work items. Callers hold cpu_freq_min_max_lock,
- * which makes this race-free without extra synchronization.
- */
-static bool thermal_bridge_init_done;
-
-static void thermal_bridge_init(void)
+static void do_thermal_cap(struct sched_cluster *cluster, unsigned long thermal_max_freq)
 {
-	int i;
-
-	if (thermal_bridge_init_done)
-		return;
-
-	thermal_bridge_init_done = true;
-	for (i = 0; i < NR_CPUS; i++)
-		INIT_DELAYED_WORK(&thermal_bridge[i].transition_work,
-				  thermal_bridge_transition);
-}
-
-unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
-{
-	struct thermal_bridge *bridge = &thermal_bridge[cpu];
-	unsigned long new_cap = thermal_bridge_calc_cap(cpu, thermal_max_freq);
-	unsigned long old_cap = thermal_cap_cpu[cpu] ?: SCHED_CAPACITY_SCALE;
+	struct thermal_bridge *bridge = &thermal_bridge[cluster->id];
+	unsigned long new_cap = thermal_bridge_calc_cap(cluster, thermal_max_freq);
+	unsigned long old_cap = bridge->current_cap ?: SCHED_CAPACITY_SCALE;
 	unsigned long diff;
-
-	thermal_bridge_init();
 
 	/* Ignore changes smaller than the hysteresis threshold */
 	if (new_cap > old_cap)
@@ -3241,7 +3226,7 @@ unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
 	if (diff < (old_cap * thermal_bridge_hyst_pct / 100)) {
 		/* Still refresh the target in case a transition is running */
 		bridge->target_cap = new_cap;
-		return old_cap;
+		return;
 	}
 
 	bridge->target_cap = new_cap;
@@ -3252,8 +3237,6 @@ unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
 		/* First step immediately, subsequent steps use step_ms */
 		schedule_delayed_work(&bridge->transition_work, 0);
 	}
-
-	return old_cap;
 }
 
 static DEFINE_SPINLOCK(cpu_freq_min_max_lock);
@@ -3267,8 +3250,12 @@ void sched_update_cpu_freq_min_max(const cpumask_t *cpus, u32 fmin, u32 fmax)
 	spin_lock_irqsave(&cpu_freq_min_max_lock, flags);
 	cpumask_copy(&cpumask, cpus);
 
-	for_each_cpu(i, &cpumask)
-		do_thermal_cap(i, fmax);
+	for_each_cpu(i, &cpumask) {
+		cluster = cpu_rq(i)->cluster;
+		do_thermal_cap(cluster, fmax);
+		/* Each cluster intersects the mask exactly once */
+		cpumask_andnot(&cpumask, &cpumask, &cluster->cpus);
+	}
 
 	/* Propagate thermal cap to arch_topology layer */
 	topology_update_thermal_pressure(cpus, fmax);
