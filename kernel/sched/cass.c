@@ -33,32 +33,12 @@ struct cass_cpu_cand {
 };
 
 /*
- * Thermal hysteresis to prevent rapid CPU switching during thermal events.
- * Keeps the last capacity each CPU was seen with and only accepts an update
- * once the change exceeds the hysteresis percentage; below the threshold the
- * previous capacity is kept so CASS doesn't flip-flop between CPUs.
+ * Thermal hysteresis is handled by the walt thermal bridge (target
+ * hysteresis + gradual ramp) and the PELT-decayed thermal pressure. A
+ * per-wakeup quantizer here would apply its acceptance gate at slightly
+ * different instants on different CPUs, leaving their reported capacities
+ * apart and making CASS's relative-utilization comparisons flip.
  */
-static DEFINE_PER_CPU(unsigned long, cass_last_thermal_cap);
-static int __read_mostly cass_thermal_hyst_pct = 3; /* 3% hysteresis */
-
-static __always_inline
-void cass_apply_thermal_hyst(int cpu, unsigned long *cap)
-{
-	unsigned long new_cap = *cap;
-	unsigned long last = READ_ONCE(per_cpu(cass_last_thermal_cap, cpu));
-	unsigned long diff;
-
-	if (new_cap > last)
-		diff = new_cap - last;
-	else
-		diff = last - new_cap;
-
-	/* Accept the update only if the change exceeds 3% */
-	if (diff >= (last * cass_thermal_hyst_pct / 100))
-		WRITE_ONCE(per_cpu(cass_last_thermal_cap, cpu), new_cap);
-	else
-		*cap = last; /* Keep previous capacity */
-}
 
 static __always_inline
 void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
@@ -90,9 +70,6 @@ void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
 	c->cap = min_t(unsigned long, c->cap,
 		       arch_scale_cpu_capacity(NULL, c->cpu) -
 		       thermal_load_avg(cpu_rq(c->cpu)));
-
-	/* Apply thermal hysteresis to prevent rapid CPU switching */
-	cass_apply_thermal_hyst(c->cpu, &c->cap);
 
 	/*
 	 * Account for lost capacity due to time spent in RT/DL tasks and IRQs.
