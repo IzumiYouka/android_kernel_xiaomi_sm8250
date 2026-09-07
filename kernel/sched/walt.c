@@ -3131,6 +3131,13 @@ static unsigned long thermal_bridge_calc_cap(int cpu, unsigned long thermal_max_
 			return rq->cpu_capacity_orig;
 		}
 
+		/* cpu_max_table_freq[] is populated by the cpufreq policy
+		 * notifier, which may not have run yet on the first call. */
+		if (!cpu_max_table_freq[cpu]) {
+			rcu_read_unlock();
+			return rq->cpu_capacity_orig;
+		}
+
 		nr_cap_states = em_pd_nr_cap_states(pd->em_pd);
 		scale_cpu = arch_scale_cpu_capacity(NULL, cpu);
 		freq = pd->em_pd->table[nr_cap_states - 1].frequency;
@@ -3153,7 +3160,7 @@ static void thermal_bridge_transition(struct work_struct *work)
 						struct thermal_bridge,
 						transition_work);
 	int cpu = bridge - thermal_bridge;
-	unsigned long diff;
+	unsigned long diff, step;
 
 	/*
 	 * Move 15% of the remaining distance toward the target. Keep the
@@ -3161,10 +3168,12 @@ static void thermal_bridge_transition(struct work_struct *work)
 	 */
 	if (bridge->current_cap > bridge->target_cap) {
 		diff = bridge->current_cap - bridge->target_cap;
-		bridge->current_cap -= diff * 15 / 100;
+		step = diff * 15 / 100;
+		bridge->current_cap -= step;
 	} else if (bridge->current_cap < bridge->target_cap) {
 		diff = bridge->target_cap - bridge->current_cap;
-		bridge->current_cap += diff * 15 / 100;
+		step = diff * 15 / 100;
+		bridge->current_cap += step;
 	} else {
 		bridge->active = false;
 		return;
@@ -3172,8 +3181,14 @@ static void thermal_bridge_transition(struct work_struct *work)
 
 	WRITE_ONCE(thermal_cap_cpu[cpu], bridge->current_cap);
 
-	/* Keep stepping until within hysteresis% of the target */
-	if (bridge->current_cap > bridge->target_cap)
+	/*
+	 * A step that rounds down to zero can never close the remaining
+	 * distance, which would keep this work rescheduling itself forever.
+	 * Land exactly on the target when no further progress is possible.
+	 */
+	if (!step)
+		diff = 0;
+	else if (bridge->current_cap > bridge->target_cap)
 		diff = bridge->current_cap - bridge->target_cap;
 	else
 		diff = bridge->target_cap - bridge->current_cap;
@@ -3189,12 +3204,33 @@ static void thermal_bridge_transition(struct work_struct *work)
 	}
 }
 
+/*
+ * One-time init of all bridge work items. Callers hold cpu_freq_min_max_lock,
+ * which makes this race-free without extra synchronization.
+ */
+static bool thermal_bridge_init_done;
+
+static void thermal_bridge_init(void)
+{
+	int i;
+
+	if (thermal_bridge_init_done)
+		return;
+
+	thermal_bridge_init_done = true;
+	for (i = 0; i < NR_CPUS; i++)
+		INIT_DELAYED_WORK(&thermal_bridge[i].transition_work,
+				  thermal_bridge_transition);
+}
+
 unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
 {
 	struct thermal_bridge *bridge = &thermal_bridge[cpu];
 	unsigned long new_cap = thermal_bridge_calc_cap(cpu, thermal_max_freq);
 	unsigned long old_cap = thermal_cap_cpu[cpu] ?: SCHED_CAPACITY_SCALE;
 	unsigned long diff;
+
+	thermal_bridge_init();
 
 	/* Ignore changes smaller than the hysteresis threshold */
 	if (new_cap > old_cap)
@@ -3213,8 +3249,6 @@ unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
 	if (!bridge->active) {
 		bridge->current_cap = old_cap;
 		bridge->active = true;
-		INIT_DELAYED_WORK(&bridge->transition_work,
-				thermal_bridge_transition);
 		/* First step immediately, subsequent steps use step_ms */
 		schedule_delayed_work(&bridge->transition_work, 0);
 	}
