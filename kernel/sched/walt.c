@@ -2488,6 +2488,8 @@ struct thermal_bridge {
 	unsigned long target_cap;
 	unsigned long current_cap;
 	unsigned long max_cap_em;	/* cached EM max capacity */
+	unsigned long pending_target;	/* debounce candidate */
+	unsigned long pending_since;	/* jiffies of first candidate report */
 	struct delayed_work transition_work;
 	bool active;
 };
@@ -3210,12 +3212,28 @@ static void thermal_bridge_transition(struct work_struct *work)
 	}
 }
 
+/*
+ * DCVS-h re-reports OPP-adjacent max frequencies (~5.7% apart) on
+ * consecutive 4ms polls. Each change slips through the 5% hysteresis gate
+ * and re-targets the transition, so the ramp keeps redirecting and CASS
+ * sees a wobbling capacity. Collapse such flapping candidates into a
+ * single committed target by requiring the value to be stable for two
+ * consecutive polls. Real throttle events change capacity by well over
+ * this threshold, so they take the immediate-commit fast path instead.
+ *
+ * ~5.7% (DCVS-h granularity) sits on one side and >= ~10% (real events)
+ * on the other, leaving ~2x margin each way.
+ */
+#define THERMAL_BRIDGE_DEBOUNCE_FRAC	10	/* immediate-commit, % capacity */
+#define THERMAL_BRIDGE_DEBOUNCE_MS	8	/* ~2 DCVS-h poll intervals */
+
 static void do_thermal_cap(struct sched_cluster *cluster, unsigned long thermal_max_freq)
 {
 	struct thermal_bridge *bridge = &thermal_bridge[cluster->id];
 	unsigned long new_cap = thermal_bridge_calc_cap(cluster, thermal_max_freq);
 	unsigned long old_cap = bridge->current_cap ?: SCHED_CAPACITY_SCALE;
 	unsigned long diff;
+	bool commit = false;
 
 	/* Ignore changes smaller than the hysteresis threshold */
 	if (new_cap > old_cap)
@@ -3229,13 +3247,32 @@ static void do_thermal_cap(struct sched_cluster *cluster, unsigned long thermal_
 		return;
 	}
 
-	bridge->target_cap = new_cap;
+	/*
+	 * Large moves are real throttle events and must not be delayed.
+	 * Small moves (around the DCVS-h granularity) are debounced.
+	 */
+	if (diff >= (old_cap * THERMAL_BRIDGE_DEBOUNCE_FRAC / 100))
+		commit = true;
+	else if (new_cap == bridge->pending_target)
+		commit = time_after_eq(jiffies,
+				       bridge->pending_since +
+				       msecs_to_jiffies(THERMAL_BRIDGE_DEBOUNCE_MS));
+	else {
+		bridge->pending_target = new_cap;
+		bridge->pending_since = jiffies;
+		return;
+	}
 
-	if (!bridge->active) {
-		bridge->current_cap = old_cap;
-		bridge->active = true;
-		/* First step immediately, subsequent steps use step_ms */
-		schedule_delayed_work(&bridge->transition_work, 0);
+	if (commit) {
+		bridge->pending_target = 0;
+		bridge->target_cap = new_cap;
+
+		if (!bridge->active) {
+			bridge->current_cap = old_cap;
+			bridge->active = true;
+			/* First step immediately, subsequent steps use step_ms */
+			schedule_delayed_work(&bridge->transition_work, 0);
+		}
 	}
 }
 
