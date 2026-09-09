@@ -2778,6 +2778,12 @@ unsigned long scale_irq_capacity(unsigned long util, unsigned long irq, unsigned
 
 #ifdef CONFIG_SMP
 extern struct static_key_false sched_energy_present;
+static inline bool sched_energy_enabled(void)
+{
+	return static_branch_unlikely(&sched_energy_present);
+}
+#else
+static inline bool sched_energy_enabled(void) { return false; }
 #endif
 
 enum sched_boost_policy {
