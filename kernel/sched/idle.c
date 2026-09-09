@@ -421,6 +421,9 @@ dequeue_task_idle(struct rq *rq, struct task_struct *p, int flags)
 
 static void put_prev_task_idle(struct rq *rq, struct task_struct *prev)
 {
+#ifdef CONFIG_SMP
+	update_rq_avg_idle(rq);
+#endif
 }
 
 /*
