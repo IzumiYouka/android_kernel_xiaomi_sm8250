@@ -2413,20 +2413,39 @@ static void ttwu_do_wakeup(struct rq *rq, struct task_struct *p, int wake_flags,
 		p->sched_class->task_woken(rq, p);
 		rq_repin_lock(rq, rf);
 	}
-
-	if (rq->idle_stamp) {
-		u64 delta = rq_clock(rq) - rq->idle_stamp;
-		u64 max = 2*rq->max_idle_balance_cost;
-
-		update_avg(&rq->avg_idle, delta);
-
-		if (rq->avg_idle > max)
-			rq->avg_idle = max;
-
-		rq->idle_stamp = 0;
-	}
 #endif
 }
+
+#ifdef CONFIG_SMP
+/*
+ * End the CPU's idle epoch: fold the idle duration into rq->avg_idle and
+ * clear the stamp. Called when the CPU stops being idle, regardless of how
+ * the new task arrived (wakeup, fork/exec or migration).
+ *
+ * Unlike upstream (which removed the guard because idle_stamp is set
+ * unconditionally there), keep the zero-stamp check: our newidle_balance()
+ * returns early on cpu_isolated() before setting idle_stamp, so a zero
+ * stamp would otherwise make delta = time-since-boot and saturate
+ * avg_idle.
+ */
+void update_rq_avg_idle(struct rq *rq)
+{
+	u64 delta, max;
+
+	if (!rq->idle_stamp)
+		return;
+
+	delta = rq_clock(rq) - rq->idle_stamp;
+	max = 2*rq->max_idle_balance_cost;
+
+	update_avg(&rq->avg_idle, delta);
+
+	if (rq->avg_idle > max)
+		rq->avg_idle = max;
+
+	rq->idle_stamp = 0;
+}
+#endif
 
 static void
 ttwu_do_activate(struct rq *rq, struct task_struct *p, int wake_flags,
