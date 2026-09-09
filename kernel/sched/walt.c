@@ -2497,8 +2497,8 @@ struct thermal_bridge {
 /* Indexed by cluster->id; initialized in update_cluster_topology(). */
 static struct thermal_bridge thermal_bridge[MAX_NR_CLUSTERS];
 
-int thermal_bridge_step_ms __read_mostly = 50;
-int thermal_bridge_hyst_pct __read_mostly = 5;
+int thermal_bridge_step_ms __read_mostly = 100;
+int thermal_bridge_hyst_pct __read_mostly = 8;
 
 static void thermal_bridge_transition(struct work_struct *work);
 
