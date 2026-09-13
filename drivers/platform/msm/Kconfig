@@ -87,6 +87,16 @@ config IPA3
 	  Kernel and user-space processes can call the IPA driver
 	  to configure IPA core.
 
+config DISABLE_IPA_WAKELOCKS
+	tristate "Disable IPA Wakelocks"
+	depends on IPA3
+	default n
+	help
+	  Disables the wakelocks created by the IPA driver in order to save
+	  power.  With this enabled the IPA driver no longer pins a
+	  wakelock while datapath clients are active and polling, so the
+	  system can reach low-power idle states.
+
 config IPA
 	tristate "IPA support"
 	depends on SPS && NET
