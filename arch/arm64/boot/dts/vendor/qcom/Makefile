@@ -548,6 +548,6 @@ endif
 
 endif # CONFIG_MACH_XIAOMI
 
-always		:= $(dtb-y)
+always		:= $(dtb-y) $(dtbo-y)
 subdir-y	:= $(dts-dirs)
 clean-files    := *.dtb *.dtbo
