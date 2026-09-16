@@ -542,7 +542,6 @@ And public attribution of xiaomi platforms(like alioth and so and)
 				4450000  3536000>;
 	mi,six-pin-step-chg;
 	mi,six-pin-soc-th = <22>;
-	mi,fcc-batt-unverify-ua = <2000000>;
 	mi,support-ffc;
 	qcom,lpd-disable;
 	mi,use-bq-pump;
@@ -617,7 +616,6 @@ And public attribution of xiaomi platforms(like alioth and so and)
 	qcom,soc-hi-res;
 	qcom,sun-profile-only;
 	qcom,k11a-batt-profile;
-	qcom,j3s-batt-profile;
 	qcom,soc_decimal_rate = <
 		0  38
 		10 35
