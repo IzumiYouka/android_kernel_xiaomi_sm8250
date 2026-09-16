@@ -3978,6 +3978,7 @@ void sde_kms_kickoff_count(struct sde_kms *sde_kms)
 			display = sde_kms->dsi_displays[i];
 		}
 	}
+}
 
 	return;
 }
