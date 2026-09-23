@@ -5208,9 +5208,6 @@ int dsi_panel_enable(struct dsi_panel *panel)
 		return -EINVAL;
 	}
 
-	if (panel->hbm_mode)
-		dsi_panel_apply_hbm_mode(panel);
-
 	mutex_lock(&panel->panel_lock);
 
 	mi_cfg = &panel->mi_cfg;
@@ -5272,6 +5269,15 @@ int dsi_panel_enable(struct dsi_panel *panel)
 	fm_stat.idle_status = false;
 
 	mutex_unlock(&panel->panel_lock);
+
+	/*
+	 * Re-apply the persisted HBM mode only after the panel is fully
+	 * enabled and panel_lock is released: the Xiaomi disp_param path
+	 * requires an initialized panel and takes panel_lock itself.
+	 */
+	if (panel->hbm_mode && panel->panel_initialized)
+		dsi_panel_apply_hbm_mode(panel);
+
 	return rc;
 }
 
@@ -5545,13 +5551,23 @@ int dsi_panel_apply_hbm_mode(struct dsi_panel *panel)
 	};
 
 	enum dsi_cmd_set_type type;
+	bool hbm_on;
 	int rc;
 
-	if (panel->hbm_mode >= 0 &&
-		panel->hbm_mode < ARRAY_SIZE(type_map))
-		type = type_map[panel->hbm_mode];
-	else
-		type = type_map[0];
+	hbm_on = panel->hbm_mode >= 0 &&
+		panel->hbm_mode < ARRAY_SIZE(type_map) && panel->hbm_mode;
+
+	/*
+	 * Route through the Xiaomi disp_param path when the mi feature
+	 * stack is enabled so that hbm_enabled/dimming_state bookkeeping,
+	 * FOD/thermal HBM gating and the backlight restore embedded in the
+	 * HBM off command stay in sync with the hbm sysfs node.
+	 */
+	if (panel->mi_cfg.mi_feature_enabled)
+		return dsi_panel_set_disp_param(panel, hbm_on ?
+				DISPPARAM_HBM_ON : DISPPARAM_HBM_OFF);
+
+	type = hbm_on ? type_map[1] : type_map[0];
 
 	mutex_lock(&panel->panel_lock);
 	rc = dsi_panel_tx_cmd_set(panel, type);
