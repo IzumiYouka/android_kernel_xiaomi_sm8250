@@ -6736,33 +6736,18 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 static int select_idle_sibling(struct task_struct *p, int prev, int target)
 {
 	struct sched_domain *sd;
-	unsigned long task_util = 0;
 	int i, recent_used_cpu;
 
-	/*
-	 * On asymmetric system, update task utilization because we will check
-	 * that the task fits with cpu's capacity.
-	 */
-	if (static_branch_unlikely(&sched_asym_cpucapacity)) {
-		sync_entity_load_avg(&p->se);
-		task_util = uclamp_task_util(p);
-	}
-
-	if (((available_idle_cpu(target) || idle_cpu(target)) &&
-	    !cpu_isolated(target) &&
-	    asym_fits_capacity(task_util, target)) ||
-		sched_idle_cpu(target))
+	if ((available_idle_cpu(target) || sched_idle_cpu(target)) &&
+	    !cpu_isolated(target))
 		return target;
 
 	/*
 	 * If the previous CPU is cache affine and idle, don't be stupid:
 	 */
-	if ((prev != target && cpus_share_cache(prev, target) &&
-  	  (available_idle_cpu(prev) || idle_cpu(prev)) &&
-  		!cpu_isolated(prev) &&
-   		asym_fits_capacity(task_util, prev)) ||
-   	sched_idle_cpu(prev))
-		
+	if (prev != target && cpus_share_cache(prev, target) &&
+	    (available_idle_cpu(prev) || sched_idle_cpu(prev)) &&
+	    !cpu_isolated(prev))
 		return prev;
 
 	/* Check a recently used CPU as a potential idle candidate: */
@@ -6770,11 +6755,11 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	if (recent_used_cpu != prev &&
 	    recent_used_cpu != target &&
 	    cpus_share_cache(recent_used_cpu, target) &&
-	  (available_idle_cpu(recent_used_cpu) || idle_cpu(recent_used_cpu) ||
-    	sched_idle_cpu(recent_used_cpu)) &&
-    	!cpu_isolated(recent_used_cpu) &&
-    	cpumask_test_cpu(p->recent_used_cpu, &p->cpus_allowed) &&
-    	asym_fits_capacity(task_util, recent_used_cpu)) {		/*
+	    (available_idle_cpu(recent_used_cpu) ||
+	     sched_idle_cpu(recent_used_cpu)) &&
+	    !cpu_isolated(recent_used_cpu) &&
+	    cpumask_test_cpu(p->recent_used_cpu, &p->cpus_allowed)) {
+		/*
 		 * Replace recent_used_cpu with prev as it is a potential
 		 * candidate for the next wake:
 		 */

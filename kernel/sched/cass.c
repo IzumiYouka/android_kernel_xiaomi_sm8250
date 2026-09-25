@@ -50,7 +50,7 @@ void cass_cpu_util(struct cass_cpu_cand *c, int this_cpu, bool sync)
 		}
 	}
 
-	/* Get the capacity of this CPU adjusted for thermal pressure */
+	/* Get this CPU's capacity, without any thermal pressure applied */
 	c->cap = arch_scale_cpu_capacity(NULL, c->cpu);
 
 	/*
@@ -136,7 +136,7 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync, bool rt
 	struct cass_cpu_cand cands[2], *best = cands;
 	int this_cpu = raw_smp_processor_id();
 	bool has_idle = false;
-	unsigned long p_util, uc_min;
+	unsigned long p_util;
 	int cidx = 0, cpu, prev_llc_id;
 
 	/*
