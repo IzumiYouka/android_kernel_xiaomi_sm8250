@@ -1147,31 +1147,19 @@ static struct cpufreq_governor schedutil_gov;
  * before the next decision point is reached. The headroom below caters for
  * that delay.
  *
- * Cubic normalized headroom: capacity-aware curve that peaks earlier in the
- * utilization range and backs off near saturation, with low-utilization
- * suppression below 15% of capacity to avoid ramping for light background
- * work. This is the exact curve previously applied through the generic
- * map_util_freq() helper, precomputed here once per policy so the hot path
- * performs a single table lookup instead of the cubic arithmetic.
+ * Fixed 25% headroom, equivalent to the traditional 1.25 * util mapping.
+ * The tapered cubic curve was reverted because it starved the top
+ * frequencies: a busy single thread could no longer reach fmax, which cost
+ * peak performance. The value is still precomputed per policy so the hot
+ * path performs a single table lookup.
  */
 static unsigned long calc_dvfs_headroom(unsigned long util,
 					unsigned long cap)
 {
-	unsigned long threshold, delta, delta_t, headroom;
-
 	if (!util || util >= cap || !cap)
 		return 0;
 
-	threshold = cap * 15 / 100;
-	delta = cap - util;
-	delta_t = cap - threshold;
-
-	headroom = delta * delta * delta * 5 / (delta_t * cap * 16);
-
-	if (util < threshold)
-		headroom = headroom * util * util / (threshold * threshold);
-
-	return headroom;
+	return util >> 2;
 }
 
 static void sugov_build_dvfs_headroom_lut(struct sugov_policy *sg_policy)

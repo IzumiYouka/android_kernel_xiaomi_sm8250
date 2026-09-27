@@ -30,35 +30,9 @@ void cpufreq_remove_update_util_hook(int cpu);
 bool cpufreq_this_cpu_can_update(struct cpufreq_policy *policy);
 
 static inline unsigned long map_util_freq(unsigned long util,
-                                          unsigned long freq,
-                                          unsigned long cap)
+					unsigned long freq, unsigned long cap)
 {
-    unsigned long delta, headroom;
-    unsigned long threshold = (cap * 15) / 100;  /* 15% of capacity */
-    unsigned long delta_t;
-
-    if (util >= cap)
-        return freq;
-
-    delta = cap - util;
-    delta_t = cap - threshold;
-
-    /*
-     * Cubic normalized headroom: capacity-aware curve that peaks
-     * earlier in the utilization range and backs off faster near
-     * saturation. Shape is consistent across CPU clusters regardless
-     * of capacity tier.
-     */
-    headroom = (delta * delta * delta * 5) / (delta_t * cap * 16);
-
-    /*
-     * Suppress boosting below 15% capacity threshold to avoid
-     * unnecessary frequency ramping for light background work.
-     */
-    if (util < threshold)
-        headroom = (headroom * util * util) / (threshold * threshold);
-
-    return (util + headroom) * freq / cap;
+	return (freq + (freq >> 2)) * util / cap;
 }
 
 #endif /* CONFIG_CPU_FREQ */
