@@ -243,6 +243,9 @@ LZ4LIB_API int LZ4_decompress_safe (const char* src, char* dst, int compressedSi
 */
 LZ4LIB_API int LZ4_compressBound(int inputSize);
 
+#define LZ4_ACCELERATION_DEFAULT 1
+
+
 /*! LZ4_compress_fast() :
     Same as LZ4_compress_default(), but allows selection of "acceleration" factor.
     The larger the acceleration value, the faster the algorithm, but also the lesser the compression.
