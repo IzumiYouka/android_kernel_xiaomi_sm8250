@@ -143,9 +143,16 @@ static void tcp_westwood_cong_control(struct sock *sk, const struct rate_sample 
 		w->rtt_cnt++;
 	}
 
-	bw = (u64)rs->delivered * BW_UNIT;
-	do_div(bw, rs->interval_us);
-	minmax_running_max(&w->bw, 10, w->rtt_cnt, bw);
+	/* Only feed valid bandwidth samples into the max filter. A negative
+	 * rs->delivered (or non-positive interval) marks an invalid sample,
+	 * e.g. missing timing information or SACK reneging; feeding it in
+	 * would inject a bogus rate and inflate the BDP estimate.
+	 */
+	if (rs->delivered >= 0 && rs->interval_us > 0) {
+		bw = (u64)rs->delivered * BW_UNIT;
+		do_div(bw, rs->interval_us);
+		minmax_running_max(&w->bw, 10, w->rtt_cnt, bw);
+	}
 
 	if (rs->rtt_us > 0) {
 		w->rtt = rs->rtt_us;
