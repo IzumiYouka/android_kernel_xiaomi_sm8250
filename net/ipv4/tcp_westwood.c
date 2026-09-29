@@ -147,8 +147,11 @@ static void tcp_westwood_cong_control(struct sock *sk, const struct rate_sample 
 	do_div(bw, rs->interval_us);
 	minmax_running_max(&w->bw, 10, w->rtt_cnt, bw);
 
-	if (rs->rtt_us > 0 && rs->rtt_us <= w->min_rtt_us)
-		w->min_rtt_us = rs->rtt_us;
+	if (rs->rtt_us > 0) {
+		w->rtt = rs->rtt_us;
+		if (rs->rtt_us <= w->min_rtt_us)
+			w->min_rtt_us = rs->rtt_us;
+	}
 
 	w->prev_ca_state = state;
 	if (state == TCP_CA_Recovery && prev_state != TCP_CA_Recovery) {
@@ -179,7 +182,7 @@ static size_t tcp_westwood_info(struct sock *sk, u32 ext, int *attr,
 	if (ext & (1 << (INET_DIAG_VEGASINFO - 1))) {
 		info->vegas.tcpv_enabled = 1;
 		info->vegas.tcpv_rttcnt	= 0;
-		info->vegas.tcpv_rtt	= jiffies_to_usecs(ca->rtt);
+		info->vegas.tcpv_rtt	= ca->rtt;
 		info->vegas.tcpv_minrtt	= ca->min_rtt_us;
 
 		*attr = INET_DIAG_VEGASINFO;
