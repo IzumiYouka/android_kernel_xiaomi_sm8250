@@ -502,7 +502,13 @@ static unsigned long sugov_get_util(struct sugov_cpu *sg_cpu)
 	sg_cpu->max = max;
 	sg_cpu->bw_dl = cpu_bw_dl(rq);
 
+#ifdef CONFIG_SCHED_TUNE
 	return stune_util(sg_cpu->cpu, 0, &sg_cpu->walt_load);
+#else
+	return uclamp_rq_util_with(rq,
+				   cpu_util_freq_walt(sg_cpu->cpu, &sg_cpu->walt_load),
+				   NULL);
+#endif
 }
 #else
 static unsigned long sugov_get_util(struct sugov_cpu *sg_cpu)
