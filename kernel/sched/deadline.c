@@ -2747,7 +2747,7 @@ bool dl_param_changed(struct task_struct *p, const struct sched_attr *attr)
 }
 
 #ifdef CONFIG_SMP
-int dl_task_can_attach(struct task_struct *p, const struct cpumask *cs_cpus_allowed)
+int dl_task_can_attach(struct task_struct *p, const struct cpumask *cs_effective_cpus)
 {
 	unsigned int dest_cpu;
 	struct dl_bw *dl_b;
@@ -2755,7 +2755,14 @@ int dl_task_can_attach(struct task_struct *p, const struct cpumask *cs_cpus_allo
 	int cpus, ret;
 	unsigned long flags;
 
-	dest_cpu = cpumask_any_and(cpu_active_mask, cs_cpus_allowed);
+	dest_cpu = cpumask_any_and(cpu_active_mask, cs_effective_cpus);
+
+	/*
+	 * When cs_effective_cpus is empty, cpumask_any_and() returns
+	 * nr_cpu_ids, which would make dl_bw_of() read out of bounds.
+	 */
+	if (unlikely(dest_cpu >= nr_cpu_ids))
+		return -EINVAL;
 
 	rcu_read_lock_sched();
 	dl_b = dl_bw_of(dest_cpu);
