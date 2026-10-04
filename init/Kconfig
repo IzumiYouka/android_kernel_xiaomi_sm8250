@@ -511,6 +511,19 @@ config SCHED_WALT
 	used to guide task placement as well as task frequency requirements
 	for cpufreq governors.
 
+config PELT_COMPATIBILITY_LAYER
+	bool "Compatibility layer for Qualcomm performance HALs"
+	depends on !SCHED_WALT
+	help
+	This option enables a non-operational compatibility layer for use in
+	lieu of Window Assisted Load Tracking on systems which expect it.
+
+	Qualcomm userspace (perfd, mi_thermald) reads and writes several
+	WALT-specific sysctl nodes. Keep those nodes present as inert knobs
+	when WALT is disabled so that userspace does not break.
+
+	If unsure, say N.
+
 config HAVE_SCHED_AVG_IRQ
 	def_bool y
 	depends on IRQ_TIME_ACCOUNTING || PARAVIRT_TIME_ACCOUNTING

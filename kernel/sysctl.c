@@ -162,6 +162,24 @@ static unsigned int one_hundred_thousand = 100000;
 static unsigned int min_cfs_boost_prio = 99;
 static unsigned int max_cfs_boost_prio = 119;
 #endif
+
+#ifdef CONFIG_PELT_COMPATIBILITY_LAYER
+/*
+ * Inert compatibility knobs for Qualcomm performance HALs. These nodes used
+ * to drive WALT; with PELT they are kept only so that userspace which pokes
+ * them at runtime does not fail. They have no effect.
+ */
+static unsigned int sysctl_sched_boost;
+static unsigned int sysctl_sched_prefer_spread;
+static unsigned int sysctl_sched_busy_hyst_enable_cpus;
+static unsigned int sysctl_sched_busy_hyst;
+static unsigned int sysctl_sched_group_upmigrate_pct = 100;
+static unsigned int sysctl_sched_group_downmigrate_pct = 95;
+static unsigned int sysctl_sched_ravg_window_nr_ticks;
+static unsigned int pelt_ns_per_sec = NSEC_PER_SEC;
+static int pelt_three = 3;
+static int pelt_neg_three = -3;
+#endif /* CONFIG_PELT_COMPATIBILITY_LAYER */
 /* this is needed for the proc_doulongvec_minmax of vm_dirty_bytes */
 static unsigned long dirty_bytes_min = 2 * PAGE_SIZE;
 
@@ -432,6 +450,69 @@ static struct ctl_table kern_table[] = {
 		.proc_handler   = proc_dointvec,
 	},
 #endif
+#ifdef CONFIG_PELT_COMPATIBILITY_LAYER
+	{
+		.procname	= "sched_boost",
+		.data		= &sysctl_sched_boost,
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= &pelt_neg_three,
+		.extra2		= &pelt_three,
+	},
+	{
+		.procname	= "sched_prefer_spread",
+		.data		= &sysctl_sched_prefer_spread,
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= &zero,
+		.extra2		= &four,
+	},
+	{
+		.procname	= "sched_busy_hysteresis_enable_cpus",
+		.data		= &sysctl_sched_busy_hyst_enable_cpus,
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= &zero,
+		.extra2		= &two_hundred_fifty_five,
+	},
+	{
+		.procname	= "sched_busy_hyst_ns",
+		.data		= &sysctl_sched_busy_hyst,
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= &zero,
+		.extra2		= &pelt_ns_per_sec,
+	},
+	{
+		.procname	= "sched_group_upmigrate",
+		.data		= &sysctl_sched_group_upmigrate_pct,
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= &sysctl_sched_group_downmigrate_pct,
+	},
+	{
+		.procname	= "sched_group_downmigrate",
+		.data		= &sysctl_sched_group_downmigrate_pct,
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= &zero,
+		.extra2		= &sysctl_sched_group_upmigrate_pct,
+	},
+	{
+		.procname	= "sched_ravg_window_nr_ticks",
+		.data		= &sysctl_sched_ravg_window_nr_ticks,
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= &zero,
+	},
+#endif /* CONFIG_PELT_COMPATIBILITY_LAYER */
 #ifdef CONFIG_SCHED_WALT
 	{
 		.procname	= "sched_user_hint",
