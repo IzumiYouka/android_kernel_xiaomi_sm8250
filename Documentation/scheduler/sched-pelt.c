@@ -37,7 +37,7 @@ void calc_runnable_avg_yN_sum(const int halflife)
 {
 	int i;
 
-	printf("static const u32 runnable_avg_yN_sum[] = {\n\t    0,");
+	printf("static const u32 runnable_avg_yN_sum[] __maybe_unused = {\n\t    0,");
 	for (i = 1; i <= halflife; i++) {
 		if (i == 1)
 			sum *= y;
