@@ -83,7 +83,6 @@
 # define SCHED_WARN_ON(x)	({ (void)(x), 0; })
 #endif
 
-#include "tune.h"
 
 struct rq;
 struct cpuidle_state;

@@ -285,9 +285,6 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 	return l_freq;
 }
 
-extern long
-schedtune_cpu_margin_with(unsigned long util, int cpu, struct task_struct *p);
-
 /*
  * This function computes an effective utilization for the given CPU, to be
  * used for frequency selection given the linear relation: f = u * f_max.
@@ -346,11 +343,7 @@ unsigned long schedutil_cpu_util(int cpu, unsigned long util_cfs,
 	 */
 	util = util_cfs + cpu_util_rt(rq);
 	if (type == FREQUENCY_UTIL)
-#ifdef CONFIG_SCHED_TUNE
-		util += schedtune_cpu_margin_with(util, cpu, p);
-#else
 		util = uclamp_rq_util_with(rq, util, p);
-#endif
 
 	dl_util = cpu_util_dl(rq);
 
