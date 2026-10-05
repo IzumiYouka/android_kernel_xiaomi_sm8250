@@ -1,6 +1,13 @@
 #ifdef CONFIG_SMP
 #include "sched-pelt.h"
 
+#define PELT_MIN_DIVIDER	(LOAD_AVG_MAX - 1024)
+
+static inline u32 get_pelt_divider(struct sched_avg *avg)
+{
+	return PELT_MIN_DIVIDER + avg->period_contrib;
+}
+
 int __update_load_avg_blocked_se(u64 now, struct sched_entity *se);
 int __update_load_avg_se(u64 now, struct cfs_rq *cfs_rq, struct sched_entity *se);
 int __update_load_avg_cfs_rq(u64 now, struct cfs_rq *cfs_rq);

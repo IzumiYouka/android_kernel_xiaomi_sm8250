@@ -112,6 +112,8 @@ accumulate_sum(u64 delta, struct sched_avg *sa,
 {
 	u32 contrib = (u32)delta; /* p == 0 -> delta < 1024 */
 	u64 periods;
+	u64 divider;
+	bool eas_enable = static_branch_unlikely(&sched_energy_present);
 
 	delta += sa->period_contrib;
 	periods = delta / 1024; /* A period is 1024us (~1ms) */
@@ -120,26 +122,45 @@ accumulate_sum(u64 delta, struct sched_avg *sa,
 	 * Step 1: decay old *_sum if we crossed period boundaries.
 	 */
 	if (periods) {
-		sa->load_sum = decay_load(sa->load_sum, periods);
-		sa->runnable_load_sum =
-			decay_load(sa->runnable_load_sum, periods);
-		sa->util_sum = decay_load((u64)(sa->util_sum), periods);
-
 		/*
-		 * Step 2
+		 * While a task is running and EAS is in use, accumulate its
+		 * load without decaying the old signal. This speeds up the
+		 * ramp-up of utilization so short interactive bursts are not
+		 * averaged away, at the cost of a faster decay when idle.
 		 */
-		delta %= 1024;
-		contrib = __accumulate_pelt_segments(periods,
-				1024 - sa->period_contrib, delta);
+		if (running && eas_enable) {
+			delta %= 1024;
+		} else {
+			sa->load_sum = decay_load(sa->load_sum, periods);
+			sa->runnable_load_sum =
+				decay_load(sa->runnable_load_sum, periods);
+			sa->util_sum = decay_load((u64)(sa->util_sum), periods);
+
+			/*
+			 * Step 2
+			 */
+			delta %= 1024;
+			contrib = __accumulate_pelt_segments(periods,
+					1024 - sa->period_contrib, delta);
+		}
 	}
 	sa->period_contrib = delta;
+	divider = get_pelt_divider(sa);
 
-	if (load)
+	if (load) {
 		sa->load_sum += load * contrib;
-	if (runnable)
+		sa->load_sum = min_t(u64, sa->load_sum, divider * load);
+	}
+	if (runnable) {
 		sa->runnable_load_sum += runnable * contrib;
-	if (running)
+		sa->runnable_load_sum = min_t(u64, sa->runnable_load_sum,
+					      divider * runnable);
+	}
+	if (running) {
 		sa->util_sum += contrib << SCHED_CAPACITY_SHIFT;
+		sa->util_sum = min_t(u64, sa->util_sum,
+				     divider << SCHED_CAPACITY_SHIFT);
+	}
 
 	return periods;
 }
@@ -226,7 +247,7 @@ ___update_load_sum(u64 now, struct sched_avg *sa,
 static __always_inline void
 ___update_load_avg(struct sched_avg *sa, unsigned long load, unsigned long runnable)
 {
-	u32 divider = LOAD_AVG_MAX - 1024 + sa->period_contrib;
+	u32 divider = get_pelt_divider(sa);
 
 	/*
 	 * Step 2: update *_avg.
