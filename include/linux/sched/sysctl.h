@@ -30,6 +30,7 @@ extern unsigned int sysctl_sched_sync_hint_enable;
 extern unsigned int sysctl_sched_cstate_aware;
 extern unsigned int sysctl_sched_force_lb_enable;
 extern unsigned int sysctl_sched_hr_limit_level;
+extern unsigned int sysctl_sched_hr_scale;
 
 #if defined(CONFIG_PREEMPTIRQ_EVENTS) || defined(CONFIG_PREEMPT_TRACER)
 extern unsigned int sysctl_preemptoff_tracing_threshold_ns;

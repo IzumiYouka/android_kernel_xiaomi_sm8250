@@ -138,6 +138,13 @@ __read_mostly unsigned int sysctl_sched_force_lb_enable = 1;
  */
 unsigned int sysctl_sched_hr_limit_level; /* 0 = unchanged curve by default */
 
+/*
+ * DVFS headroom scaling, in percent of the PELT-growth ideal:
+ * 100 means "exactly the utilization growth possible during the governor
+ * response delay", 0 disables the headroom.
+ */
+unsigned int sysctl_sched_hr_scale __read_mostly = 125;
+
 static inline void update_load_add(struct load_weight *lw, unsigned long inc)
 {
 	lw->weight += inc;
