@@ -74,7 +74,8 @@ struct sugov_cpu {
 
 	unsigned long util;
 
-	unsigned long		bw_dl;
+	unsigned long		bw_min;
+	unsigned long		util_max;
 	unsigned long		min;
 	unsigned long		max;
 };
@@ -226,38 +227,9 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 				  unsigned long util, unsigned long max)
 {
 	struct cpufreq_policy *policy = sg_policy->policy;
-	const u16 *lut;
-	unsigned long headroom;
 	unsigned int freq = arch_scale_freq_invariant() ?
 				policy->cpuinfo.max_freq : policy->cur;
-	unsigned int idx, l_freq, h_freq, limit_level;
-
-	/*
-	 * Apply DVFS headroom from the precomputed lookup table. The table
-	 * is keyed by absolute utilization (0..SCHED_CAPACITY_SCALE) and
-	 * holds headroom in capacity units. The zero-util fast path avoids
-	 * the acquire load entirely.
-	 */
-	if (util) {
-		if (util > SCHED_CAPACITY_SCALE)
-			util = SCHED_CAPACITY_SCALE;
-		lut = smp_load_acquire(&sg_policy->dvfs_headroom_lut_cur);
-		if (lut) {
-			headroom = lut[util];
-			limit_level = READ_ONCE(sysctl_sched_hr_limit_level);
-			if (limit_level) {
-				headroom = min(headroom, max * 20 / 100);
-				if (limit_level == 2)
-					headroom = min(headroom,
-						       util * 768 >>
-						       SCHED_CAPACITY_SHIFT);
-			}
-
-			util += headroom;
-			if (util > max)
-				util = max;
-		}
-	}
+	unsigned int idx, l_freq, h_freq;
 
 	freq = freq * util / max;
 	trace_sugov_next_freq(policy->cpu, util, max, freq);
@@ -394,18 +366,78 @@ unsigned long schedutil_cpu_util(int cpu, unsigned long util_cfs,
 	return min(max, util);
 }
 
+/**
+ * sugov_apply_dvfs_headroom - Add DVFS headroom to a utilization value
+ * @util: Utilization to add headroom to
+ * @cpu: CPU the utilization belongs to
+ *
+ * Applies the per-policy DVFS headroom lookup table and the optional
+ * runtime limits controlled through sched_hr_limit_level.
+ */
+static inline unsigned long sugov_apply_dvfs_headroom(unsigned long util, int cpu)
+{
+	struct sugov_cpu *sg_cpu = &per_cpu(sugov_cpu, cpu);
+	struct sugov_policy *sg_policy = sg_cpu->sg_policy;
+	const u16 *lut;
+	unsigned long headroom;
+	unsigned int limit_level;
+
+	if (!util)
+		return 0;
+
+	if (util > SCHED_CAPACITY_SCALE)
+		util = SCHED_CAPACITY_SCALE;
+
+	lut = smp_load_acquire(&sg_policy->dvfs_headroom_lut_cur);
+	if (!lut)
+		return util;
+
+	headroom = lut[util];
+	limit_level = READ_ONCE(sysctl_sched_hr_limit_level);
+	if (limit_level) {
+		headroom = min(headroom, sg_cpu->max * 20 / 100);
+		if (limit_level == 2)
+			headroom = min(headroom,
+				       util * 768 >> SCHED_CAPACITY_SHIFT);
+	}
+
+	util += headroom;
+	if (util > sg_cpu->max)
+		util = sg_cpu->max;
+
+	return util;
+}
+
+unsigned long sugov_effective_cpu_perf(int cpu, unsigned long actual,
+					unsigned long min,
+					unsigned long max)
+{
+	/* Add DVFS headroom to actual utilization */
+	actual = sugov_apply_dvfs_headroom(actual, cpu);
+
+	/*
+	 * Ensure at least minimum performance while providing more compute
+	 * capacity when possible, clamped to the maximum allowed.
+	 */
+	if (unlikely(min >= max))
+		return min;
+
+	return clamp(actual, min, max);
+}
+
 static unsigned long sugov_get_util(struct sugov_cpu *sg_cpu)
 {
 	struct rq *rq = cpu_rq(sg_cpu->cpu);
-
 	unsigned long util_cfs = cpu_util_cfs(rq);
-	unsigned long max = arch_scale_cpu_capacity(sg_cpu->cpu);
+	unsigned long min, max;
 
-	sg_cpu->max = max;
-	sg_cpu->bw_dl = cpu_bw_dl(rq);
+	sg_cpu->max = arch_scale_cpu_capacity(sg_cpu->cpu);
 
-	return schedutil_cpu_util(sg_cpu->cpu, util_cfs, max,
-				  FREQUENCY_UTIL, NULL);
+	util_cfs = effective_cpu_util(sg_cpu->cpu, util_cfs, &min, &max);
+	sg_cpu->bw_min = min;
+	sg_cpu->util_max = max;
+
+	return util_cfs;
 }
 
 /**
@@ -536,7 +568,7 @@ static unsigned long sugov_iowait_apply(struct sugov_cpu *sg_cpu, u64 time,
  */
 static inline void ignore_dl_rate_limit(struct sugov_cpu *sg_cpu, struct sugov_policy *sg_policy)
 {
-	if (cpu_bw_dl(cpu_rq(sg_cpu->cpu)) > sg_cpu->bw_dl)
+	if (cpu_bw_dl(cpu_rq(sg_cpu->cpu)) > sg_cpu->bw_min)
 		WRITE_ONCE(sg_policy->limits_changed, true);
 }
 
@@ -560,6 +592,8 @@ static void sugov_update_single(struct update_util_data *hook, u64 time,
 	max = sg_cpu->max;
 
 	util = sugov_iowait_apply(sg_cpu, time, util, max);
+	util = sugov_effective_cpu_perf(sg_cpu->cpu, util,
+					sg_cpu->bw_min, sg_cpu->util_max);
 	next_f = get_next_freq(sg_policy, util, max);
 
 	/*
@@ -587,9 +621,12 @@ static unsigned int sugov_next_freq_shared(struct sugov_cpu *sg_cpu, u64 time)
 		struct sugov_cpu *j_sg_cpu = &per_cpu(sugov_cpu, j);
 		unsigned long j_util, j_max;
 
-		j_util = j_sg_cpu->util;
+		j_util = sugov_get_util(j_sg_cpu);
 		j_max = j_sg_cpu->max;
 		j_util = sugov_iowait_apply(j_sg_cpu, time, j_util, j_max);
+		j_util = sugov_effective_cpu_perf(j_sg_cpu->cpu, j_util,
+						  j_sg_cpu->bw_min,
+						  j_sg_cpu->util_max);
 
 		if (j_util * max >= j_max * util) {
 			util = j_util;

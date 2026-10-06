@@ -2706,6 +2706,15 @@ static inline bool uclamp_is_used(void)
 {
 	return static_branch_likely(&sched_uclamp_used);
 }
+
+static inline unsigned long uclamp_rq_get(struct rq *rq,
+					  enum uclamp_id clamp_id)
+{
+	if (!uclamp_is_used() || (rq->uclamp_flags & UCLAMP_FLAG_IDLE))
+		return clamp_id == UCLAMP_MIN ? 0 : SCHED_CAPACITY_SCALE;
+
+	return READ_ONCE(rq->uclamp[clamp_id].value);
+}
 #else /* CONFIG_UCLAMP_TASK */
 static inline
 unsigned long uclamp_rq_util_with(struct rq *rq, unsigned long util,
@@ -2717,6 +2726,12 @@ unsigned long uclamp_rq_util_with(struct rq *rq, unsigned long util,
 static inline bool uclamp_is_used(void)
 {
 	return false;
+}
+
+static inline unsigned long uclamp_rq_get(struct rq *rq,
+					  enum uclamp_id clamp_id)
+{
+	return clamp_id == UCLAMP_MIN ? 0 : SCHED_CAPACITY_SCALE;
 }
 #endif /* CONFIG_UCLAMP_TASK */
 
@@ -2767,6 +2782,13 @@ static inline unsigned long cpu_util_cfs(struct rq *rq)
 unsigned long schedutil_cpu_util(int cpu, unsigned long util_cfs,
 				 unsigned long max, enum schedutil_type type,
 				 struct task_struct *p);
+
+unsigned long effective_cpu_util(int cpu, unsigned long util_cfs,
+				 unsigned long *min, unsigned long *max);
+
+unsigned long sugov_effective_cpu_perf(int cpu, unsigned long actual,
+				       unsigned long min,
+				       unsigned long max);
 
 static inline unsigned long cpu_bw_dl(struct rq *rq)
 {
