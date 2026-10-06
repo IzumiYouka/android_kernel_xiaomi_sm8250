@@ -2733,6 +2733,12 @@ static inline unsigned long uclamp_rq_get(struct rq *rq,
 {
 	return clamp_id == UCLAMP_MIN ? 0 : SCHED_CAPACITY_SCALE;
 }
+
+static inline unsigned long uclamp_eff_value(struct task_struct *p,
+					     enum uclamp_id clamp_id)
+{
+	return clamp_id == UCLAMP_MIN ? 0 : SCHED_CAPACITY_SCALE;
+}
 #endif /* CONFIG_UCLAMP_TASK */
 
 unsigned long task_util_est(struct task_struct *p);
@@ -2747,21 +2753,6 @@ bool uclamp_boosted(struct task_struct *p);
 #else
 # define arch_scale_freq_invariant()	false
 #endif
-
-/**
- * enum schedutil_type - CPU utilization type
- * @FREQUENCY_UTIL:	Utilization used to select frequency
- * @ENERGY_UTIL:	Utilization used during energy calculation
- *
- * The utilization signals of all scheduling classes (CFS/RT/DL) and IRQ time
- * need to be aggregated differently depending on the usage made of them. This
- * enum is used within schedutil_freq_util() to differentiate the types of
- * utilization expected by the callers, and adjust the aggregation accordingly.
- */
-enum schedutil_type {
-	FREQUENCY_UTIL,
-	ENERGY_UTIL,
-};
 
 #ifdef CONFIG_SMP
 static inline unsigned long cpu_util_cfs(struct rq *rq)
@@ -2778,10 +2769,6 @@ static inline unsigned long cpu_util_cfs(struct rq *rq)
 #endif
 
 #ifdef CONFIG_CPU_FREQ_GOV_SCHEDUTIL
-
-unsigned long schedutil_cpu_util(int cpu, unsigned long util_cfs,
-				 unsigned long max, enum schedutil_type type,
-				 struct task_struct *p);
 
 unsigned long effective_cpu_util(int cpu, unsigned long util_cfs,
 				 unsigned long *min, unsigned long *max);
@@ -2806,11 +2793,23 @@ static inline unsigned long cpu_util_rt(struct rq *rq)
 }
 
 #else /* CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
-static inline unsigned long schedutil_cpu_util(int cpu, unsigned long util_cfs,
-				 unsigned long max, enum schedutil_type type,
-				 struct task_struct *p)
+static inline unsigned long effective_cpu_util(int cpu, unsigned long util_cfs,
+					       unsigned long *min,
+					       unsigned long *max)
 {
+	if (min)
+		*min = 0;
+	if (max)
+		*max = SCHED_CAPACITY_SCALE;
+
 	return 0;
+}
+
+static inline unsigned long sugov_effective_cpu_perf(int cpu, unsigned long actual,
+						     unsigned long min,
+						     unsigned long max)
+{
+	return actual;
 }
 #endif /* CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
 
