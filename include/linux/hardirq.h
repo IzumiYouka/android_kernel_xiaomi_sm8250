@@ -2,6 +2,7 @@
 #ifndef LINUX_HARDIRQ_H
 #define LINUX_HARDIRQ_H
 
+#include <linux/context_tracking_state.h>
 #include <linux/preempt.h>
 #include <linux/lockdep.h>
 #include <linux/ftrace_irq.h>
@@ -11,6 +12,18 @@
 
 extern void synchronize_irq(unsigned int irq);
 extern bool synchronize_hardirq(unsigned int irq);
+
+#ifdef CONFIG_NO_HZ_FULL
+void __rcu_irq_enter_check_tick(void);
+#else
+static inline void __rcu_irq_enter_check_tick(void) { }
+#endif
+
+static __always_inline void rcu_irq_enter_check_tick(void)
+{
+	if (context_tracking_is_enabled())
+		__rcu_irq_enter_check_tick();
+}
 
 #if defined(CONFIG_TINY_RCU)
 

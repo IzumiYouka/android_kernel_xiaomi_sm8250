@@ -1163,4 +1163,7 @@ int __sched autoremove_wake_function(struct wait_queue_entry *wq_entry,
 		(wait)->flags = 0;						\
 	} while (0)
 
+typedef int (*task_call_f)(struct task_struct *p, void *arg);
+extern int task_call_func(struct task_struct *p, task_call_f func, void *arg);
+
 #endif /* _LINUX_WAIT_H */
