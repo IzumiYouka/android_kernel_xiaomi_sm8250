@@ -10238,7 +10238,7 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 		sgs->group_load += cpu_load(rq);
 		sgs->group_util += cpu_util(i);
 		sgs->group_runnable += cpu_runnable(rq);
-		sgs->sum_h_nr_running += rq->cfs.h_nr_running;
+		sgs->sum_h_nr_running += rq->cfs.h_nr_queued;
 
 		nr_running = rq->nr_running;
 		sgs->sum_nr_running += nr_running;
@@ -10511,7 +10511,7 @@ static inline void update_sg_wakeup_stats(struct sched_domain *sd,
 		sgs->group_util += cpu_util_without(i, p);
 		sgs->group_runnable += cpu_runnable_without(rq, p);
 		local = task_running_on_cpu(i, p);
-		sgs->sum_h_nr_queued += rq->cfs.h_nr_queued - local;
+		sgs->sum_h_nr_running += rq->cfs.h_nr_queued - local;
 		nr_running = rq->nr_running - local;
 		sgs->sum_nr_running += nr_running;
 
