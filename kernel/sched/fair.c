@@ -10821,48 +10821,6 @@ next_group:
 
 		WRITE_ONCE(rd->overutilized, SG_OVERUTILIZED);
 	}
-
-#ifdef CONFIG_SCHED_WALT
-	if (sg_status & SG_OVERUTILIZED)
-		set_sd_overutilized(env->sd);
-	else
-		clear_sd_overutilized(env->sd);
-
-	/*
-	 * If there is a misfit task in one cpu in this sched_domain
-	 * it is likely that the imbalance cannot be sorted out among
-	 * the cpu's in this sched_domain. In this case set the
-	 * overutilized flag at the parent sched_domain.
-	 */
-	if (sg_status & SG_HAS_MISFIT_TASK) {
-		struct sched_domain *sd = env->sd->parent;
-
-		/*
-		 * In case of a misfit task, load balance at the parent
-		 * sched domain level will make sense only if the the cpus
-		 * have a different capacity. If cpus at a domain level have
-		 * the same capacity, the misfit task cannot be well
-		 * accomodated	in any of the cpus and there in no point in
-		 * trying a load balance at this level
-		 */
-		while (sd) {
-			if (sd->flags & SD_ASYM_CPUCAPACITY) {
-				set_sd_overutilized(sd);
-				break;
-			}
-			sd = sd->parent;
-		}
-	}
-
-	/*
-	 * If the domain util is greater that domain capacity, load balancing
-	 * needs to be done at the next sched domain level as well.
-	 */
-	if (env->sd->parent &&
-	    sds->total_capacity * 1024 < sds->total_util *
-			 sched_capacity_margin_up[group_first_cpu(sds->local)])
-		set_sd_overutilized(env->sd->parent);
-#endif
 }
 
 /**
