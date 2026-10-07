@@ -5024,7 +5024,7 @@ static inline void update_misfit_status(struct task_struct *p, struct rq *rq)
 	 */
 	if (!p || p->nr_cpus_allowed == 1 ||
 	    arch_scale_cpu_capacity(cpu) == p->max_allowed_capacity ||
-	    task_fits_max(p, cpu)) {
+	    task_fits_cpu(p, cpu)) {
 		rq->misfit_task_load = 0;
 		return;
 	}
