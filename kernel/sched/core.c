@@ -40,7 +40,7 @@ DEFINE_PER_CPU(struct rnd_state, sched_rnd_state);
  */
 #define SCHED_FEAT(name, enabled)	\
 	(1UL << __SCHED_FEAT_##name) * enabled |
-const_debug unsigned int sysctl_sched_features =
+const_debug unsigned long sysctl_sched_features =
 #include "features.h"
 	0;
 #undef SCHED_FEAT
