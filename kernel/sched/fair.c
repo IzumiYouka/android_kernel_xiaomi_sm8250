@@ -10318,7 +10318,7 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 	}
 
 	if (sgs->sum_nr_running)
-		sgs->load_per_task = sgs->sum_weighted_load /
+		sgs->load_per_task = sgs->group_load /
 						sgs->sum_nr_running;
 }
 
@@ -11070,8 +11070,8 @@ static struct rq *find_busiest_queue(struct lb_env *env,
 		 * to: load_i * capacity_j > load_j * capacity_i;  where j is
 		 * our previous maximum.
 		 */
-		if (wl * busiest_capacity >= busiest_load * capacity) {
-			busiest_load = wl;			busiest_capacity = capacity;
+		if (load * busiest_capacity > busiest_load * capacity) {
+			busiest_load = load;			busiest_capacity = capacity;
 			busiest = rq;
 		}
 	}
