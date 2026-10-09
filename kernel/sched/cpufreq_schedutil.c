@@ -86,6 +86,14 @@ static DEFINE_PER_CPU(struct sugov_tunables *, cached_tunables);
 
 /************************ Governor internals ***********************/
 
+/*
+ * Vendor scripts like to disable rate limiting outright by writing 0,
+ * which lets the frequency flap on every utilization dip.  Keep a small
+ * floor; with frequency-invariant utilization the up direction already
+ * ignores the rate limit, so this effectively only bounds reductions.
+ */
+#define SUGOV_RATE_LIMIT_MIN_US	2000U
+
 static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 {
 	s64 delta_ns;
@@ -672,6 +680,7 @@ static ssize_t up_rate_limit_us_store(struct gov_attr_set *attr_set,
 	if (kstrtouint(buf, 10, &rate_limit_us))
 		return -EINVAL;
 
+	rate_limit_us = max(rate_limit_us, SUGOV_RATE_LIMIT_MIN_US);
 	tunables->up_rate_limit_us = rate_limit_us;
 
 	list_for_each_entry(sg_policy, &attr_set->policy_list, tunables_hook) {
@@ -693,6 +702,7 @@ static ssize_t down_rate_limit_us_store(struct gov_attr_set *attr_set,
 	if (kstrtouint(buf, 10, &rate_limit_us))
 		return -EINVAL;
 
+	rate_limit_us = max(rate_limit_us, SUGOV_RATE_LIMIT_MIN_US);
 	tunables->down_rate_limit_us = rate_limit_us;
 
 	list_for_each_entry(sg_policy, &attr_set->policy_list, tunables_hook) {
