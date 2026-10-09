@@ -4929,7 +4929,11 @@ static inline int task_fits_cpu(struct task_struct *p, int cpu)
 	unsigned long uclamp_max = uclamp_eff_value(p, UCLAMP_MAX);
 	unsigned long util = task_util_est(p);
 
-	return util_fits_cpu(util, uclamp_min, uclamp_max, cpu);
+	/*
+	 * Return true only if the cpu fully fits the task requirements, which
+	 * include the utilization but also the performance hints.
+	 */
+	return (util_fits_cpu(util, uclamp_min, uclamp_max, cpu) > 0);
 }
 
 static inline bool task_fits_max(struct task_struct *p, int cpu)
@@ -5029,7 +5033,17 @@ static inline void update_misfit_status(struct task_struct *p, struct rq *rq)
 		return;
 	}
 
-	rq->misfit_task_load = task_h_load(p);
+	/*
+	 * Make sure that misfit_task_load will not be null even if
+	 * task_h_load() returns 0.
+	 */
+	rq->misfit_task_load = max_t(unsigned long, task_h_load(p), 1);
+}
+
+/* Check if the rq has a misfit task */
+static inline bool check_misfit_status(struct rq *rq)
+{
+	return rq->misfit_task_load;
 }
 
 #else /* CONFIG_SMP */
@@ -12198,6 +12212,19 @@ static void nohz_balancer_kick(struct rq *rq)
 
 	if (time_before(now, nohz.next_balance))
 		goto out;
+
+	/*
+	 * When ASYM_CPUCAPACITY; see if there's a higher capacity CPU
+	 * to run the misfit task on.
+	 */
+	rcu_read_lock();
+	sd = rcu_dereference(per_cpu(sd_asym_cpucapacity, cpu));
+	if (sd && check_misfit_status(rq)) {
+		rcu_read_unlock();
+		flags = NOHZ_STATS_KICK | NOHZ_BALANCE_KICK;
+		goto out;
+	}
+	rcu_read_unlock();
 
 	/*
 	 * With EAS, no-hz idle balance is allowed only when the CPU
