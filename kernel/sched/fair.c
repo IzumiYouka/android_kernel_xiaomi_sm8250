@@ -9638,7 +9638,7 @@ static void __update_blocked_averages(struct rq *rq)
 {
 	struct cfs_rq *cfs_rq, *pos;
 	const struct sched_class *curr_class;
-	bool done = true;
+	bool done = true, decayed = false;
 
 	/*
 	 * Iterates the task_group tree in a bottom up fashion, see
@@ -9648,6 +9648,7 @@ static void __update_blocked_averages(struct rq *rq)
 		struct sched_entity *se;
 
 		if (update_cfs_rq_load_avg(cfs_rq_clock_pelt(cfs_rq), cfs_rq)) {
+			decayed = true;
 			update_tg_load_avg(cfs_rq, 0);
 
 			if (cfs_rq->nr_queued == 0)
@@ -9672,14 +9673,21 @@ static void __update_blocked_averages(struct rq *rq)
 	}
 
 	curr_class = rq->curr->sched_class;
-	update_rt_rq_load_avg(rq_clock_pelt(rq), rq, curr_class == &rt_sched_class);
-	update_dl_rq_load_avg(rq_clock_pelt(rq), rq, curr_class == &dl_sched_class);
-	update_thermal_load_avg(rq_clock_thermal(rq), rq,
-				arch_scale_thermal_pressure(cpu_of(rq)));
-	update_irq_load_avg(rq, 0);
+	decayed |= update_rt_rq_load_avg(rq_clock_pelt(rq), rq, curr_class == &rt_sched_class);
+	decayed |= update_dl_rq_load_avg(rq_clock_pelt(rq), rq, curr_class == &dl_sched_class);
+	decayed |= update_thermal_load_avg(rq_clock_thermal(rq), rq,
+					   arch_scale_thermal_pressure(cpu_of(rq)));
+	decayed |= update_irq_load_avg(rq, 0);
 	/* Don't need periodic decay once load/util_avg are null */
 	if (others_have_blocked(rq))
 		done = false;
+
+	/*
+	 * Notify the governor when blocked load decayed so it can
+	 * re-evaluate the frequency request.
+	 */
+	if (decayed)
+		cpufreq_update_util(rq, 0);
 
 #ifdef CONFIG_NO_HZ_COMMON
 	rq->last_blocked_load_update_tick = jiffies;
