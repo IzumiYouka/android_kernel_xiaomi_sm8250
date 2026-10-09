@@ -12830,12 +12830,13 @@ static void task_tick_fair(struct rq *rq, struct task_struct *curr, int queued)
 		reweight_eevdf(cfs_rq, se, weight, se->on_rq);
 	}
 
+	if (queued)
+		return;
+
 	if (static_branch_unlikely(&sched_numa_balancing))
 		task_tick_numa(rq, curr);
 
 	update_misfit_status(curr, rq);
-
-
 	check_update_overutilized_status(task_rq(curr));
 }
 
