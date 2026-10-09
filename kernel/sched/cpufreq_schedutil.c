@@ -123,7 +123,19 @@ static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 		smp_mb();
 
 		return true;
+	} else if (sg_policy->need_freq_update) {
+		/* ignore_dl_rate_limit() wants a new frequency to be found. */
+		return true;
 	}
+
+	/*
+	 * When frequency-invariant utilization tracking is present, there's no
+	 * rate limit when increasing frequency. Therefore, the next frequency
+	 * must be determined before a decision can be made to rate limit the
+	 * frequency change, hence the rate limit check is bypassed here.
+	 */
+	if (arch_scale_freq_invariant())
+		return true;
 
 	/* No need to recalculate next freq for min_rate_limit_us
 	 * at least. However we might still decide to further rate
@@ -142,9 +154,14 @@ static bool sugov_up_down_rate_limit(struct sugov_policy *sg_policy, u64 time,
 
 	delta_ns = time - sg_policy->last_freq_update_time;
 
-	if (next_freq > sg_policy->next_freq &&
+	/*
+	 * With frequency-invariant utilization the next frequency is scaled
+	 * from the current utilization immediately, so there is no rate limit
+	 * when increasing the frequency; only reductions stay rate limited.
+	 */
+	if (next_freq > sg_policy->next_freq && !arch_scale_freq_invariant() &&
 	    delta_ns < sg_policy->up_rate_delay_ns)
-			return true;
+		return true;
 
 	if (next_freq < sg_policy->next_freq &&
 	    delta_ns < sg_policy->down_rate_delay_ns)
@@ -478,7 +495,7 @@ static unsigned long sugov_iowait_apply(struct sugov_cpu *sg_cpu, u64 time,
 static inline void ignore_dl_rate_limit(struct sugov_cpu *sg_cpu, struct sugov_policy *sg_policy)
 {
 	if (cpu_bw_dl(cpu_rq(sg_cpu->cpu)) > sg_cpu->bw_min)
-		WRITE_ONCE(sg_policy->limits_changed, true);
+		sg_policy->need_freq_update = true;
 }
 
 static void sugov_update_single(struct update_util_data *hook, u64 time,
@@ -966,8 +983,13 @@ static int sugov_init(struct cpufreq_policy *policy)
 		goto stop_kthread;
 	}
 
-	tunables->up_rate_limit_us = cpufreq_policy_transition_delay_us(policy);
-	tunables->down_rate_limit_us = cpufreq_policy_transition_delay_us(policy);
+	/*
+	 * Keep the default short so bursty workloads ramp up quickly; with
+	 * frequency-invariant utilization the up direction ignores the limit
+	 * entirely anyway, so this mostly bounds the down direction.
+	 */
+	tunables->up_rate_limit_us = 2000;
+	tunables->down_rate_limit_us = 2000;
 
 	policy->governor_data = sg_policy;
 	sg_policy->tunables = tunables;
