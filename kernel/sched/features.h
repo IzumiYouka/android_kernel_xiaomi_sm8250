@@ -96,7 +96,15 @@ SCHED_FEAT(WARN_DOUBLE_CLOCK, false)
  * IPI to that CPU and let that CPU push the RT task to where
  * it should go may be a better scenario.
  */
+#ifdef CONFIG_PREEMPT_RT
 SCHED_FEAT(RT_PUSH_IPI, true)
+#else
+/*
+ * RT push IPI is only beneficial on PREEMPT_RT; on !RT it adds an IPI
+ * for every priority drop and can contribute to latency spikes.
+ */
+SCHED_FEAT(RT_PUSH_IPI, false)
+#endif
 #endif
 
 SCHED_FEAT(RT_RUNTIME_SHARE, false)
