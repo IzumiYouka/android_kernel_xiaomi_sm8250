@@ -39,7 +39,12 @@
 #define FAS_ADAPTIVE_MAX_MS	200U
 #define FAS_MIN_INPUT_INTERVAL	(150 * USEC_PER_MSEC)
 
-static bool fas_enabled = true;
+/*
+ * Disabled by default: the KGSL cmdbatch hook re-arms the boost every frame
+ * above 60Hz, pinning the little cluster at FAS_BOOST_FREQ_HI (1804800).
+ * Toggle via /sys/kernel/fas/enabled.
+ */
+static bool fas_enabled = false;
 
 enum {
 	SCREEN_OFF,
