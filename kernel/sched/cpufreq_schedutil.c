@@ -18,10 +18,13 @@
 #include <trace/events/power.h>
 #include <linux/sched/sysctl.h>
 
+DEFINE_PER_CPU_READ_MOSTLY(unsigned long, response_time_mult);
+
 struct sugov_tunables {
 	struct gov_attr_set	attr_set;
 	unsigned int		up_rate_limit_us;
 	unsigned int		down_rate_limit_us;
+	unsigned int		response_time_ms;
 };
 
 struct sugov_policy {
@@ -35,6 +38,7 @@ struct sugov_policy {
 	s64			min_rate_limit_ns;
 	s64			up_rate_delay_ns;
 	s64			down_rate_delay_ns;
+	unsigned int		freq_response_time_ms;
 	unsigned int		next_freq;
 	unsigned int		cached_raw_freq;
 	unsigned int		prev_cached_raw_freq;
@@ -283,6 +287,81 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 	return l_freq;
 }
 
+static unsigned int sugov_second_max_freq(struct cpufreq_policy *policy)
+{
+	unsigned int max_freq = policy->cpuinfo.max_freq;
+	unsigned int sec_max_freq = 0;
+	int i;
+
+	for (i = 0; policy->freq_table[i].frequency != CPUFREQ_TABLE_END; i++) {
+		unsigned int freq = policy->freq_table[i].frequency;
+
+		if (freq == CPUFREQ_ENTRY_INVALID || freq >= max_freq)
+			continue;
+		if (freq > sec_max_freq)
+			sec_max_freq = freq;
+	}
+
+	return sec_max_freq ? sec_max_freq : max_freq;
+}
+
+static inline u64 sugov_calc_freq_response_ms(struct sugov_policy *sg_policy)
+{
+	int cpu = cpumask_first(sg_policy->policy->cpus);
+	unsigned long cap = arch_scale_cpu_capacity(cpu);
+	unsigned int max_freq = sg_policy->policy->cpuinfo.max_freq;
+	unsigned int sec_max_freq;
+
+	sec_max_freq = sugov_second_max_freq(sg_policy->policy);
+
+	/*
+	 * We will request max_freq as soon as util crosses the capacity at
+	 * the second highest frequency, so the response time is the time
+	 * needed to ramp util up to that point.
+	 */
+	cap = sec_max_freq * cap / max_freq;
+
+	return approximate_runtime(cap + 1);
+}
+
+static inline void sugov_update_response_time_mult(struct sugov_policy *sg_policy)
+{
+	unsigned long mult;
+	int cpu;
+
+	if (unlikely(!sg_policy->freq_response_time_ms))
+		sg_policy->freq_response_time_ms = sugov_calc_freq_response_ms(sg_policy);
+
+	if (unlikely(!sg_policy->tunables->response_time_ms))
+		sg_policy->tunables->response_time_ms = sg_policy->freq_response_time_ms;
+
+	mult = sg_policy->freq_response_time_ms * SCHED_CAPACITY_SCALE;
+	mult /= sg_policy->tunables->response_time_ms;
+
+	if (SCHED_WARN_ON(!mult))
+		mult = SCHED_CAPACITY_SCALE;
+
+	for_each_cpu(cpu, sg_policy->policy->cpus)
+		per_cpu(response_time_mult, cpu) = mult;
+}
+
+/*
+ * Shrink or expand how long it takes to reach the maximum performance point
+ * of the policy. freq_response_time_ms is fixed by PELT HALFLIFE and policy
+ * capacity; response_time_ms is user tunable. Lowering it speeds frequency
+ * ramp up, raising it slows the ramp down and saves power.
+ */
+static inline unsigned long
+sugov_apply_response_time(unsigned long util, int cpu)
+{
+	unsigned long mult = per_cpu(response_time_mult, cpu);
+
+	if (unlikely(!mult))
+		return util;
+
+	return mult * util >> SCHED_CAPACITY_SHIFT;
+}
+
 /**
  * sugov_apply_dvfs_headroom - Add DVFS headroom to a utilization value
  * @util: Utilization to add headroom to
@@ -346,7 +425,8 @@ unsigned long sugov_effective_cpu_perf(int cpu, unsigned long actual,
 					unsigned long min,
 					unsigned long max)
 {
-	/* Add DVFS headroom to actual utilization */
+	/* Scale response time, then add DVFS headroom */
+	actual = sugov_apply_response_time(actual, cpu);
 	actual = sugov_apply_dvfs_headroom(actual, cpu);
 
 	/*
@@ -717,9 +797,41 @@ static ssize_t down_rate_limit_us_store(struct gov_attr_set *attr_set,
 static struct governor_attr up_rate_limit_us = __ATTR_RW(up_rate_limit_us);
 static struct governor_attr down_rate_limit_us = __ATTR_RW(down_rate_limit_us);
 
+static ssize_t response_time_ms_show(struct gov_attr_set *attr_set, char *buf)
+{
+	struct sugov_tunables *tunables = to_sugov_tunables(attr_set);
+
+	return scnprintf(buf, PAGE_SIZE, "%u\n", tunables->response_time_ms);
+}
+
+static ssize_t
+response_time_ms_store(struct gov_attr_set *attr_set, const char *buf, size_t count)
+{
+	struct sugov_tunables *tunables = to_sugov_tunables(attr_set);
+	struct sugov_policy *sg_policy;
+	unsigned int response_time_ms;
+
+	if (kstrtouint(buf, 10, &response_time_ms) || !response_time_ms)
+		return -EINVAL;
+
+	tunables->response_time_ms = response_time_ms;
+
+	list_for_each_entry(sg_policy, &attr_set->policy_list, tunables_hook) {
+		if (sg_policy->tunables == tunables) {
+			sugov_update_response_time_mult(sg_policy);
+			break;
+		}
+	}
+
+	return count;
+}
+
+static struct governor_attr response_time_ms = __ATTR_RW(response_time_ms);
+
 static struct attribute *sugov_attributes[] = {
 	&up_rate_limit_us.attr,
 	&down_rate_limit_us.attr,
+	&response_time_ms.attr,
 	NULL
 };
 
@@ -930,6 +1042,7 @@ static void sugov_tunables_save(struct cpufreq_policy *policy,
 
 	cached->up_rate_limit_us = tunables->up_rate_limit_us;
 	cached->down_rate_limit_us = tunables->down_rate_limit_us;
+	cached->response_time_ms = tunables->response_time_ms;
 }
 
 static void sugov_clear_global_tunables(void)
@@ -949,6 +1062,8 @@ static void sugov_tunables_restore(struct cpufreq_policy *policy)
 
 	tunables->up_rate_limit_us = cached->up_rate_limit_us;
 	tunables->down_rate_limit_us = cached->down_rate_limit_us;
+	tunables->response_time_ms = cached->response_time_ms;
+	sugov_update_response_time_mult(sg_policy);
 }
 
 static int sugov_init(struct cpufreq_policy *policy)
@@ -984,6 +1099,7 @@ static int sugov_init(struct cpufreq_policy *policy)
 		sg_policy->tunables = global_tunables;
 
 		gov_attr_set_get(&global_tunables->attr_set, &sg_policy->tunables_hook);
+		sugov_update_response_time_mult(sg_policy);
 		goto out;
 	}
 
@@ -1005,6 +1121,7 @@ static int sugov_init(struct cpufreq_policy *policy)
 	sg_policy->tunables = tunables;
 
 	sugov_tunables_restore(policy);
+	sugov_update_response_time_mult(sg_policy);
 
 	ret = kobject_init_and_add(&tunables->attr_set.kobj, &sugov_tunables_ktype,
 				   get_governor_parent_kobj(policy), "%s",
