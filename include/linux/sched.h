@@ -2184,4 +2184,11 @@ static inline void set_wake_up_idle(bool enabled)
 		current->flags &= ~PF_WAKE_UP_IDLE;
 }
 
+#ifndef CONFIG_SCHED_TUNE
+static inline int sched_set_boost(int enable)
+{
+	return -EINVAL;
+}
+#endif
+
 #endif
