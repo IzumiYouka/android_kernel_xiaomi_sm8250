@@ -327,16 +327,24 @@ static inline u64 sugov_calc_freq_response_ms(struct sugov_policy *sg_policy)
 static inline void sugov_update_response_time_mult(struct sugov_policy *sg_policy)
 {
 	unsigned long mult;
+	unsigned int response_time_ms;
 	int cpu;
 
 	if (unlikely(!sg_policy->freq_response_time_ms))
 		sg_policy->freq_response_time_ms = sugov_calc_freq_response_ms(sg_policy);
 
-	if (unlikely(!sg_policy->tunables->response_time_ms))
-		sg_policy->tunables->response_time_ms = sg_policy->freq_response_time_ms;
+	/*
+	 * Zero means "no user scaling": fall back to each policy's own ramp
+	 * time. Tunables are shared between policies on this driver, so
+	 * storing a concrete default here would scale every other cluster's
+	 * utilization by the first policy's ramp time.
+	 */
+	response_time_ms = sg_policy->tunables->response_time_ms;
+	if (!response_time_ms)
+		response_time_ms = sg_policy->freq_response_time_ms;
 
 	mult = sg_policy->freq_response_time_ms * SCHED_CAPACITY_SCALE;
-	mult /= sg_policy->tunables->response_time_ms;
+	mult /= response_time_ms;
 
 	if (SCHED_WARN_ON(!mult))
 		mult = SCHED_CAPACITY_SCALE;
