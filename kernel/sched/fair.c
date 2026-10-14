@@ -7396,7 +7396,7 @@ static unsigned long cpu_util_without(int cpu, struct task_struct *p)
 	 */
 	if (sched_feat(UTIL_EST)) {
 		unsigned int estimated =
-			READ_ONCE(cfs_rq->avg.util_est);
+			READ_ONCE(cfs_rq->avg.util_est) & ~UTIL_AVG_UNCHANGED;
 
 		/*
 		 * Despite the following checks we still have a small window
@@ -7993,7 +7993,8 @@ static unsigned long cpu_util_next(int cpu, struct task_struct *p, int dst_cpu)
 		util += task_util(p);
 
 	if (sched_feat(UTIL_EST)) {
-		util_est = READ_ONCE(cfs_rq->avg.util_est);
+		util_est = READ_ONCE(cfs_rq->avg.util_est) &
+			   ~UTIL_AVG_UNCHANGED;
 
 		/*
 		 * During wake-up, the task isn't enqueued yet and doesn't
