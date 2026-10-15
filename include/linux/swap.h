@@ -683,3 +683,6 @@ static inline bool mem_cgroup_swap_full(struct page *page)
 
 #endif /* __KERNEL__*/
 #endif /* _LINUX_SWAP_H */
+
+void deactivate_page(struct page *page);
+unsigned long reclaim_pages(struct list_head *page_list);
