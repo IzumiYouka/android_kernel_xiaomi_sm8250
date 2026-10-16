@@ -270,3 +270,16 @@ static void __exit process_reclaim_exit(void)
 
 module_init(process_reclaim_init);
 module_exit(process_reclaim_exit);
+
+/*
+ * Process reclaim was reverted in this tree; keep a no-op implementation so
+ * that the reverted callers (and the /proc/pid/reclaim path) link and simply
+ * report nothing reclaimed.
+ */
+struct reclaim_param reclaim_task_anon(struct task_struct *task,
+		int nr_to_reclaim)
+{
+	struct reclaim_param rp = {};
+
+	return rp;
+}

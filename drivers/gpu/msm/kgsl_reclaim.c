@@ -12,6 +12,18 @@
 #include "kgsl_reclaim.h"
 #include "kgsl_sharedmem.h"
 
+#ifndef CONFIG_PROCESS_RECLAIM
+struct reclaim_param;
+
+static inline int reclaim_address_space(struct address_space *mapping,
+		struct reclaim_param *rp) { return 0; }
+static inline int proc_reclaim_notifier_register(struct notifier_block *nb)
+	{ return 0; }
+static inline int proc_reclaim_notifier_unregister(struct notifier_block *nb)
+	{ return 0; }
+#endif
+
+
 static struct notifier_block kgsl_reclaim_nb;
 static bool kgsl_reclaim;
 
